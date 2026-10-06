@@ -30,4 +30,13 @@ lib/
   domain/     units and wheel logic
   ui/         screens (wheel, recipes, history)
 test/         unit and widget tests
+packages/
+  nutrition_core/   nutrient model, food sources interface, unit conversion,
+                    recipe nutrition calculation (plain Dart)
+```
+
+Packages are tested on their own:
+
+```bash
+cd packages/nutrition_core && dart test
 ```

@@ -38,6 +38,8 @@ dependencies:
   drift_flutter: ^0.3.1
   path_provider: ^2.1.6
   image_picker: ^1.2.4
+  nutrition_core:
+    path: packages/nutrition_core
   path: ^1.9.1
 
 dev_dependencies:

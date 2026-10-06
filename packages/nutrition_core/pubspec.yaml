@@ -1,0 +1,11 @@
+name: nutrition_core
+description: Nutrition models, data-source interface, cooking unit conversion and recipe nutrition calculation for Manja Manja.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.5
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0

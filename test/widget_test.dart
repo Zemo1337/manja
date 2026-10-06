@@ -7,14 +7,6 @@ import 'package:manja_manja/domain/wheel_service.dart';
 
 void main() {
   group('units', () {
-    test('mass converts to grams, volume needs density', () {
-      expect(CookingUnit.kg.toGrams(1.5), 1500);
-      expect(CookingUnit.oz.toGrams(1), closeTo(28.35, 0.01));
-      expect(CookingUnit.cup.toGrams(1), isNull);
-      expect(CookingUnit.cup.toGrams(1, densityGPerMl: 0.53), closeTo(125.4, 0.1));
-      expect(CookingUnit.piece.toGrams(2, gramsPerPiece: 60), 120);
-    });
-
     test('formats amounts without trailing zeros', () {
       expect(formatAmount(2), '2');
       expect(formatAmount(1.5), '1.5');
