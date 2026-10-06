@@ -225,7 +225,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = min(constraints.maxWidth - 32, constraints.maxHeight - 260).clamp(200.0, 560.0);
+        final size = min(constraints.maxWidth - 32, constraints.maxHeight - 280).clamp(200.0, 560.0);
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
@@ -305,43 +305,68 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            if (recipe.photoPath != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 280,
-                  child: AspectRatio(aspectRatio: 16 / 9, child: RecipePhoto(recipe: recipe, cacheWidth: 840)),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 480),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: onOpen,
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    if (recipe.photoPath != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox.square(dimension: 56, child: RecipePhoto(recipe: recipe, cacheWidth: 168)),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Today you cook', style: theme.textTheme.labelLarge),
+                          Text(
+                            recipe.name,
+                            key: const ValueKey('result-name'),
+                            style: theme.textTheme.titleLarge,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
-            ],
-            Text('Today you cook', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 4),
-            TextButton(
-              onPressed: onOpen,
-              child: Text(
-                recipe.name,
-                key: const ValueKey('result-name'),
-                style: theme.textTheme.headlineSmall,
-                textAlign: TextAlign.center,
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onSpinAgain,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Spin again'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: onConfirm,
+                      icon: const Icon(Icons.check),
+                      label: const Text("Let's cook it"),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                OutlinedButton.icon(onPressed: onSpinAgain, icon: const Icon(Icons.refresh), label: const Text('Spin again')),
-                FilledButton.icon(onPressed: onConfirm, icon: const Icon(Icons.check), label: const Text("Let's cook it")),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

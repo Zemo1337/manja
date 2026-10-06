@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -21,7 +22,7 @@ void main() {
     await db.saveRecipe(RecipeDraft(name: 'Sarma', portions: 4));
 
     final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
-    addTearDown(() => photos.baseDir.deleteSync(recursive: true));
+    addTearDown(() => _deleteQuietly(photos.baseDir));
     await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, child: const ManjaManjaApp()));
     await tester.pumpAndSettle();
     expect(find.text('1 of 1 dishes left'), findsOneWidget);
@@ -65,6 +66,42 @@ void main() {
     expect(find.descendant(of: find.byType(ListTile), matching: find.text(eaten.name)), findsOneWidget);
   });
 
+  for (final screen in const [Size(360, 640), Size(412, 915)]) {
+    testWidgets('result buttons are visible without scrolling on ${screen.width.round()}x${screen.height.round()}',
+        (tester) async {
+      tester.view
+        ..physicalSize = screen * 3
+        ..devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+      addTearDown(db.close);
+      final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
+      addTearDown(() => _deleteQuietly(photos.baseDir));
+      final pixel = File('${photos.baseDir.path}/pixel.png')
+        ..writeAsBytesSync(base64Decode(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        ));
+      await tester.runAsync(() async {
+        for (final name in ['Begova čorba sa piletinom i povrćem', 'Sarma']) {
+          await db.saveRecipe(RecipeDraft(name: name, portions: 2, photoPath: await photos.save(pixel.path)));
+        }
+      });
+
+      await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, child: const ManjaManjaApp()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Spin'));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      final navTop = tester.getTopLeft(find.byType(NavigationBar)).dy;
+      for (final label in ['Spin again', "Let's cook it"]) {
+        final rect = tester.getRect(find.text(label));
+        expect(rect.bottom, lessThanOrEqualTo(navTop), reason: '$label must not be hidden below the fold');
+        expect(rect.right, lessThanOrEqualTo(screen.width));
+      }
+    });
+  }
+
   testWidgets('recipes hidden behind the +n slice can still be drawn', (tester) async {
     tester.view
       ..physicalSize = const Size(1080, 2400)
@@ -80,7 +117,7 @@ void main() {
     }
 
     final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
-    addTearDown(() => photos.baseDir.deleteSync(recursive: true));
+    addTearDown(() => _deleteQuietly(photos.baseDir));
     await tester.pumpWidget(AppScope(db: db, wheel: wheel, photos: photos, child: const ManjaManjaApp()));
     await tester.pumpAndSettle();
 
@@ -98,4 +135,12 @@ void main() {
     expect(eaten, hasLength(names.length), reason: 'every recipe, visible or hidden, was drawn once');
     expect(find.text('8 of 8 dishes left'), findsOneWidget);
   });
+}
+
+void _deleteQuietly(Directory dir) {
+  try {
+    dir.deleteSync(recursive: true);
+  } on FileSystemException {
+    // Windows keeps decoded test images open until the test process exits.
+  }
 }
