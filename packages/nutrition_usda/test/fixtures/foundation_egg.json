@@ -1,0 +1,91 @@
+{
+ "fdcId": 323604,
+ "description": "Egg, whole, raw, frozen, pasteurized",
+ "dataType": "Foundation",
+ "foodCategory": {
+  "id": 1,
+  "code": "0100",
+  "description": "Dairy and Egg Products"
+ },
+ "foodNutrients": [
+  {
+   "nutrient": {
+    "id": 1008,
+    "number": "208",
+    "name": "Energy",
+    "unitName": "kcal"
+   },
+   "amount": 150.0
+  },
+  {
+   "nutrient": {
+    "id": 1062,
+    "number": "268",
+    "name": "Energy",
+    "unitName": "kJ"
+   },
+   "amount": 627.0
+  },
+  {
+   "nutrient": {
+    "id": 1003,
+    "number": "203",
+    "name": "Protein",
+    "unitName": "g"
+   },
+   "amount": 12.3
+  },
+  {
+   "nutrient": {
+    "id": 1004,
+    "number": "204",
+    "name": "Total lipid (fat)",
+    "unitName": "g"
+   },
+   "amount": 10.3
+  },
+  {
+   "nutrient": {
+    "id": 1005,
+    "number": "205",
+    "name": "Carbohydrate, by difference",
+    "unitName": "g"
+   },
+   "amount": 0.91
+  },
+  {
+   "nutrient": {
+    "id": 1093,
+    "number": "307",
+    "name": "Sodium, Na",
+    "unitName": "mg"
+   },
+   "amount": 121.0
+  }
+ ],
+ "foodPortions": [
+  {
+   "id": 119060,
+   "gramWeight": 28.4,
+   "sequenceNumber": 1,
+   "amount": 1.0,
+   "modifier": "",
+   "measureUnit": {
+    "id": 1038,
+    "name": "oz",
+    "abbreviation": "oz"
+   }
+  },
+  {
+   "id": 312626,
+   "gramWeight": 50.0,
+   "sequenceNumber": 1,
+   "amount": 1.0,
+   "measureUnit": {
+    "id": 1121,
+    "name": "RACC",
+    "abbreviation": "RACC"
+   }
+  }
+ ]
+}

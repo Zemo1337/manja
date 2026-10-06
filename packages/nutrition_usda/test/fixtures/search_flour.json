@@ -1,0 +1,25 @@
+{
+ "totalHits": 243,
+ "currentPage": 1,
+ "totalPages": 81,
+ "foods": [
+  {
+   "fdcId": 168944,
+   "description": "Wheat flour, whole-grain, soft wheat",
+   "dataType": "SR Legacy",
+   "foodCategory": "Cereal Grains and Pasta"
+  },
+  {
+   "fdcId": 790085,
+   "description": "Flour, whole wheat, unenriched",
+   "dataType": "Foundation",
+   "foodCategory": "Cereal Grains and Pasta"
+  },
+  {
+   "fdcId": 168913,
+   "description": "Wheat flours, bread, unenriched",
+   "dataType": "SR Legacy",
+   "foodCategory": "Cereal Grains and Pasta"
+  }
+ ]
+}

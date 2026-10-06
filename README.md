@@ -33,10 +33,16 @@ test/         unit and widget tests
 packages/
   nutrition_core/   nutrient model, food sources interface, unit conversion,
                     recipe nutrition calculation (plain Dart)
+  nutrition_usda/   USDA FoodData Central adapter (search, food details,
+                    portion parsing)
 ```
 
 Packages are tested on their own:
 
 ```bash
 cd packages/nutrition_core && dart test
+```
+
+```bash
+cd packages/nutrition_usda && dart test
 ```

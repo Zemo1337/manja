@@ -543,6 +543,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  nutrition_usda:
+    dependency: "direct main"
+    description:
+      path: "packages/nutrition_usda"
+      relative: true
+    source: path
+    version: "0.1.0"
   objective_c:
     dependency: transitive
     description:
