@@ -56,6 +56,24 @@ void main() {
       expect(state.available.length, 3, reason: 'whenEmpty mode starts a new round');
     });
 
+    test('a new round starts after the last meal even within the same clock tick', () async {
+      await addRecipes(['Burek', 'Ćevapi', 'Sarma']);
+      final recipes = await db.allRecipes();
+      final t = DateTime(2026, 3, 1, 12);
+      await wheel.resetCycle(t.subtract(const Duration(days: 1)));
+      await db.logMeal(recipes[0].id, t.subtract(const Duration(hours: 2)));
+      await db.logMeal(recipes[1].id, t.subtract(const Duration(hours: 1)));
+      await db.logMeal(recipes[2].id, t);
+
+      expect((await wheel.computeState(now: t)).available, hasLength(3));
+      expect((await wheel.computeState(now: t.add(const Duration(minutes: 1)))).available, hasLength(3));
+
+      await wheel.saveSettings(ResetMode.manual, 7);
+      await db.logMeal(recipes[0].id, t.add(const Duration(minutes: 2)));
+      await wheel.resetCycle(t.add(const Duration(minutes: 2)));
+      expect((await wheel.computeState(now: t.add(const Duration(minutes: 3)))).available, hasLength(3));
+    });
+
     test('manual mode stays empty until reset', () async {
       await addRecipes(['Burek', 'Sarma']);
       await wheel.saveSettings(ResetMode.manual, 7);

@@ -178,6 +178,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteMealLog(int id) => (delete(mealLogs)..where((m) => m.id.equals(id))).go();
 
+  Future<DateTime?> latestMealAt() async {
+    final latest = mealLogs.eatenAt.max();
+    return (selectOnly(mealLogs)..addColumns([latest])).map((row) => row.read(latest)).getSingle();
+  }
+
   Future<List<MealLog>> mealLogsSince(DateTime since) async {
     final logs = await select(mealLogs).get();
     return [for (final log in logs) if (!log.eatenAt.isBefore(since)) log];

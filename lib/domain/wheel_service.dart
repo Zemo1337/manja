@@ -140,23 +140,28 @@ class WheelService {
     await db.setSetting(_keyTheme, a.theme.name);
   }
 
-  Future<void> resetCycle([DateTime? at]) =>
-      db.setSetting(_keyCycleStart, (at ?? DateTime.now()).toIso8601String());
+  Future<DateTime> resetCycle([DateTime? at]) async {
+    var start = at ?? DateTime.now();
+    final latest = await db.latestMealAt();
+    if (latest != null && !start.isAfter(latest)) start = latest.add(const Duration(microseconds: 1));
+    await db.setSetting(_keyCycleStart, start.toIso8601String());
+    return start;
+  }
 
   Future<WheelState> computeState({DateTime? now}) async {
     now ??= DateTime.now();
     var settings = await loadSettings();
     if (settings.mode == ResetMode.afterDays &&
         now.difference(settings.cycleStartedAt) >= Duration(days: settings.resetDays)) {
-      await resetCycle(now);
-      settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: now);
+      final start = await resetCycle(now);
+      settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: start);
     }
     final recipes = await db.allRecipes();
     final eatenIds = {for (final log in await db.mealLogsSince(settings.cycleStartedAt)) log.recipeId};
     var available = [for (final r in recipes) if (!eatenIds.contains(r.id)) r];
     if (available.isEmpty && recipes.isNotEmpty && settings.mode == ResetMode.whenEmpty) {
-      await resetCycle(now);
-      settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: now);
+      final start = await resetCycle(now);
+      settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: start);
       available = recipes;
     }
     available.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
