@@ -1,6 +1,30 @@
 import 'dart:math';
 
+import '../data/database.dart';
+
 const fullTurn = 2 * pi;
+
+class WheelEntry {
+  const WheelEntry.recipe(Recipe this.recipe) : hidden = const [];
+  const WheelEntry.overflow(this.hidden) : recipe = null;
+
+  final Recipe? recipe;
+  final List<Recipe> hidden;
+
+  bool get isOverflow => recipe == null;
+
+  bool represents(Recipe r) => isOverflow ? hidden.any((h) => h.id == r.id) : recipe!.id == r.id;
+}
+
+List<WheelEntry> buildEntries(List<Recipe> available, int maxSlices, Random random) {
+  if (available.length <= maxSlices) return [for (final r in available) WheelEntry.recipe(r)];
+  final shuffled = [...available]..shuffle(random);
+  final shown = shuffled.take(maxSlices - 1).toList()
+    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  return [for (final r in shown) WheelEntry.recipe(r), WheelEntry.overflow(shuffled.skip(maxSlices - 1).toList())];
+}
+
+int entryIndexFor(List<WheelEntry> entries, Recipe recipe) => entries.indexWhere((e) => e.represents(recipe));
 
 List<double> sliceSweeps(int count) => List.filled(count, fullTurn / count);
 

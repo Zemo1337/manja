@@ -88,10 +88,14 @@ void main() {
       final defaults = await wheel.loadAppearance();
       expect(defaults.flipText, isTrue);
       expect(defaults.content, WheelContent.both);
-      await wheel.saveAppearance(const WheelAppearance(content: WheelContent.photo, flipText: false));
+      expect(defaults.maxSlices, 20);
+      await wheel.saveAppearance(const WheelAppearance(content: WheelContent.photo, maxSlices: 8, flipText: false));
       final saved = await wheel.loadAppearance();
       expect(saved.flipText, isFalse);
       expect(saved.content, WheelContent.photo);
+      expect(saved.maxSlices, 8);
+      await db.setSetting('wheel.maxSlices', '999');
+      expect((await wheel.loadAppearance()).maxSlices, WheelAppearance.maxSlicesLimit);
     });
 
     test('saving a recipe replaces its ingredients and steps', () async {

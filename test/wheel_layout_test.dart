@@ -1,9 +1,49 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:manja_manja/data/database.dart';
 import 'package:manja_manja/domain/wheel_layout.dart';
 
+Recipe _recipe(int id) => Recipe(
+      id: id,
+      name: 'Dish $id',
+      portions: 2,
+      cookingInfo: '',
+      isFavorite: false,
+      createdAt: DateTime(2026),
+    );
+
 void main() {
+  group('entries', () {
+    final recipes = [for (var i = 1; i <= 30; i++) _recipe(i)];
+
+    test('all recipes get a slice when they fit', () {
+      final entries = buildEntries(recipes.take(20).toList(), 20, Random(1));
+      expect(entries, hasLength(20));
+      expect(entries.any((e) => e.isOverflow), isFalse);
+    });
+
+    test('overflow slice holds the rest and every recipe is represented once', () {
+      final entries = buildEntries(recipes, 20, Random(1));
+      expect(entries, hasLength(20));
+      expect(entries.last.isOverflow, isTrue);
+      expect(entries.last.hidden, hasLength(11));
+      for (final r in recipes) {
+        expect(entries.where((e) => e.represents(r)), hasLength(1), reason: r.name);
+        expect(entryIndexFor(entries, r), greaterThanOrEqualTo(0));
+      }
+      final visible = [for (final e in entries.take(19)) e.recipe!.name.toLowerCase()];
+      expect(visible, [...visible]..sort());
+    });
+
+    test('a hidden recipe resolves to the overflow slice', () {
+      final entries = buildEntries(recipes, 5, Random(2));
+      final hidden = entries.last.hidden.first;
+      expect(entryIndexFor(entries, hidden), 4);
+    });
+  });
+
+
   test('equal sweeps fill the whole wheel', () {
     for (var count = 1; count <= 50; count++) {
       expect(sliceSweeps(count).reduce((a, b) => a + b), closeTo(fullTurn, 1e-9));

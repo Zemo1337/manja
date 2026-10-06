@@ -57,4 +57,38 @@ void main() {
     final eaten = (await db.allRecipes()).firstWhere((r) => r.id == logs.single.recipeId);
     expect(find.descendant(of: find.byType(ListTile), matching: find.text(eaten.name)), findsOneWidget);
   });
+
+  testWidgets('recipes hidden behind the +n slice can still be drawn', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 2400)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    addTearDown(db.close);
+    final wheel = WheelService(db);
+    await wheel.saveAppearance(const WheelAppearance(maxSlices: 4));
+    const names = ['Burek', 'Ćevapi', 'Dolma', 'Grah', 'Japrak', 'Musaka', 'Pasulj', 'Sarma'];
+    for (final name in names) {
+      await db.saveRecipe(RecipeDraft(name: name, portions: 2));
+    }
+
+    final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
+    addTearDown(() => photos.baseDir.deleteSync(recursive: true));
+    await tester.pumpWidget(AppScope(db: db, wheel: wheel, photos: photos, child: const ManjaManjaApp()));
+    await tester.pumpAndSettle();
+
+    for (var left = names.length; left > 0; left--) {
+      expect(find.text('$left of ${names.length} dishes left'), findsOneWidget);
+      await tester.tap(find.text('Spin'));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.text('Today you cook'), findsOneWidget);
+      await tester.tap(find.text("Let's cook it"));
+      await tester.pumpAndSettle();
+    }
+
+    final eaten = {for (final log in await db.select(db.mealLogs).get()) log.recipeId};
+    expect(eaten, hasLength(names.length), reason: 'every recipe, visible or hidden, was drawn once');
+    expect(find.text('8 of 8 dishes left'), findsOneWidget);
+  });
 }

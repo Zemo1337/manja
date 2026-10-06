@@ -59,6 +59,20 @@ class _WheelSettingsSheetState extends State<_WheelSettingsSheet> {
                 selected: {_look.content},
                 onSelectionChanged: (s) => setState(() => _look = _look.copyWith(content: s.single)),
               ),
+              const SizedBox(height: 16),
+              Text('Recipes shown on the wheel: ${_look.maxSlices}', style: theme.textTheme.bodyMedium),
+              Slider(
+                value: _look.maxSlices.toDouble(),
+                min: WheelAppearance.minSlices.toDouble(),
+                max: WheelAppearance.maxSlicesLimit.toDouble(),
+                divisions: WheelAppearance.maxSlicesLimit - WheelAppearance.minSlices,
+                label: '${_look.maxSlices}',
+                onChanged: (v) => setState(() => _look = _look.copyWith(maxSlices: v.round())),
+              ),
+              Text(
+                'With more recipes, one "+n" slice stands for the rest. Every recipe still has the same chance.',
+                style: theme.textTheme.bodySmall,
+              ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Keep names upright'),

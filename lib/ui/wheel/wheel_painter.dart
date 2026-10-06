@@ -20,11 +20,14 @@ Color sliceColor(int index, int count) {
   return wheelPalette[last ? 1 : index % wheelPalette.length];
 }
 
+const overflowSliceColor = Color(0xFF4A3F3B);
+
 class WheelSliceData {
-  const WheelSliceData({required this.label, this.image});
+  const WheelSliceData({required this.label, this.image, this.isOverflow = false});
 
   final String label;
   final ui.Image? image;
+  final bool isOverflow;
 }
 
 class WheelPainter extends CustomPainter {
@@ -62,7 +65,7 @@ class WheelPainter extends CustomPainter {
     for (var i = 0; i < count; i++) {
       final sweep = sweeps[i];
       final slice = slices[i];
-      final color = sliceColor(i, count);
+      final color = slice.isOverflow ? overflowSliceColor : sliceColor(i, count);
       final wedge = _wedge(radius, start, sweep);
       canvas.drawPath(wedge, Paint()..color = color);
       final image = content == WheelContent.text ? null : slice.image;

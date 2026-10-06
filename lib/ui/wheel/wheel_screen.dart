@@ -26,9 +26,12 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
   final _random = Random();
   StreamSubscription<void>? _subscription;
   WheelState? _state;
-  List<Recipe> _slices = const [];
+  List<Recipe> _available = const [];
+  List<WheelEntry> _entries = const [];
+  String? _entriesKey;
   double _rotation = 0;
   Animation<double>? _spin;
+  Recipe? _picked;
   Recipe? _result;
   WheelImageCache? _images;
 
@@ -61,21 +64,47 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
     setState(() {
       _state = state;
       if (!_spinning) {
-        _slices = state.available;
-        if (_result != null && !_slices.any((r) => r.id == _result!.id)) _result = null;
+        _available = state.available;
+        final key = '${state.appearance.maxSlices}:${[for (final r in _available) r.id].join(',')}';
+        if (key != _entriesKey) {
+          _entriesKey = key;
+          _entries = buildEntries(_available, state.appearance.maxSlices, _random);
+        }
+        if (_result != null && !_available.any((r) => r.id == _result!.id)) _result = null;
       }
     });
+    _retainImages();
+  }
+
+  void _retainImages() {
+    final state = _state;
+    if (state == null) return;
     _images!.retain({
-      if (state.appearance.content != WheelContent.text)
-        for (final r in state.available)
-          if (r.photoPath != null) r.photoPath!,
+      if (state.appearance.content != WheelContent.text) ...[
+        for (final e in _entries)
+          if (e.recipe?.photoPath != null) e.recipe!.photoPath!,
+        if (_picked?.photoPath != null) _picked!.photoPath!,
+      ],
     });
   }
 
+  List<WheelSliceData> _sliceData() => [
+        for (final e in _entries)
+          if (!e.isOverflow)
+            WheelSliceData(label: e.recipe!.name, image: _images![e.recipe!.photoPath])
+          else if (_result != null && e.represents(_result!))
+            WheelSliceData(label: _result!.name, image: _images![_result!.photoPath], isOverflow: true)
+          else
+            WheelSliceData(label: '+${e.hidden.length}', isOverflow: true),
+      ];
+
   void _spinWheel() {
-    if (_slices.isEmpty || _spinning) return;
-    final sweeps = sliceSweeps(_slices.length);
-    final index = _slices.indexOf(_wheel.pickRecipe(_slices));
+    if (_entries.isEmpty || _spinning) return;
+    final picked = _wheel.pickRecipe(_available);
+    final sweeps = sliceSweeps(_entries.length);
+    final index = entryIndexFor(_entries, picked);
+    _picked = picked;
+    _retainImages();
     final end = targetRotation(
       current: _rotation,
       sweeps: sweeps,
@@ -90,9 +119,9 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
       ..forward().whenComplete(() {
         if (!mounted) return;
         setState(() {
-          _rotation = end % (2 * pi);
+          _rotation = end % fullTurn;
           _spin = null;
-          _result = _slices[sliceAtPointer(_rotation, sweeps)];
+          _result = picked;
         });
       });
   }
@@ -151,7 +180,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
         message: 'Add your favourite dishes in the Recipes tab and they will show up here.',
       );
     }
-    if (_slices.isEmpty) {
+    if (_entries.isEmpty) {
       return _EmptyMessage(
         icon: Icons.celebration_outlined,
         title: 'You ate everything!',
@@ -166,7 +195,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              Text('${_slices.length} of ${state.total} dishes left', style: theme.textTheme.titleMedium),
+              Text('${_available.length} of ${state.total} dishes left', style: theme.textTheme.titleMedium),
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: _spinWheel,
@@ -183,10 +212,8 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
                           builder: (context, _) => CustomPaint(
                             size: Size.square(size),
                             painter: WheelPainter(
-                              slices: [
-                                for (final r in _slices) WheelSliceData(label: r.name, image: _images![r.photoPath]),
-                              ],
-                              sweeps: sliceSweeps(_slices.length),
+                              slices: _sliceData(),
+                              sweeps: sliceSweeps(_entries.length),
                               rotation: _spin?.value ?? _rotation,
                               rimColor: theme.colorScheme.onSurface,
                               content: state.appearance.content,
