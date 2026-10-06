@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../../domain/wheel_layout.dart';
+import '../../domain/wheel_service.dart';
 
 const wheelPalette = [
   Color(0xFFE4572E),
@@ -18,28 +20,39 @@ Color sliceColor(int index, int count) {
   return wheelPalette[last ? 1 : index % wheelPalette.length];
 }
 
+class WheelSliceData {
+  const WheelSliceData({required this.label, this.image});
+
+  final String label;
+  final ui.Image? image;
+}
+
 class WheelPainter extends CustomPainter {
   WheelPainter({
-    required this.labels,
+    required this.slices,
     required this.sweeps,
     required this.rotation,
     required this.rimColor,
+    this.content = WheelContent.text,
     this.flipText = true,
     this.labelStyle = const TextStyle(),
   });
 
-  final List<String> labels;
+  final List<WheelSliceData> slices;
   final List<double> sweeps;
   final double rotation;
   final Color rimColor;
+  final WheelContent content;
   final bool flipText;
   final TextStyle labelStyle;
+
+  static const _photoShadows = [Shadow(blurRadius: 4), Shadow(blurRadius: 2)];
 
   @override
   void paint(Canvas canvas, Size size) {
     final radius = min(size.width, size.height) / 2;
     final center = size.center(Offset.zero);
-    final count = labels.length;
+    final count = slices.length;
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -48,8 +61,12 @@ class WheelPainter extends CustomPainter {
     var start = -pi / 2;
     for (var i = 0; i < count; i++) {
       final sweep = sweeps[i];
+      final slice = slices[i];
       final color = sliceColor(i, count);
-      canvas.drawPath(_wedge(radius, start, sweep), Paint()..color = color);
+      final wedge = _wedge(radius, start, sweep);
+      canvas.drawPath(wedge, Paint()..color = color);
+      final image = content == WheelContent.text ? null : slice.image;
+      if (image != null) _paintPhoto(canvas, wedge, image, radius, start + sweep / 2, sweep);
       if (count > 1) {
         canvas.drawLine(
           Offset.zero,
@@ -59,7 +76,9 @@ class WheelPainter extends CustomPainter {
             ..strokeWidth = 1.5,
         );
       }
-      _paintLabel(canvas, radius, start + sweep / 2, sweep, labels[i], color);
+      if (image == null || content == WheelContent.both) {
+        _paintLabel(canvas, radius, start + sweep / 2, sweep, slice.label, color, onPhoto: image != null);
+      }
       start += sweep;
     }
     canvas.restore();
@@ -84,14 +103,39 @@ class WheelPainter extends CustomPainter {
       ..close();
   }
 
-  void _paintLabel(Canvas canvas, double radius, double angle, double sweep, String text, Color bg) {
+  void _paintPhoto(Canvas canvas, Path wedge, ui.Image image, double radius, double mid, double sweep) {
+    canvas.save();
+    canvas.clipPath(wedge);
+    canvas.rotate(mid + pi / 2);
+    final Rect rect;
+    if (sweep >= pi) {
+      rect = Rect.fromCircle(center: Offset.zero, radius: radius);
+    } else {
+      final halfWidth = radius * sin(sweep / 2);
+      rect = Rect.fromLTRB(-halfWidth, -radius, halfWidth, 0);
+    }
+    paintImage(canvas: canvas, rect: rect, image: image, fit: BoxFit.cover, filterQuality: FilterQuality.medium);
+    if (content == WheelContent.both) canvas.drawRect(rect, Paint()..color = const Color(0x33000000));
+    canvas.restore();
+  }
+
+  void _paintLabel(
+    Canvas canvas,
+    double radius,
+    double angle,
+    double sweep,
+    String text,
+    Color bg, {
+    required bool onPhoto,
+  }) {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
         style: labelStyle.copyWith(
-          color: bg.computeLuminance() > 0.45 ? Colors.black87 : Colors.white,
+          color: onPhoto || bg.computeLuminance() <= 0.45 ? Colors.white : Colors.black87,
           fontSize: labelFontSize(sweep: sweep, radius: radius),
           fontWeight: FontWeight.w600,
+          shadows: onPhoto ? _photoShadows : null,
         ),
       ),
       textDirection: TextDirection.ltr,

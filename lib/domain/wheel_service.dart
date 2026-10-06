@@ -12,12 +12,24 @@ enum ResetMode {
   final String label;
 }
 
-class WheelAppearance {
-  const WheelAppearance({this.flipText = true});
+enum WheelContent {
+  text('Text'),
+  photo('Photo'),
+  both('Both');
 
+  const WheelContent(this.label);
+
+  final String label;
+}
+
+class WheelAppearance {
+  const WheelAppearance({this.content = WheelContent.both, this.flipText = true});
+
+  final WheelContent content;
   final bool flipText;
 
-  WheelAppearance copyWith({bool? flipText}) => WheelAppearance(flipText: flipText ?? this.flipText);
+  WheelAppearance copyWith({WheelContent? content, bool? flipText}) =>
+      WheelAppearance(content: content ?? this.content, flipText: flipText ?? this.flipText);
 }
 
 class WheelSettings {
@@ -46,6 +58,7 @@ class WheelService {
   static const _keyMode = 'wheel.resetMode';
   static const _keyDays = 'wheel.resetDays';
   static const _keyCycleStart = 'wheel.cycleStartedAt';
+  static const _keyContent = 'wheel.content';
   static const _keyFlipText = 'wheel.flipText';
 
   final AppDatabase db;
@@ -71,11 +84,13 @@ class WheelService {
   Future<WheelAppearance> loadAppearance() async {
     const d = WheelAppearance();
     return WheelAppearance(
+      content: WheelContent.values.asNameMap()[await db.getSetting(_keyContent)] ?? d.content,
       flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
     );
   }
 
   Future<void> saveAppearance(WheelAppearance a) async {
+    await db.setSetting(_keyContent, a.content.name);
     await db.setSetting(_keyFlipText, '${a.flipText}');
   }
 

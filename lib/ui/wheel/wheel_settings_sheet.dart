@@ -49,6 +49,16 @@ class _WheelSettingsSheetState extends State<_WheelSettingsSheet> {
               Text('Wheel settings', style: theme.textTheme.titleLarge),
               const SizedBox(height: 16),
               Text('Look', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text('Show on the wheel', style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              SegmentedButton<WheelContent>(
+                segments: [
+                  for (final c in WheelContent.values) ButtonSegment(value: c, label: Text(c.label)),
+                ],
+                selected: {_look.content},
+                onSelectionChanged: (s) => setState(() => _look = _look.copyWith(content: s.single)),
+              ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Keep names upright'),

@@ -85,9 +85,13 @@ void main() {
     });
 
     test('appearance defaults and round-trips through the settings table', () async {
-      expect((await wheel.loadAppearance()).flipText, isTrue);
-      await wheel.saveAppearance(const WheelAppearance(flipText: false));
-      expect((await wheel.loadAppearance()).flipText, isFalse);
+      final defaults = await wheel.loadAppearance();
+      expect(defaults.flipText, isTrue);
+      expect(defaults.content, WheelContent.both);
+      await wheel.saveAppearance(const WheelAppearance(content: WheelContent.photo, flipText: false));
+      final saved = await wheel.loadAppearance();
+      expect(saved.flipText, isFalse);
+      expect(saved.content, WheelContent.photo);
     });
 
     test('saving a recipe replaces its ingredients and steps', () async {

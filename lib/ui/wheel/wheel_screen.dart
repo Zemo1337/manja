@@ -9,6 +9,7 @@ import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../recipes/recipe_photo.dart';
+import 'wheel_image_cache.dart';
 import 'wheel_painter.dart';
 import 'wheel_settings_sheet.dart';
 
@@ -29,6 +30,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
   double _rotation = 0;
   Animation<double>? _spin;
   Recipe? _result;
+  WheelImageCache? _images;
 
   WheelService get _wheel => AppScope.of(context).wheel;
 
@@ -37,7 +39,11 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _subscription ??= AppScope.of(context).db.watchWheelInputs().listen((_) => _reload());
+    final scope = AppScope.of(context);
+    _images ??= WheelImageCache(scope.photos, onLoaded: () {
+      if (mounted) setState(() {});
+    });
+    _subscription ??= scope.db.watchWheelInputs().listen((_) => _reload());
     _reload();
   }
 
@@ -45,6 +51,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
   void dispose() {
     _subscription?.cancel();
     _controller.dispose();
+    _images?.dispose();
     super.dispose();
   }
 
@@ -57,6 +64,11 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
         _slices = state.available;
         if (_result != null && !_slices.any((r) => r.id == _result!.id)) _result = null;
       }
+    });
+    _images!.retain({
+      if (state.appearance.content != WheelContent.text)
+        for (final r in state.available)
+          if (r.photoPath != null) r.photoPath!,
     });
   }
 
@@ -171,10 +183,13 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
                           builder: (context, _) => CustomPaint(
                             size: Size.square(size),
                             painter: WheelPainter(
-                              labels: [for (final r in _slices) r.name],
+                              slices: [
+                                for (final r in _slices) WheelSliceData(label: r.name, image: _images![r.photoPath]),
+                              ],
                               sweeps: sliceSweeps(_slices.length),
                               rotation: _spin?.value ?? _rotation,
                               rimColor: theme.colorScheme.onSurface,
+                              content: state.appearance.content,
                               flipText: state.appearance.flipText,
                               labelStyle: theme.textTheme.labelLarge ?? const TextStyle(),
                             ),
