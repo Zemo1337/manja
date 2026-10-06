@@ -89,11 +89,17 @@ void main() {
       expect(defaults.flipText, isTrue);
       expect(defaults.content, WheelContent.both);
       expect(defaults.maxSlices, 20);
-      await wheel.saveAppearance(const WheelAppearance(content: WheelContent.photo, maxSlices: 8, flipText: false));
+      expect(defaults.winnerPercent, 100);
+      await wheel.saveAppearance(
+        const WheelAppearance(content: WheelContent.photo, maxSlices: 8, winnerPercent: 40, flipText: false),
+      );
       final saved = await wheel.loadAppearance();
       expect(saved.flipText, isFalse);
       expect(saved.content, WheelContent.photo);
       expect(saved.maxSlices, 8);
+      expect(saved.winnerPercent, 40);
+      await db.setSetting('wheel.winnerPercent', '5');
+      expect((await wheel.loadAppearance()).winnerPercent, WheelAppearance.minWinnerPercent);
       await db.setSetting('wheel.maxSlices', '999');
       expect((await wheel.loadAppearance()).maxSlices, WheelAppearance.maxSlicesLimit);
     });

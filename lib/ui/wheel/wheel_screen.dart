@@ -20,9 +20,12 @@ class WheelScreen extends StatefulWidget {
   State<WheelScreen> createState() => _WheelScreenState();
 }
 
-class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStateMixin {
+class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
   late final AnimationController _controller =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 4200));
+  late final AnimationController _grow = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+  late final Animation<double> _growCurve = CurvedAnimation(parent: _grow, curve: Curves.easeInOutCubic);
+  int? _winner;
   final _random = Random();
   StreamSubscription<void>? _subscription;
   WheelState? _state;
@@ -37,7 +40,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
 
   WheelService get _wheel => AppScope.of(context).wheel;
 
-  bool get _spinning => _controller.isAnimating;
+  bool get _spinning => _controller.isAnimating || _grow.isAnimating;
 
   @override
   void didChangeDependencies() {
@@ -54,6 +57,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
   void dispose() {
     _subscription?.cancel();
     _controller.dispose();
+    _grow.dispose();
     _images?.dispose();
     super.dispose();
   }
@@ -69,6 +73,8 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
         if (key != _entriesKey) {
           _entriesKey = key;
           _entries = buildEntries(_available, state.appearance.maxSlices, _random);
+          _winner = null;
+          _grow.value = 0;
         }
         if (_result != null && !_available.any((r) => r.id == _result!.id)) _result = null;
       }
@@ -98,11 +104,36 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
             WheelSliceData(label: '+${e.hidden.length}', isOverflow: true),
       ];
 
+  ({List<double> sweeps, double rotation}) _frame() {
+    final count = _entries.length;
+    final spin = _spin;
+    final winner = _winner;
+    if (spin != null) return (sweeps: sliceSweeps(count), rotation: spin.value);
+    if (winner == null) return (sweeps: sliceSweeps(count), rotation: _rotation);
+    final fraction = (_state?.appearance.winnerPercent ?? 100) / 100;
+    final progress = _growCurve.value;
+    return (
+      sweeps: sliceSweeps(count, winner: winner, winnerFraction: fraction, progress: progress),
+      rotation: winnerRotation(
+        landing: _rotation,
+        count: count,
+        winner: winner,
+        winnerFraction: fraction,
+        progress: progress,
+      ),
+    );
+  }
+
   void _spinWheel() {
     if (_entries.isEmpty || _spinning) return;
     final picked = _wheel.pickRecipe(_available);
     final sweeps = sliceSweeps(_entries.length);
     final index = entryIndexFor(_entries, picked);
+    if (_winner != null) {
+      _rotation = centeredRotation(sweeps, _winner!);
+      _winner = null;
+      _grow.value = 0;
+    }
     _picked = picked;
     _retainImages();
     final end = targetRotation(
@@ -122,7 +153,9 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
           _rotation = end % fullTurn;
           _spin = null;
           _result = picked;
+          _winner = index;
         });
+        _grow.forward(from: 0);
       });
   }
 
@@ -208,19 +241,23 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
                       Positioned(
                         top: 18,
                         child: AnimatedBuilder(
-                          animation: _controller,
-                          builder: (context, _) => CustomPaint(
-                            size: Size.square(size),
-                            painter: WheelPainter(
-                              slices: _sliceData(),
-                              sweeps: sliceSweeps(_entries.length),
-                              rotation: _spin?.value ?? _rotation,
-                              rimColor: theme.colorScheme.onSurface,
-                              content: state.appearance.content,
-                              flipText: state.appearance.flipText,
-                              labelStyle: theme.textTheme.labelLarge ?? const TextStyle(),
-                            ),
-                          ),
+                          animation: Listenable.merge([_controller, _grow]),
+                          builder: (context, _) {
+                            final frame = _frame();
+                            return CustomPaint(
+                              size: Size.square(size),
+                              painter: WheelPainter(
+                                slices: _sliceData(),
+                                sweeps: frame.sweeps,
+                                rotation: frame.rotation,
+                                rimColor: theme.colorScheme.onSurface,
+                                content: state.appearance.content,
+                                flipText: state.appearance.flipText,
+                                labelStyle: theme.textTheme.labelLarge ?? const TextStyle(),
+                                highlight: _winner,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(theme.colorScheme.onSurface)),

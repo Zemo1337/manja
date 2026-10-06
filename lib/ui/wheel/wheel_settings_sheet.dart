@@ -73,6 +73,16 @@ class _WheelSettingsSheetState extends State<_WheelSettingsSheet> {
                 'With more recipes, one "+n" slice stands for the rest. Every recipe still has the same chance.',
                 style: theme.textTheme.bodySmall,
               ),
+              const SizedBox(height: 16),
+              Text('Winning dish takes ${_look.winnerPercent}% of the wheel', style: theme.textTheme.bodyMedium),
+              Slider(
+                value: _look.winnerPercent.toDouble(),
+                min: WheelAppearance.minWinnerPercent.toDouble(),
+                max: 100,
+                divisions: (100 - WheelAppearance.minWinnerPercent) ~/ 10,
+                label: '${_look.winnerPercent}%',
+                onChanged: (v) => setState(() => _look = _look.copyWith(winnerPercent: v.round())),
+              ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Keep names upright'),

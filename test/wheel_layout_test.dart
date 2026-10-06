@@ -71,6 +71,63 @@ void main() {
     expect(end - 1.0, lessThan(6 * fullTurn));
   });
 
+  group('winner takeover', () {
+    test('sweeps always fill the wheel and the winner grows to its share', () {
+      for (final count in [2, 5, 20]) {
+        for (final fraction in [0.3, 0.6, 1.0]) {
+          for (final progress in [0.0, 0.25, 0.5, 1.0]) {
+            final sweeps = sliceSweeps(count, winner: 1, winnerFraction: fraction, progress: progress);
+            expect(sweeps.reduce((a, b) => a + b), closeTo(fullTurn, 1e-9));
+          }
+          final done = sliceSweeps(count, winner: 1, winnerFraction: fraction, progress: 1);
+          expect(done[1], closeTo(max(fullTurn / count, fraction * fullTurn), 1e-9));
+        }
+      }
+      expect(sliceSweeps(6, winner: 2, progress: 0), [for (final s in sliceSweeps(6)) closeTo(s, 1e-9)]);
+      expect(sliceSweeps(6, winner: 2, winnerFraction: 1, progress: 1)[0], closeTo(0, 1e-9));
+    });
+
+    test('a small winner share never shrinks the winning slice', () {
+      final sweeps = sliceSweeps(2, winner: 0, winnerFraction: 0.3, progress: 1);
+      expect(sweeps[0], closeTo(pi, 1e-9));
+    });
+
+    test('the pointer stays on the winner while it grows and ends centred', () {
+      final random = Random(3);
+      for (var round = 0; round < 200; round++) {
+        final count = 2 + random.nextInt(30);
+        final winner = random.nextInt(count);
+        final fraction = 0.3 + random.nextDouble() * 0.7;
+        final landing = targetRotation(
+          current: random.nextDouble() * fullTurn,
+          sweeps: sliceSweeps(count),
+          index: winner,
+          fullSpins: 0,
+          jitter: (random.nextDouble() - 0.5) * 0.7,
+        );
+        for (final progress in [0.0, 0.1, 0.5, 0.9, 1.0]) {
+          final sweeps = sliceSweeps(count, winner: winner, winnerFraction: fraction, progress: progress);
+          final rotation = winnerRotation(
+            landing: landing,
+            count: count,
+            winner: winner,
+            winnerFraction: fraction,
+            progress: progress,
+          );
+          expect(sliceAtPointer(rotation, sweeps), winner, reason: 'round $round progress $progress');
+          if (progress == 0) expect(shortestAngle(landing, rotation), closeTo(0, 1e-9));
+          if (progress == 1) expect(shortestAngle(centeredRotation(sweeps, winner), rotation), closeTo(0, 1e-9));
+        }
+      }
+    });
+  });
+
+  test('shortest angle picks the short way round', () {
+    expect(shortestAngle(0, 0.5), closeTo(0.5, 1e-12));
+    expect(shortestAngle(0.5, 0), closeTo(-0.5, 1e-12));
+    expect(shortestAngle(0.1, fullTurn - 0.1), closeTo(-0.2, 1e-12));
+  });
+
   test('label font shrinks with more slices but stays readable', () {
     const radius = 170.0;
     final sizes = [for (final n in [2, 6, 12, 20, 50]) labelFontSize(sweep: fullTurn / n, radius: radius)];

@@ -26,7 +26,36 @@ List<WheelEntry> buildEntries(List<Recipe> available, int maxSlices, Random rand
 
 int entryIndexFor(List<WheelEntry> entries, Recipe recipe) => entries.indexWhere((e) => e.represents(recipe));
 
-List<double> sliceSweeps(int count) => List.filled(count, fullTurn / count);
+List<double> sliceSweeps(int count, {int? winner, double winnerFraction = 1, double progress = 0}) {
+  final base = fullTurn / count;
+  if (winner == null || count == 1) return List.filled(count, base);
+  final target = max(base, winnerFraction.clamp(0.0, 1.0) * fullTurn);
+  final grown = base + (target - base) * progress.clamp(0.0, 1.0);
+  final other = (fullTurn - grown) / (count - 1);
+  return [for (var i = 0; i < count; i++) i == winner ? grown : other];
+}
+
+double centeredRotation(List<double> sweeps, int index) => -(_offsetBefore(sweeps, index) + sweeps[index] / 2);
+
+double shortestAngle(double from, double to) {
+  final d = (to - from) % fullTurn;
+  return d > pi ? d - fullTurn : d;
+}
+
+double winnerRotation({
+  required double landing,
+  required int count,
+  required int winner,
+  required double winnerFraction,
+  required double progress,
+}) {
+  final start = centeredRotation(sliceSweeps(count), winner);
+  final now = centeredRotation(
+    sliceSweeps(count, winner: winner, winnerFraction: winnerFraction, progress: progress),
+    winner,
+  );
+  return now + shortestAngle(start, landing) * (1 - progress);
+}
 
 double _offsetBefore(List<double> sweeps, int index) {
   var sum = 0.0;

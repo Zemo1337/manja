@@ -23,18 +23,27 @@ enum WheelContent {
 }
 
 class WheelAppearance {
-  const WheelAppearance({this.content = WheelContent.both, this.maxSlices = 20, this.flipText = true});
+  const WheelAppearance({
+    this.content = WheelContent.both,
+    this.maxSlices = 20,
+    this.winnerPercent = 100,
+    this.flipText = true,
+  });
 
   static const minSlices = 4;
   static const maxSlicesLimit = 50;
+  static const minWinnerPercent = 30;
 
   final WheelContent content;
   final int maxSlices;
+  final int winnerPercent;
   final bool flipText;
 
-  WheelAppearance copyWith({WheelContent? content, int? maxSlices, bool? flipText}) => WheelAppearance(
+  WheelAppearance copyWith({WheelContent? content, int? maxSlices, int? winnerPercent, bool? flipText}) =>
+      WheelAppearance(
         content: content ?? this.content,
         maxSlices: maxSlices ?? this.maxSlices,
+        winnerPercent: winnerPercent ?? this.winnerPercent,
         flipText: flipText ?? this.flipText,
       );
 }
@@ -67,6 +76,7 @@ class WheelService {
   static const _keyCycleStart = 'wheel.cycleStartedAt';
   static const _keyContent = 'wheel.content';
   static const _keyMaxSlices = 'wheel.maxSlices';
+  static const _keyWinnerPercent = 'wheel.winnerPercent';
   static const _keyFlipText = 'wheel.flipText';
 
   final AppDatabase db;
@@ -92,9 +102,11 @@ class WheelService {
   Future<WheelAppearance> loadAppearance() async {
     const d = WheelAppearance();
     final maxSlices = int.tryParse(await db.getSetting(_keyMaxSlices) ?? '') ?? d.maxSlices;
+    final winner = int.tryParse(await db.getSetting(_keyWinnerPercent) ?? '') ?? d.winnerPercent;
     return WheelAppearance(
       content: WheelContent.values.asNameMap()[await db.getSetting(_keyContent)] ?? d.content,
       maxSlices: maxSlices.clamp(WheelAppearance.minSlices, WheelAppearance.maxSlicesLimit),
+      winnerPercent: winner.clamp(WheelAppearance.minWinnerPercent, 100),
       flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
     );
   }
@@ -102,6 +114,7 @@ class WheelService {
   Future<void> saveAppearance(WheelAppearance a) async {
     await db.setSetting(_keyContent, a.content.name);
     await db.setSetting(_keyMaxSlices, '${a.maxSlices}');
+    await db.setSetting(_keyWinnerPercent, '${a.winnerPercent}');
     await db.setSetting(_keyFlipText, '${a.flipText}');
   }
 

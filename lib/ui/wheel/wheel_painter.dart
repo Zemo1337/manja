@@ -39,6 +39,7 @@ class WheelPainter extends CustomPainter {
     this.content = WheelContent.text,
     this.flipText = true,
     this.labelStyle = const TextStyle(),
+    this.highlight,
   });
 
   final List<WheelSliceData> slices;
@@ -48,41 +49,64 @@ class WheelPainter extends CustomPainter {
   final WheelContent content;
   final bool flipText;
   final TextStyle labelStyle;
+  final int? highlight;
 
   static const _photoShadows = [Shadow(blurRadius: 4), Shadow(blurRadius: 2)];
+  static const _minSweep = 1e-4;
+  static const _wideSweep = 1.9;
 
   @override
   void paint(Canvas canvas, Size size) {
     final radius = min(size.width, size.height) / 2;
     final center = size.center(Offset.zero);
     final count = slices.length;
+    final starts = <double>[];
+    var angle = -pi / 2;
+    for (final sweep in sweeps) {
+      starts.add(angle);
+      angle += sweep;
+    }
+    final colors = [for (var i = 0; i < count; i++) slices[i].isOverflow ? overflowSliceColor : sliceColor(i, count)];
+    final visible = [for (var i = 0; i < count; i++) if (sweeps[i] > _minSweep) i];
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
 
-    var start = -pi / 2;
-    for (var i = 0; i < count; i++) {
-      final sweep = sweeps[i];
-      final slice = slices[i];
-      final color = slice.isOverflow ? overflowSliceColor : sliceColor(i, count);
-      final wedge = _wedge(radius, start, sweep);
-      canvas.drawPath(wedge, Paint()..color = color);
-      final image = content == WheelContent.text ? null : slice.image;
-      if (image != null) _paintPhoto(canvas, wedge, image, radius, start + sweep / 2, sweep);
-      if (count > 1) {
-        canvas.drawLine(
-          Offset.zero,
-          Offset(cos(start), sin(start)) * radius,
-          Paint()
-            ..color = Colors.white.withValues(alpha: 0.6)
-            ..strokeWidth = 1.5,
-        );
+    for (final i in visible) {
+      final wedge = _wedge(radius, starts[i], sweeps[i]);
+      canvas.drawPath(wedge, Paint()..color = colors[i]);
+      final image = _imageFor(i);
+      if (image != null) _paintPhoto(canvas, wedge, image, radius, starts[i] + sweeps[i] / 2, sweeps[i]);
+    }
+    if (visible.length > 1) {
+      final divider = Paint()
+        ..color = Colors.white.withValues(alpha: 0.6)
+        ..strokeWidth = 1.5;
+      for (final i in visible) {
+        canvas.drawLine(Offset.zero, Offset(cos(starts[i]), sin(starts[i])) * radius, divider);
       }
-      if (image == null || content == WheelContent.both) {
-        _paintLabel(canvas, radius, start + sweep / 2, sweep, slice.label, color, onPhoto: image != null);
+    }
+    final h = highlight;
+    if (h != null && sweeps[h] > _minSweep) {
+      canvas.drawPath(
+        _wedge(radius - 2, starts[h], sweeps[h]),
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
+    for (final i in visible) {
+      final image = _imageFor(i);
+      if (image != null && content != WheelContent.both) continue;
+      final mid = starts[i] + sweeps[i] / 2;
+      if (sweeps[i] < _wideSweep) {
+        _paintLabel(canvas, radius, mid, sweeps[i], slices[i].label, colors[i], onPhoto: image != null);
+      } else {
+        _paintWideLabel(canvas, radius, mid, sweeps[i], slices[i].label, colors[i], onPhoto: image != null);
       }
-      start += sweep;
     }
     canvas.restore();
 
@@ -97,6 +121,8 @@ class WheelPainter extends CustomPainter {
     canvas.drawCircle(center, radius * 0.12, Paint()..color = rimColor);
     canvas.drawCircle(center, radius * 0.07, Paint()..color = Colors.white);
   }
+
+  ui.Image? _imageFor(int i) => content == WheelContent.text ? null : slices[i].image;
 
   Path _wedge(double radius, double start, double sweep) {
     if (sweep >= fullTurn - 1e-6) return Path()..addOval(Rect.fromCircle(center: Offset.zero, radius: radius));
@@ -151,6 +177,38 @@ class WheelPainter extends CustomPainter {
     canvas.rotate(flip ? angle + pi : angle);
     final dx = flip ? -radius * 0.9 : radius * 0.9 - painter.width;
     painter.paint(canvas, Offset(dx, -painter.height / 2));
+    canvas.restore();
+  }
+
+  void _paintWideLabel(
+    Canvas canvas,
+    double radius,
+    double angle,
+    double sweep,
+    String text,
+    Color bg, {
+    required bool onPhoto,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: labelStyle.copyWith(
+          color: onPhoto || bg.computeLuminance() <= 0.45 ? Colors.white : Colors.black87,
+          fontSize: (radius * 0.13).clamp(14.0, 30.0),
+          fontWeight: FontWeight.w700,
+          shadows: onPhoto ? _photoShadows : null,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      ellipsis: '…',
+    )..layout(maxWidth: radius * (sweep >= pi ? 1.3 : 0.9));
+
+    final y = sweep >= 1.5 * pi ? radius * 0.45 : -radius * 0.58;
+    canvas.save();
+    canvas.rotate(angle + pi / 2);
+    painter.paint(canvas, Offset(-painter.width / 2, y - painter.height / 2));
     canvas.restore();
   }
 
