@@ -11,6 +11,7 @@ import 'package:manja_manja/data/nutrition_repository.dart';
 import 'package:manja_manja/data/photo_store.dart';
 import 'package:manja_manja/domain/wheel_service.dart';
 import 'package:manja_manja/main.dart';
+import 'package:nutrition_core/nutrition_core.dart';
 
 void main() {
   testWidgets('add a recipe, spin the wheel, cook it, see it in history', (tester) async {
@@ -102,6 +103,59 @@ void main() {
       }
     });
   }
+
+  testWidgets('an ingredient can be linked to a food from the picker', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 2400)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    addTearDown(db.close);
+    final nutrition = NutritionRepository(db);
+    final flour = await nutrition.saveUserFood(
+      name: 'Wheat flour, white',
+      per100g: Nutrients.of(energyKcal: 364),
+      portions: const [FoodPortion(label: '1 cup', grams: 125, unit: CookingUnit.cup)],
+    );
+    final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
+    addTearDown(() => _deleteQuietly(photos.baseDir));
+    await tester.pumpWidget(
+      AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: nutrition, child: const ManjaManjaApp()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add recipe'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Palačinke');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Qty'), '2');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Ingredient'), 'flour');
+    await tester.tap(find.text('Link nutrition'));
+    await tester.pumpAndSettle();
+    expect(find.text('On this device'), findsOneWidget);
+    await tester.tap(find.text('Wheat flour, white'));
+    await tester.pumpAndSettle();
+    expect(find.text('Link nutrition'), findsNothing);
+    expect(find.textContaining('No gram weight'), findsNothing, reason: 'grams are known per g');
+
+    await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, 'g'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('pinch').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No gram weight for "pinch"'), findsOneWidget);
+    await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, 'pinch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('cup').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No gram weight'), findsNothing, reason: 'the food has a cup portion');
+
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    final ingredient = (await db.select(db.recipeIngredients).get()).single;
+    expect(ingredient.foodKey, flour.key);
+    expect(ingredient.unit, 'cup');
+  });
 
   testWidgets('recipes hidden behind the +n slice can still be drawn', (tester) async {
     tester.view
