@@ -12,6 +12,14 @@ enum ResetMode {
   final String label;
 }
 
+class WheelAppearance {
+  const WheelAppearance({this.flipText = true});
+
+  final bool flipText;
+
+  WheelAppearance copyWith({bool? flipText}) => WheelAppearance(flipText: flipText ?? this.flipText);
+}
+
 class WheelSettings {
   const WheelSettings({required this.mode, required this.resetDays, required this.cycleStartedAt});
 
@@ -21,11 +29,12 @@ class WheelSettings {
 }
 
 class WheelState {
-  const WheelState({required this.available, required this.total, required this.settings});
+  const WheelState({required this.available, required this.total, required this.settings, required this.appearance});
 
   final List<Recipe> available;
   final int total;
   final WheelSettings settings;
+  final WheelAppearance appearance;
 
   int get eaten => total - available.length;
   bool get exhausted => total > 0 && available.isEmpty;
@@ -37,6 +46,7 @@ class WheelService {
   static const _keyMode = 'wheel.resetMode';
   static const _keyDays = 'wheel.resetDays';
   static const _keyCycleStart = 'wheel.cycleStartedAt';
+  static const _keyFlipText = 'wheel.flipText';
 
   final AppDatabase db;
   final Random _random;
@@ -56,6 +66,17 @@ class WheelService {
   Future<void> saveSettings(ResetMode mode, int resetDays) async {
     await db.setSetting(_keyMode, mode.name);
     await db.setSetting(_keyDays, resetDays.toString());
+  }
+
+  Future<WheelAppearance> loadAppearance() async {
+    const d = WheelAppearance();
+    return WheelAppearance(
+      flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
+    );
+  }
+
+  Future<void> saveAppearance(WheelAppearance a) async {
+    await db.setSetting(_keyFlipText, '${a.flipText}');
   }
 
   Future<void> resetCycle([DateTime? at]) =>
@@ -78,10 +99,15 @@ class WheelService {
       available = recipes;
     }
     available.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    return WheelState(available: available, total: recipes.length, settings: settings);
+    return WheelState(
+      available: available,
+      total: recipes.length,
+      settings: settings,
+      appearance: await loadAppearance(),
+    );
   }
 
-  int pickIndex(int count) => _random.nextInt(count);
+  Recipe pickRecipe(List<Recipe> available) => available[_random.nextInt(available.length)];
 
   Future<void> confirmMeal(Recipe recipe) => db.logMeal(recipe.id, DateTime.now());
 }

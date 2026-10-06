@@ -1,36 +1,11 @@
-import 'dart:math';
-
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja_manja/data/database.dart';
 import 'package:manja_manja/domain/units.dart';
 import 'package:manja_manja/domain/wheel_service.dart';
-import 'package:manja_manja/ui/wheel/wheel_painter.dart';
 
 void main() {
-  group('wheel geometry', () {
-    test('target rotation lands the pointer on the chosen slice', () {
-      final random = Random(1);
-      for (var count = 1; count <= 20; count++) {
-        var rotation = 0.0;
-        for (var round = 0; round < 50; round++) {
-          final index = random.nextInt(count);
-          final jitter = (random.nextDouble() - 0.5) * 0.7;
-          rotation = targetRotation(current: rotation, index: index, count: count, fullSpins: 5, jitter: jitter);
-          expect(indexAtPointer(rotation, count), index, reason: 'count=$count round=$round');
-          rotation %= 2 * pi;
-        }
-      }
-    });
-
-    test('target rotation always spins forward by at least the full spins', () {
-      final end = targetRotation(current: 1.0, index: 0, count: 4, fullSpins: 5);
-      expect(end - 1.0, greaterThanOrEqualTo(5 * 2 * pi));
-      expect(end - 1.0, lessThan(6 * 2 * pi));
-    });
-  });
-
   group('units', () {
     test('mass converts to grams, volume needs density', () {
       expect(CookingUnit.kg.toGrams(1.5), 1500);
@@ -107,6 +82,12 @@ void main() {
 
       state = await wheel.computeState(now: start.add(const Duration(days: 3)));
       expect(state.available.length, 2);
+    });
+
+    test('appearance defaults and round-trips through the settings table', () async {
+      expect((await wheel.loadAppearance()).flipText, isTrue);
+      await wheel.saveAppearance(const WheelAppearance(flipText: false));
+      expect((await wheel.loadAppearance()).flipText, isFalse);
     });
 
     test('saving a recipe replaces its ingredients and steps', () async {

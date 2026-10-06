@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../recipes/recipe_photo.dart';
@@ -61,12 +62,12 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
 
   void _spinWheel() {
     if (_slices.isEmpty || _spinning) return;
-    final count = _slices.length;
-    final index = _wheel.pickIndex(count);
+    final sweeps = sliceSweeps(_slices.length);
+    final index = _slices.indexOf(_wheel.pickRecipe(_slices));
     final end = targetRotation(
       current: _rotation,
+      sweeps: sweeps,
       index: index,
-      count: count,
       fullSpins: 5 + _random.nextInt(3),
       jitter: (_random.nextDouble() - 0.5) * 0.7,
     );
@@ -79,7 +80,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
         setState(() {
           _rotation = end % (2 * pi);
           _spin = null;
-          _result = _slices[indexAtPointer(_rotation, count)];
+          _result = _slices[sliceAtPointer(_rotation, sweeps)];
         });
       });
   }
@@ -121,7 +122,7 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
           IconButton(
             tooltip: 'Wheel settings',
             icon: const Icon(Icons.tune),
-            onPressed: state == null ? null : () => showWheelSettings(context, state.settings),
+            onPressed: state == null ? null : () => showWheelSettings(context, state.settings, state.appearance),
           ),
         ],
       ),
@@ -171,8 +172,11 @@ class _WheelScreenState extends State<WheelScreen> with SingleTickerProviderStat
                             size: Size.square(size),
                             painter: WheelPainter(
                               labels: [for (final r in _slices) r.name],
+                              sweeps: sliceSweeps(_slices.length),
                               rotation: _spin?.value ?? _rotation,
                               rimColor: theme.colorScheme.onSurface,
+                              flipText: state.appearance.flipText,
+                              labelStyle: theme.textTheme.labelLarge ?? const TextStyle(),
                             ),
                           ),
                         ),

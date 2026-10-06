@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../domain/wheel_layout.dart';
+
 const wheelPalette = [
   Color(0xFFE4572E),
   Color(0xFFF3A712),
@@ -17,42 +19,48 @@ Color sliceColor(int index, int count) {
 }
 
 class WheelPainter extends CustomPainter {
-  WheelPainter({required this.labels, required this.rotation, required this.rimColor});
+  WheelPainter({
+    required this.labels,
+    required this.sweeps,
+    required this.rotation,
+    required this.rimColor,
+    this.flipText = true,
+    this.labelStyle = const TextStyle(),
+  });
 
   final List<String> labels;
+  final List<double> sweeps;
   final double rotation;
   final Color rimColor;
+  final bool flipText;
+  final TextStyle labelStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
     final radius = min(size.width, size.height) / 2;
     final center = size.center(Offset.zero);
-    final rect = Rect.fromCircle(center: center, radius: radius);
     final count = labels.length;
-    final sweep = 2 * pi / count;
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
-    canvas.translate(-center.dx, -center.dy);
 
+    var start = -pi / 2;
     for (var i = 0; i < count; i++) {
-      final start = -pi / 2 + i * sweep;
+      final sweep = sweeps[i];
       final color = sliceColor(i, count);
-      canvas.drawArc(rect, start, sweep, true, Paint()..color = color);
+      canvas.drawPath(_wedge(radius, start, sweep), Paint()..color = color);
       if (count > 1) {
-        canvas.drawArc(
-          rect,
-          start,
-          sweep,
-          true,
+        canvas.drawLine(
+          Offset.zero,
+          Offset(cos(start), sin(start)) * radius,
           Paint()
             ..color = Colors.white.withValues(alpha: 0.6)
-            ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5,
         );
       }
-      _paintLabel(canvas, center, radius, start + sweep / 2, labels[i], color, count);
+      _paintLabel(canvas, radius, start + sweep / 2, sweep, labels[i], color);
+      start += sweep;
     }
     canvas.restore();
 
@@ -68,29 +76,39 @@ class WheelPainter extends CustomPainter {
     canvas.drawCircle(center, radius * 0.07, Paint()..color = Colors.white);
   }
 
-  void _paintLabel(Canvas canvas, Offset center, double radius, double angle, String text, Color bg, int count) {
-    final fontSize = (radius * 0.11).clamp(10.0, 20.0) * (count > 12 ? 0.8 : 1.0);
-    final textColor = bg.computeLuminance() > 0.45 ? Colors.black87 : Colors.white;
+  Path _wedge(double radius, double start, double sweep) {
+    if (sweep >= fullTurn - 1e-6) return Path()..addOval(Rect.fromCircle(center: Offset.zero, radius: radius));
+    return Path()
+      ..moveTo(0, 0)
+      ..arcTo(Rect.fromCircle(center: Offset.zero, radius: radius), start, sweep, false)
+      ..close();
+  }
+
+  void _paintLabel(Canvas canvas, double radius, double angle, double sweep, String text, Color bg) {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(color: textColor, fontSize: fontSize, fontWeight: FontWeight.w600),
+        style: labelStyle.copyWith(
+          color: bg.computeLuminance() > 0.45 ? Colors.black87 : Colors.white,
+          fontSize: labelFontSize(sweep: sweep, radius: radius),
+          fontWeight: FontWeight.w600,
+        ),
       ),
       textDirection: TextDirection.ltr,
       maxLines: 1,
       ellipsis: '…',
-    )..layout(maxWidth: radius * 0.68);
+    )..layout(maxWidth: radius * 0.62);
 
+    final flip = flipText && shouldFlipLabel(angle + rotation);
     canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(angle);
-    painter.paint(canvas, Offset(radius * 0.9 - painter.width, -painter.height / 2));
+    canvas.rotate(flip ? angle + pi : angle);
+    final dx = flip ? -radius * 0.9 : radius * 0.9 - painter.width;
+    painter.paint(canvas, Offset(dx, -painter.height / 2));
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(WheelPainter oldDelegate) =>
-      oldDelegate.rotation != rotation || oldDelegate.labels != labels || oldDelegate.rimColor != rimColor;
+  bool shouldRepaint(WheelPainter oldDelegate) => true;
 }
 
 class WheelPointerPainter extends CustomPainter {
@@ -111,23 +129,4 @@ class WheelPointerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WheelPointerPainter oldDelegate) => oldDelegate.color != color;
-}
-
-double targetRotation({
-  required double current,
-  required int index,
-  required int count,
-  required int fullSpins,
-  double jitter = 0,
-}) {
-  final sweep = 2 * pi / count;
-  final desired = -(index + 0.5 + jitter) * sweep;
-  final delta = (desired - current) % (2 * pi);
-  return current + fullSpins * 2 * pi + delta;
-}
-
-int indexAtPointer(double rotation, int count) {
-  final sweep = 2 * pi / count;
-  final local = (-rotation) % (2 * pi);
-  return (local / sweep).floor() % count;
 }
