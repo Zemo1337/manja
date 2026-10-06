@@ -5,6 +5,7 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../data/nutrition_repository.dart';
+import 'food_edit_screen.dart';
 
 Future<Food?> showFoodPicker(BuildContext context, {String initialQuery = ''}) {
   return showModalBottomSheet<Food>(
@@ -97,6 +98,14 @@ class _FoodPickerState extends State<_FoodPicker> {
     }
   }
 
+  Future<void> _createOwn() async {
+    final food = await Navigator.push<Food>(
+      context,
+      MaterialPageRoute(builder: (_) => FoodEditScreen(initialName: _query.text.trim())),
+    );
+    if (food != null && mounted) Navigator.pop(context, food);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -120,6 +129,12 @@ class _FoodPickerState extends State<_FoodPicker> {
         Expanded(
           child: ListView(
             children: [
+              ListTile(
+                leading: const Icon(Icons.add_circle_outline),
+                title: const Text('Create my own ingredient'),
+                subtitle: const Text('Enter values from a package label'),
+                onTap: _opening == null ? _createOwn : null,
+              ),
               if (_local.isNotEmpty) ...[
                 _Header('On this device'),
                 for (final f in _local) _tile(f),

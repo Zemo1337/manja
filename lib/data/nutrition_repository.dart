@@ -101,12 +101,14 @@ class NutritionRepository {
 
   Future<void> delete(String key) => db.deleteFoodRow(key);
 
+  Future<List<Food>> library() async => [for (final r in await db.select(db.foods).get()) foodFromRow(r)];
+
   Stream<List<Food>> watchLibrary() => db.watchFoodRows().map((rows) => [for (final r in rows) foodFromRow(r)]);
 
   Future<({int updated, int failed})> refreshCached() async {
     var updated = 0;
     var failed = 0;
-    for (final food in await watchLibrary().first) {
+    for (final food in await library()) {
       final remote = _remotes[food.source];
       if (remote == null) continue;
       try {
@@ -127,7 +129,7 @@ class NutritionRepository {
   Future<int> pruneUnused() async {
     final linked = await db.linkedFoodKeys();
     var removed = 0;
-    for (final food in await watchLibrary().first) {
+    for (final food in await library()) {
       if (food.source != FoodSource.user && !linked.contains(food.key)) {
         await delete(food.key);
         removed++;

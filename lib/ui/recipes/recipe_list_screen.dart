@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../nutrition/ingredients_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
@@ -20,7 +21,16 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
   Widget build(BuildContext context) {
     final db = AppScope.of(context).db;
     return Scaffold(
-      appBar: AppBar(title: const Text('Recipes')),
+      appBar: AppBar(
+        title: const Text('Recipes'),
+        actions: [
+          IconButton(
+            tooltip: 'Ingredients',
+            icon: const Icon(Icons.kitchen_outlined),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IngredientsScreen())),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipeEditScreen())),
         icon: const Icon(Icons.add),

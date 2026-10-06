@@ -157,6 +157,68 @@ void main() {
     expect(ingredient.unit, 'cup');
   });
 
+  testWidgets('own ingredients can be created from the picker and managed on the Ingredients screen', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 4000)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    addTearDown(db.close);
+    final nutrition = NutritionRepository(db);
+    final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
+    addTearDown(() => _deleteQuietly(photos.baseDir));
+    await tester.pumpWidget(
+      AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: nutrition, child: const ManjaManjaApp()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add recipe'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Burek');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Qty'), '2');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Ingredient'), 'Ajvar');
+    await tester.tap(find.text('Link nutrition'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Create my own ingredient'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextFormField, 'Ajvar'), findsOneWidget, reason: 'name is prefilled');
+    await tester.enterText(find.byKey(const ValueKey('nutrient-energy')), '85');
+    await tester.enterText(find.byKey(const ValueKey('nutrient-fat')), '5,5');
+    await tester.enterText(find.byKey(const ValueKey('nutrient-sodium')), '1.2');
+    await tester.tap(find.text('Add portion'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, 'piece'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('tablespoon').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Weight'), '16');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ajvar'), findsWidgets);
+    expect(find.text('Link nutrition'), findsNothing);
+    final foods = await nutrition.library();
+    final ajvar = foods.single;
+    expect(ajvar.source, FoodSource.user);
+    expect(ajvar.per100g[Nutrient.fat], 5.5);
+    expect(ajvar.per100g[Nutrient.sodium], closeTo(480, 1e-9));
+    expect(gramsFor(ajvar, 2, CookingUnit.tbsp), 32);
+
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Ingredients'));
+    await tester.pumpAndSettle();
+    expect(find.text('My ingredients (1)'), findsOneWidget);
+    expect(find.text('85 kcal / 100 g · used in recipes'), findsOneWidget);
+
+    await tester.tap(find.text('Always online'));
+    await tester.pumpAndSettle();
+    expect(await nutrition.mode(), FoodCacheMode.online);
+  });
+
   testWidgets('recipes hidden behind the +n slice can still be drawn', (tester) async {
     tester.view
       ..physicalSize = const Size(1080, 2400)
