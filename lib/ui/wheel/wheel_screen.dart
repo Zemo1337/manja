@@ -12,6 +12,7 @@ import '../recipes/recipe_photo.dart';
 import 'wheel_image_cache.dart';
 import 'wheel_painter.dart';
 import 'wheel_settings_sheet.dart';
+import 'wheel_themes.dart';
 
 class WheelScreen extends StatefulWidget {
   const WheelScreen({super.key});
@@ -206,6 +207,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   Widget _body(BuildContext context, WheelState state) {
     final theme = Theme.of(context);
+    final wheelTheme = WheelTheme.of(state.appearance.theme, theme.colorScheme);
     if (state.total == 0) {
       return const _EmptyMessage(
         icon: Icons.menu_book_outlined,
@@ -250,7 +252,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                                 slices: _sliceData(),
                                 sweeps: frame.sweeps,
                                 rotation: frame.rotation,
-                                rimColor: theme.colorScheme.onSurface,
+                                theme: wheelTheme,
                                 content: state.appearance.content,
                                 flipText: state.appearance.flipText,
                                 labelStyle: theme.textTheme.labelLarge ?? const TextStyle(),
@@ -260,7 +262,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                           },
                         ),
                       ),
-                      CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(theme.colorScheme.onSurface)),
+                      CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(wheelTheme.pointer)),
                     ],
                   ),
                 ),

@@ -22,12 +22,23 @@ enum WheelContent {
   final String label;
 }
 
+enum WheelThemeKind {
+  classic('Classic'),
+  pizza('Pizza'),
+  burek('Burek');
+
+  const WheelThemeKind(this.label);
+
+  final String label;
+}
+
 class WheelAppearance {
   const WheelAppearance({
     this.content = WheelContent.both,
     this.maxSlices = 20,
     this.winnerPercent = 100,
     this.flipText = true,
+    this.theme = WheelThemeKind.classic,
   });
 
   static const minSlices = 4;
@@ -38,13 +49,21 @@ class WheelAppearance {
   final int maxSlices;
   final int winnerPercent;
   final bool flipText;
+  final WheelThemeKind theme;
 
-  WheelAppearance copyWith({WheelContent? content, int? maxSlices, int? winnerPercent, bool? flipText}) =>
+  WheelAppearance copyWith({
+    WheelContent? content,
+    int? maxSlices,
+    int? winnerPercent,
+    bool? flipText,
+    WheelThemeKind? theme,
+  }) =>
       WheelAppearance(
         content: content ?? this.content,
         maxSlices: maxSlices ?? this.maxSlices,
         winnerPercent: winnerPercent ?? this.winnerPercent,
         flipText: flipText ?? this.flipText,
+        theme: theme ?? this.theme,
       );
 }
 
@@ -78,6 +97,7 @@ class WheelService {
   static const _keyMaxSlices = 'wheel.maxSlices';
   static const _keyWinnerPercent = 'wheel.winnerPercent';
   static const _keyFlipText = 'wheel.flipText';
+  static const _keyTheme = 'wheel.theme';
 
   final AppDatabase db;
   final Random _random;
@@ -108,6 +128,7 @@ class WheelService {
       maxSlices: maxSlices.clamp(WheelAppearance.minSlices, WheelAppearance.maxSlicesLimit),
       winnerPercent: winner.clamp(WheelAppearance.minWinnerPercent, 100),
       flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
+      theme: WheelThemeKind.values.asNameMap()[await db.getSetting(_keyTheme)] ?? d.theme,
     );
   }
 
@@ -116,6 +137,7 @@ class WheelService {
     await db.setSetting(_keyMaxSlices, '${a.maxSlices}');
     await db.setSetting(_keyWinnerPercent, '${a.winnerPercent}');
     await db.setSetting(_keyFlipText, '${a.flipText}');
+    await db.setSetting(_keyTheme, a.theme.name);
   }
 
   Future<void> resetCycle([DateTime? at]) =>

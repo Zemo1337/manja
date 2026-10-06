@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
+import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
+import 'wheel_painter.dart';
+import 'wheel_themes.dart';
 
 Future<void> showWheelSettings(BuildContext context, WheelSettings settings, WheelAppearance appearance) {
   return showModalBottomSheet<void>(
@@ -50,6 +53,21 @@ class _WheelSettingsSheetState extends State<_WheelSettingsSheet> {
               const SizedBox(height: 16),
               Text('Look', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
+              Text('Theme', style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  for (final kind in WheelThemeKind.values)
+                    Expanded(
+                      child: _ThemeOption(
+                        kind: kind,
+                        selected: _look.theme == kind,
+                        onTap: () => setState(() => _look = _look.copyWith(theme: kind)),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
               Text('Show on the wheel', style: theme.textTheme.bodyMedium),
               const SizedBox(height: 8),
               SegmentedButton<WheelContent>(
@@ -122,6 +140,58 @@ class _WheelSettingsSheetState extends State<_WheelSettingsSheet> {
                 alignment: Alignment.centerRight,
                 child: FilledButton(onPressed: _save, child: const Text('Save')),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  const _ThemeOption({required this.kind, required this.selected, required this.onTap});
+
+  final WheelThemeKind kind;
+  final bool selected;
+  final VoidCallback onTap;
+
+  static const _sample = [
+    WheelSliceData(label: ''),
+    WheelSliceData(label: ''),
+    WheelSliceData(label: ''),
+    WheelSliceData(label: ''),
+    WheelSliceData(label: ''),
+    WheelSliceData(label: ''),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? scheme.primary : scheme.outlineVariant, width: selected ? 2 : 1),
+            color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
+          ),
+          child: Column(
+            children: [
+              CustomPaint(
+                size: const Size.square(64),
+                painter: WheelPainter(
+                  slices: _sample,
+                  sweeps: sliceSweeps(_sample.length),
+                  rotation: 0,
+                  theme: WheelTheme.of(kind, scheme),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(kind.label, style: Theme.of(context).textTheme.labelLarge),
             ],
           ),
         ),

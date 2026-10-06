@@ -5,22 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
-
-const wheelPalette = [
-  Color(0xFFE4572E),
-  Color(0xFFF3A712),
-  Color(0xFF29335C),
-  Color(0xFF669BBC),
-  Color(0xFF7FB069),
-  Color(0xFFA8325E),
-];
-
-Color sliceColor(int index, int count) {
-  final last = count > 1 && index == count - 1 && index % wheelPalette.length == 0;
-  return wheelPalette[last ? 1 : index % wheelPalette.length];
-}
-
-const overflowSliceColor = Color(0xFF4A3F3B);
+import 'wheel_themes.dart';
 
 class WheelSliceData {
   const WheelSliceData({required this.label, this.image, this.isOverflow = false});
@@ -35,7 +20,7 @@ class WheelPainter extends CustomPainter {
     required this.slices,
     required this.sweeps,
     required this.rotation,
-    required this.rimColor,
+    required this.theme,
     this.content = WheelContent.text,
     this.flipText = true,
     this.labelStyle = const TextStyle(),
@@ -45,7 +30,7 @@ class WheelPainter extends CustomPainter {
   final List<WheelSliceData> slices;
   final List<double> sweeps;
   final double rotation;
-  final Color rimColor;
+  final WheelTheme theme;
   final WheelContent content;
   final bool flipText;
   final TextStyle labelStyle;
@@ -57,7 +42,8 @@ class WheelPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final radius = min(size.width, size.height) / 2;
+    final outer = min(size.width, size.height) / 2;
+    final radius = outer * (1 - theme.rimFraction);
     final center = size.center(Offset.zero);
     final count = slices.length;
     final starts = <double>[];
@@ -66,7 +52,9 @@ class WheelPainter extends CustomPainter {
       starts.add(angle);
       angle += sweep;
     }
-    final colors = [for (var i = 0; i < count; i++) slices[i].isOverflow ? overflowSliceColor : sliceColor(i, count)];
+    final colors = [
+      for (var i = 0; i < count; i++) slices[i].isOverflow ? theme.overflow : theme.sliceColor(i, count),
+    ];
     final visible = [for (var i = 0; i < count; i++) if (sweeps[i] > _minSweep) i];
 
     canvas.save();
@@ -74,14 +62,18 @@ class WheelPainter extends CustomPainter {
     canvas.rotate(rotation);
 
     for (final i in visible) {
-      final wedge = _wedge(radius, starts[i], sweeps[i]);
-      canvas.drawPath(wedge, Paint()..color = colors[i]);
+      canvas.drawPath(_wedge(radius, starts[i], sweeps[i]), Paint()..color = colors[i]);
+    }
+    theme.paintSurface(canvas, radius);
+    for (final i in visible) {
       final image = _imageFor(i);
-      if (image != null) _paintPhoto(canvas, wedge, image, radius, starts[i] + sweeps[i] / 2, sweeps[i]);
+      if (image != null) {
+        _paintPhoto(canvas, _wedge(radius, starts[i], sweeps[i]), image, radius, starts[i] + sweeps[i] / 2, sweeps[i]);
+      }
     }
     if (visible.length > 1) {
       final divider = Paint()
-        ..color = Colors.white.withValues(alpha: 0.6)
+        ..color = theme.divider
         ..strokeWidth = 1.5;
       for (final i in visible) {
         canvas.drawLine(Offset.zero, Offset(cos(starts[i]), sin(starts[i])) * radius, divider);
@@ -108,18 +100,9 @@ class WheelPainter extends CustomPainter {
         _paintWideLabel(canvas, radius, mid, sweeps[i], slices[i].label, colors[i], onPhoto: image != null);
       }
     }
+    theme.paintRim(canvas, outer, radius);
+    theme.paintHub(canvas, outer);
     canvas.restore();
-
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = rimColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6,
-    );
-    canvas.drawCircle(center, radius * 0.12, Paint()..color = rimColor);
-    canvas.drawCircle(center, radius * 0.07, Paint()..color = Colors.white);
   }
 
   ui.Image? _imageFor(int i) => content == WheelContent.text ? null : slices[i].image;
@@ -161,7 +144,7 @@ class WheelPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: labelStyle.copyWith(
-          color: onPhoto || bg.computeLuminance() <= 0.45 ? Colors.white : Colors.black87,
+          color: onPhoto ? Colors.white : theme.labelColor(bg),
           fontSize: labelFontSize(sweep: sweep, radius: radius),
           fontWeight: FontWeight.w600,
           shadows: onPhoto ? _photoShadows : null,
@@ -193,7 +176,7 @@ class WheelPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: labelStyle.copyWith(
-          color: onPhoto || bg.computeLuminance() <= 0.45 ? Colors.white : Colors.black87,
+          color: onPhoto ? Colors.white : theme.labelColor(bg),
           fontSize: (radius * 0.13).clamp(14.0, 30.0),
           fontWeight: FontWeight.w700,
           shadows: onPhoto ? _photoShadows : null,

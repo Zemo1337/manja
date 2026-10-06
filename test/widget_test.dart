@@ -90,10 +90,18 @@ void main() {
       expect(defaults.content, WheelContent.both);
       expect(defaults.maxSlices, 20);
       expect(defaults.winnerPercent, 100);
+      expect(defaults.theme, WheelThemeKind.classic);
       await wheel.saveAppearance(
-        const WheelAppearance(content: WheelContent.photo, maxSlices: 8, winnerPercent: 40, flipText: false),
+        const WheelAppearance(
+          content: WheelContent.photo,
+          maxSlices: 8,
+          winnerPercent: 40,
+          flipText: false,
+          theme: WheelThemeKind.burek,
+        ),
       );
       final saved = await wheel.loadAppearance();
+      expect(saved.theme, WheelThemeKind.burek);
       expect(saved.flipText, isFalse);
       expect(saved.content, WheelContent.photo);
       expect(saved.maxSlices, 8);
