@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nutrition_core/nutrition_core.dart' show IngredientLine, RecipeNutrition;
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/units.dart';
+import '../nutrition/nutrition_panel.dart';
 import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
 
@@ -17,6 +19,7 @@ class RecipeDetailScreen extends StatefulWidget {
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   RecipeFull? _full;
+  RecipeNutrition? _nutrition;
   bool _loaded = false;
   int? _portions;
 
@@ -28,10 +31,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
   Future<void> _load() async {
     _loaded = true;
-    final full = await AppScope.of(context).db.recipeFull(widget.recipeId);
+    final scope = AppScope.of(context);
+    final full = await scope.db.recipeFull(widget.recipeId);
+    RecipeNutrition? nutrition;
+    if (full != null) {
+      final foods = await scope.nutrition.foodsByKey({for (final i in full.ingredients) ?i.foodKey});
+      nutrition = RecipeNutrition.calculate(
+        [
+          for (final i in full.ingredients)
+            IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]),
+        ],
+        portions: full.recipe.portions,
+        finishedWeightG: full.recipe.finishedWeightG,
+      );
+    }
     if (!mounted) return;
     setState(() {
       _full = full;
+      _nutrition = nutrition;
       _portions = full?.recipe.portions;
     });
   }
@@ -134,6 +151,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ],
               ),
             ),
+          const Divider(),
+          Text('Nutrition', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 8),
+          if (_nutrition != null) NutritionPanel(result: _nutrition!),
           if (recipe.cookingInfo.isNotEmpty) ...[
             const Divider(),
             Text('Cooking info', style: theme.textTheme.titleLarge),

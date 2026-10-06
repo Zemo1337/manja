@@ -43,6 +43,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   late final TextEditingController _prep;
   late final TextEditingController _cook;
   late final TextEditingController _info;
+  late final TextEditingController _finishedWeight;
   late final List<_IngredientRow> _ingredients;
   late final List<TextEditingController> _steps;
   final _picker = ImagePicker();
@@ -66,6 +67,9 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     _prep = TextEditingController(text: r?.prepMinutes?.toString() ?? '');
     _cook = TextEditingController(text: r?.cookMinutes?.toString() ?? '');
     _info = TextEditingController(text: r?.cookingInfo ?? '');
+    _finishedWeight = TextEditingController(
+      text: r?.finishedWeightG == null ? '' : formatAmount(r!.finishedWeightG!),
+    );
     _ingredients = [
       for (final i in widget.existing?.ingredients ?? const <RecipeIngredient>[])
         _IngredientRow(
@@ -174,7 +178,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _portions, _prep, _cook, _info, ..._steps]) {
+    for (final c in [_name, _portions, _prep, _cook, _info, _finishedWeight, ..._steps]) {
       c.dispose();
     }
     for (final row in _ingredients) {
@@ -221,6 +225,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       prepMinutes: int.tryParse(_prep.text.trim()),
       cookMinutes: int.tryParse(_cook.text.trim()),
       cookingInfo: _info.text.trim(),
+      finishedWeightG: _parseAmount(_finishedWeight.text),
       isFavorite: widget.existing?.recipe.isFavorite ?? false,
       photoPath: photoPath,
       ingredients: [
@@ -419,6 +424,23 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('Add ingredient'),
               ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _finishedWeight,
+              decoration: const InputDecoration(
+                labelText: 'Weight of the finished dish (optional)',
+                helperText: 'Cooking changes the weight. Weigh the dish for accurate per 100 g values.',
+                helperMaxLines: 2,
+                suffixText: 'g',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                final g = _parseAmount(v);
+                return g == null || g <= 0 ? 'Grams, e.g. 850' : null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
