@@ -233,7 +233,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               Text('${_available.length} of ${state.total} dishes left', style: theme.textTheme.titleMedium),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: _spinWheel,
+                key: const ValueKey('wheel'),
+                onTap: _result == null ? _spinWheel : null,
                 child: SizedBox(
                   width: size,
                   height: size + 18,
@@ -323,7 +324,12 @@ class _ResultCard extends StatelessWidget {
             const SizedBox(height: 4),
             TextButton(
               onPressed: onOpen,
-              child: Text(recipe.name, style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+              child: Text(
+                recipe.name,
+                key: const ValueKey('result-name'),
+                style: theme.textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(

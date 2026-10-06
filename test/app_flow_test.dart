@@ -46,6 +46,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Today you cook'), findsOneWidget);
 
+    final chosen = tester.widget<Text>(find.byKey(const ValueKey('result-name'))).data;
+    await tester.tap(find.byKey(const ValueKey('wheel')));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Today you cook'), findsOneWidget, reason: 'tapping the wheel keeps the result');
+    await tester.pumpAndSettle();
+    expect(tester.widget<Text>(find.byKey(const ValueKey('result-name'))).data, chosen);
+
     await tester.tap(find.text("Let's cook it"));
     await tester.pumpAndSettle();
     expect(find.text('1 of 2 dishes left'), findsOneWidget);
