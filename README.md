@@ -20,6 +20,24 @@ flutter test
 flutter run
 ```
 
+### USDA API key
+
+Ingredient nutrition comes from [USDA FoodData Central](https://fdc.nal.usda.gov/). Get a free key at
+[api.data.gov/signup](https://api.data.gov/signup/), then:
+
+```bash
+cp config/local.example.json config/local.json
+```
+
+Put the key into `config/local.json` (ignored by git) and run with:
+
+```bash
+flutter run --dart-define-from-file=config/local.json
+```
+
+The VS Code launch configuration "Manja Manja" does this automatically. Without a key the app uses USDA's
+`DEMO_KEY`, which is limited to a few requests per hour.
+
 The database layer uses [drift](https://drift.simonbinder.eu/). After changing tables in `lib/data/database.dart`, rerun `build_runner`.
 
 ## Project layout

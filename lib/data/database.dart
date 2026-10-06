@@ -13,6 +13,7 @@ class Recipes extends Table {
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get photoPath => text().nullable()();
+  RealColumn get finishedWeightG => real().nullable()();
 }
 
 class RecipeIngredients extends Table {
@@ -22,6 +23,23 @@ class RecipeIngredients extends Table {
   TextColumn get name => text()();
   RealColumn get amount => real()();
   TextColumn get unit => text()();
+  TextColumn get foodKey => text().nullable()();
+}
+
+@DataClassName('FoodRow')
+class Foods extends Table {
+  TextColumn get key => text()();
+  TextColumn get source => text()();
+  TextColumn get sourceId => text()();
+  TextColumn get name => text()();
+  TextColumn get detail => text().nullable()();
+  TextColumn get nutrients => text()();
+  TextColumn get portions => text().withDefault(const Constant('[]'))();
+  RealColumn get densityGPerMl => real().nullable()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {key};
 }
 
 class RecipeSteps extends Table {
@@ -54,11 +72,12 @@ class RecipeFull {
 }
 
 class IngredientDraft {
-  IngredientDraft({required this.name, required this.amount, required this.unit});
+  IngredientDraft({required this.name, required this.amount, required this.unit, this.foodKey});
 
   final String name;
   final double amount;
   final String unit;
+  final String? foodKey;
 }
 
 class RecipeDraft {
@@ -71,6 +90,7 @@ class RecipeDraft {
     this.cookingInfo = '',
     this.isFavorite = false,
     this.photoPath,
+    this.finishedWeightG,
     this.ingredients = const [],
     this.steps = const [],
   });
@@ -83,6 +103,7 @@ class RecipeDraft {
   final String cookingInfo;
   final bool isFavorite;
   final String? photoPath;
+  final double? finishedWeightG;
   final List<IngredientDraft> ingredients;
   final List<String> steps;
 }
@@ -94,17 +115,22 @@ class MealLogEntry {
   final Recipe recipe;
 }
 
-@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings])
+@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja_manja'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.addColumn(recipes, recipes.photoPath);
+          if (from < 3) {
+            await m.addColumn(recipes, recipes.finishedWeightG);
+            await m.addColumn(recipeIngredients, recipeIngredients.foodKey);
+            await m.createTable(foods);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -139,6 +165,7 @@ class AppDatabase extends _$AppDatabase {
           cookingInfo: Value(draft.cookingInfo),
           isFavorite: Value(draft.isFavorite),
           photoPath: Value(draft.photoPath),
+          finishedWeightG: Value(draft.finishedWeightG),
         );
         final int id;
         if (draft.id == null) {
@@ -158,6 +185,7 @@ class AppDatabase extends _$AppDatabase {
                 name: ingredient.name,
                 amount: ingredient.amount,
                 unit: ingredient.unit,
+                foodKey: Value(ingredient.foodKey),
               ),
           ]);
           b.insertAll(recipeSteps, [
@@ -177,6 +205,40 @@ class AppDatabase extends _$AppDatabase {
       into(mealLogs).insert(MealLogsCompanion.insert(recipeId: recipeId, eatenAt: eatenAt));
 
   Future<void> deleteMealLog(int id) => (delete(mealLogs)..where((m) => m.id.equals(id))).go();
+
+  Future<FoodRow?> foodRow(String key) => (select(foods)..where((f) => f.key.equals(key))).getSingleOrNull();
+
+  Future<List<FoodRow>> foodRows(Iterable<String> keys) => (select(foods)..where((f) => f.key.isIn(keys))).get();
+
+  Future<List<FoodRow>> searchFoodRows(String query, {int limit = 25}) {
+    final words = query.trim().toLowerCase().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final q = select(foods);
+    for (final w in words) {
+      final escaped = w.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+      q.where((f) => f.name.lower().like('%$escaped%', escapeChar: r'\'));
+    }
+    return (q
+          ..orderBy([(f) => OrderingTerm.asc(f.name.length), (f) => OrderingTerm.asc(f.name)])
+          ..limit(limit))
+        .get();
+  }
+
+  Stream<List<FoodRow>> watchFoodRows() =>
+      (select(foods)..orderBy([(f) => OrderingTerm.asc(f.name.collate(Collate.noCase))])).watch();
+
+  Future<void> upsertFoodRow(FoodsCompanion row) => into(foods).insertOnConflictUpdate(row);
+
+  Future<void> deleteFoodRow(String key) => (delete(foods)..where((f) => f.key.equals(key))).go();
+
+  Future<Set<String>> linkedFoodKeys() async {
+    final key = recipeIngredients.foodKey;
+    final rows = await (selectOnly(recipeIngredients, distinct: true)
+          ..addColumns([key])
+          ..where(key.isNotNull()))
+        .map((r) => r.read(key)!)
+        .get();
+    return rows.toSet();
+  }
 
   Future<DateTime?> latestMealAt() async {
     final latest = mealLogs.eatenAt.max();

@@ -65,7 +65,34 @@ void main() {
             created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
           );
         ''');
+        raw.execute('''
+          CREATE TABLE recipe_ingredients (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            amount REAL NOT NULL,
+            unit TEXT NOT NULL
+          );
+        ''');
+        raw.execute('''
+          CREATE TABLE recipe_steps (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            body TEXT NOT NULL
+          );
+        ''');
+        raw.execute('''
+          CREATE TABLE meal_logs (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
+            eaten_at TEXT NOT NULL
+          );
+        ''');
+        raw.execute('CREATE TABLE app_settings (key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (key));');
         raw.execute("INSERT INTO recipes (name, portions) VALUES ('Sarma', 6);");
+        raw.execute("INSERT INTO recipe_ingredients (recipe_id, position, name, amount, unit) VALUES (1, 0, 'Rice', 200, 'g');");
         raw.execute('PRAGMA user_version = 1;');
       });
       await v1.ensureOpen(_NoUser());
@@ -76,6 +103,11 @@ void main() {
       final recipes = await db.allRecipes();
       expect(recipes.single.name, 'Sarma');
       expect(recipes.single.photoPath, isNull);
+      expect(recipes.single.finishedWeightG, isNull);
+      final full = await db.recipeFull(recipes.single.id);
+      expect(full!.ingredients.single.name, 'Rice');
+      expect(full.ingredients.single.foodKey, isNull);
+      expect(await db.searchFoodRows('anything'), isEmpty);
     });
   });
 }

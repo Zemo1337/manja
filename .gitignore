@@ -49,3 +49,6 @@ app.*.map.json
 
 # Local packages resolve against the app's lock file
 packages/*/pubspec.lock
+
+# Local secrets, copy config/local.example.json to config/local.json
+config/local.json

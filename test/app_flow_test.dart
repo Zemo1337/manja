@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja_manja/app_scope.dart';
 import 'package:manja_manja/data/database.dart';
+import 'package:manja_manja/data/nutrition_repository.dart';
 import 'package:manja_manja/data/photo_store.dart';
 import 'package:manja_manja/domain/wheel_service.dart';
 import 'package:manja_manja/main.dart';
@@ -23,7 +24,7 @@ void main() {
 
     final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
     addTearDown(() => _deleteQuietly(photos.baseDir));
-    await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, child: const ManjaManjaApp()));
+    await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: NutritionRepository(db), child: const ManjaManjaApp()));
     await tester.pumpAndSettle();
     expect(find.text('1 of 1 dishes left'), findsOneWidget);
 
@@ -87,7 +88,7 @@ void main() {
         }
       });
 
-      await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, child: const ManjaManjaApp()));
+      await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: NutritionRepository(db), child: const ManjaManjaApp()));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Spin'));
       await tester.pump(const Duration(seconds: 5));
@@ -118,7 +119,7 @@ void main() {
 
     final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
     addTearDown(() => _deleteQuietly(photos.baseDir));
-    await tester.pumpWidget(AppScope(db: db, wheel: wheel, photos: photos, child: const ManjaManjaApp()));
+    await tester.pumpWidget(AppScope(db: db, wheel: wheel, photos: photos, nutrition: NutritionRepository(db), child: const ManjaManjaApp()));
     await tester.pumpAndSettle();
 
     for (var left = names.length; left > 0; left--) {
