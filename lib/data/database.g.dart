@@ -107,6 +107,17 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _photoPathMeta = const VerificationMeta(
+    'photoPath',
+  );
+  @override
+  late final GeneratedColumn<String> photoPath = GeneratedColumn<String>(
+    'photo_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -117,6 +128,7 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     cookingInfo,
     isFavorite,
     createdAt,
+    photoPath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -186,6 +198,12 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('photo_path')) {
+      context.handle(
+        _photoPathMeta,
+        photoPath.isAcceptableOrUnknown(data['photo_path']!, _photoPathMeta),
+      );
+    }
     return context;
   }
 
@@ -227,6 +245,10 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      photoPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_path'],
+      ),
     );
   }
 
@@ -245,6 +267,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
   final String cookingInfo;
   final bool isFavorite;
   final DateTime createdAt;
+  final String? photoPath;
   const Recipe({
     required this.id,
     required this.name,
@@ -254,6 +277,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     required this.cookingInfo,
     required this.isFavorite,
     required this.createdAt,
+    this.photoPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -270,6 +294,9 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     map['cooking_info'] = Variable<String>(cookingInfo);
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || photoPath != null) {
+      map['photo_path'] = Variable<String>(photoPath);
+    }
     return map;
   }
 
@@ -287,6 +314,9 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       cookingInfo: Value(cookingInfo),
       isFavorite: Value(isFavorite),
       createdAt: Value(createdAt),
+      photoPath: photoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoPath),
     );
   }
 
@@ -304,6 +334,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       cookingInfo: serializer.fromJson<String>(json['cookingInfo']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      photoPath: serializer.fromJson<String?>(json['photoPath']),
     );
   }
   @override
@@ -318,6 +349,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       'cookingInfo': serializer.toJson<String>(cookingInfo),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'photoPath': serializer.toJson<String?>(photoPath),
     };
   }
 
@@ -330,6 +362,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     String? cookingInfo,
     bool? isFavorite,
     DateTime? createdAt,
+    Value<String?> photoPath = const Value.absent(),
   }) => Recipe(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -339,6 +372,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     cookingInfo: cookingInfo ?? this.cookingInfo,
     isFavorite: isFavorite ?? this.isFavorite,
     createdAt: createdAt ?? this.createdAt,
+    photoPath: photoPath.present ? photoPath.value : this.photoPath,
   );
   Recipe copyWithCompanion(RecipesCompanion data) {
     return Recipe(
@@ -358,6 +392,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           ? data.isFavorite.value
           : this.isFavorite,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
     );
   }
 
@@ -371,7 +406,8 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           ..write('cookMinutes: $cookMinutes, ')
           ..write('cookingInfo: $cookingInfo, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('photoPath: $photoPath')
           ..write(')'))
         .toString();
   }
@@ -386,6 +422,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     cookingInfo,
     isFavorite,
     createdAt,
+    photoPath,
   );
   @override
   bool operator ==(Object other) =>
@@ -398,7 +435,8 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           other.cookMinutes == this.cookMinutes &&
           other.cookingInfo == this.cookingInfo &&
           other.isFavorite == this.isFavorite &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.photoPath == this.photoPath);
 }
 
 class RecipesCompanion extends UpdateCompanion<Recipe> {
@@ -410,6 +448,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
   final Value<String> cookingInfo;
   final Value<bool> isFavorite;
   final Value<DateTime> createdAt;
+  final Value<String?> photoPath;
   const RecipesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -419,6 +458,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     this.cookingInfo = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.photoPath = const Value.absent(),
   });
   RecipesCompanion.insert({
     this.id = const Value.absent(),
@@ -429,6 +469,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     this.cookingInfo = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.photoPath = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Recipe> custom({
     Expression<int>? id,
@@ -439,6 +480,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Expression<String>? cookingInfo,
     Expression<bool>? isFavorite,
     Expression<DateTime>? createdAt,
+    Expression<String>? photoPath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -449,6 +491,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       if (cookingInfo != null) 'cooking_info': cookingInfo,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (createdAt != null) 'created_at': createdAt,
+      if (photoPath != null) 'photo_path': photoPath,
     });
   }
 
@@ -461,6 +504,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Value<String>? cookingInfo,
     Value<bool>? isFavorite,
     Value<DateTime>? createdAt,
+    Value<String?>? photoPath,
   }) {
     return RecipesCompanion(
       id: id ?? this.id,
@@ -471,6 +515,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       cookingInfo: cookingInfo ?? this.cookingInfo,
       isFavorite: isFavorite ?? this.isFavorite,
       createdAt: createdAt ?? this.createdAt,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 
@@ -501,6 +546,9 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (photoPath.present) {
+      map['photo_path'] = Variable<String>(photoPath.value);
+    }
     return map;
   }
 
@@ -514,7 +562,8 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
           ..write('cookMinutes: $cookMinutes, ')
           ..write('cookingInfo: $cookingInfo, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('photoPath: $photoPath')
           ..write(')'))
         .toString();
   }
@@ -1732,6 +1781,7 @@ typedef $$RecipesTableCreateCompanionBuilder = RecipesCompanion Function({
   Value<String> cookingInfo,
   Value<bool> isFavorite,
   Value<DateTime> createdAt,
+  Value<String?> photoPath,
 });
 typedef $$RecipesTableUpdateCompanionBuilder = RecipesCompanion Function({
   Value<int> id,
@@ -1742,6 +1792,7 @@ typedef $$RecipesTableUpdateCompanionBuilder = RecipesCompanion Function({
   Value<String> cookingInfo,
   Value<bool> isFavorite,
   Value<DateTime> createdAt,
+  Value<String?> photoPath,
 });
 
 final class $$RecipesTableReferences
@@ -1853,6 +1904,11 @@ class $$RecipesTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1980,6 +2036,11 @@ class $$RecipesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecipesTableAnnotationComposer
@@ -2022,6 +2083,9 @@ class $$RecipesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get photoPath =>
+      $composableBuilder(column: $table.photoPath, builder: (column) => column);
 
   Expression<T> recipeIngredientsRefs<T extends Object>(
     Expression<T> Function($$RecipeIngredientsTableAnnotationComposer a) f,
@@ -2140,6 +2204,7 @@ class $$RecipesTableTableManager
                 Value<String> cookingInfo = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> photoPath = const Value.absent(),
               }) => RecipesCompanion(
                 id: id,
                 name: name,
@@ -2149,6 +2214,7 @@ class $$RecipesTableTableManager
                 cookingInfo: cookingInfo,
                 isFavorite: isFavorite,
                 createdAt: createdAt,
+                photoPath: photoPath,
               ),
           createCompanionCallback:
               ({
@@ -2160,6 +2226,7 @@ class $$RecipesTableTableManager
                 Value<String> cookingInfo = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> photoPath = const Value.absent(),
               }) => RecipesCompanion.insert(
                 id: id,
                 name: name,
@@ -2169,6 +2236,7 @@ class $$RecipesTableTableManager
                 cookingInfo: cookingInfo,
                 isFavorite: isFavorite,
                 createdAt: createdAt,
+                photoPath: photoPath,
               ),
           withReferenceMapper: (p0) => p0
               .map(

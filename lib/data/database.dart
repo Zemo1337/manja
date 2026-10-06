@@ -12,6 +12,7 @@ class Recipes extends Table {
   TextColumn get cookingInfo => text().withDefault(const Constant(''))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get photoPath => text().nullable()();
 }
 
 class RecipeIngredients extends Table {
@@ -69,6 +70,7 @@ class RecipeDraft {
     this.cookMinutes,
     this.cookingInfo = '',
     this.isFavorite = false,
+    this.photoPath,
     this.ingredients = const [],
     this.steps = const [],
   });
@@ -80,6 +82,7 @@ class RecipeDraft {
   final int? cookMinutes;
   final String cookingInfo;
   final bool isFavorite;
+  final String? photoPath;
   final List<IngredientDraft> ingredients;
   final List<String> steps;
 }
@@ -96,10 +99,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja_manja'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) await m.addColumn(recipes, recipes.photoPath);
+        },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
         },
@@ -132,6 +138,7 @@ class AppDatabase extends _$AppDatabase {
           cookMinutes: Value(draft.cookMinutes),
           cookingInfo: Value(draft.cookingInfo),
           isFavorite: Value(draft.isFavorite),
+          photoPath: Value(draft.photoPath),
         );
         final int id;
         if (draft.id == null) {

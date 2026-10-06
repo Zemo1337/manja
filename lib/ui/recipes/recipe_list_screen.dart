@@ -4,6 +4,7 @@ import '../../app_scope.dart';
 import '../../data/database.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
+import 'recipe_photo.dart';
 
 class RecipeListScreen extends StatefulWidget {
   const RecipeListScreen({super.key});
@@ -52,7 +53,10 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                   itemBuilder: (context, i) {
                     final recipe = recipes[i];
                     return ListTile(
-                      leading: CircleAvatar(child: Text(recipe.name.characters.first.toUpperCase())),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox.square(dimension: 48, child: RecipePhoto(recipe: recipe, cacheWidth: 144)),
+                      ),
                       title: Text(recipe.name),
                       subtitle: Text(_subtitle(recipe)),
                       trailing: IconButton(

@@ -4,6 +4,7 @@ import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/units.dart';
 import 'recipe_edit_screen.dart';
+import 'recipe_photo.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   const RecipeDetailScreen({super.key, required this.recipeId});
@@ -53,8 +54,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         ],
       ),
     );
-    if (ok != true) return;
+    if (ok != true || !mounted) return;
+    final photos = AppScope.of(context).photos;
     await db.deleteRecipe(widget.recipeId);
+    await photos.delete(_full!.recipe.photoPath);
     if (mounted) Navigator.pop(context);
   }
 
@@ -82,6 +85,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (recipe.photoPath != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AspectRatio(aspectRatio: 16 / 9, child: RecipePhoto(recipe: recipe, cacheWidth: 1200)),
+            ),
+            const SizedBox(height: 12),
+          ],
           Wrap(
             spacing: 8,
             runSpacing: 8,

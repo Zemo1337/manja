@@ -1,19 +1,28 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja_manja/app_scope.dart';
 import 'package:manja_manja/data/database.dart';
+import 'package:manja_manja/data/photo_store.dart';
 import 'package:manja_manja/domain/wheel_service.dart';
 import 'package:manja_manja/main.dart';
 
 void main() {
   testWidgets('add a recipe, spin the wheel, cook it, see it in history', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 2400)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     addTearDown(db.close);
     await db.saveRecipe(RecipeDraft(name: 'Sarma', portions: 4));
 
-    await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), child: const ManjaManjaApp()));
+    final photos = PhotoStore(Directory.systemTemp.createTempSync('manja_photos_'));
+    addTearDown(() => photos.baseDir.deleteSync(recursive: true));
+    await tester.pumpWidget(AppScope(db: db, wheel: WheelService(db), photos: photos, child: const ManjaManjaApp()));
     await tester.pumpAndSettle();
     expect(find.text('1 of 1 dishes left'), findsOneWidget);
 

@@ -7,6 +7,7 @@ import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
+import '../recipes/recipe_photo.dart';
 import 'wheel_painter.dart';
 import 'wheel_settings_sheet.dart';
 
@@ -223,6 +224,16 @@ class _ResultCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            if (recipe.photoPath != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 280,
+                  child: AspectRatio(aspectRatio: 16 / 9, child: RecipePhoto(recipe: recipe, cacheWidth: 840)),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             Text('Today you cook', style: theme.textTheme.labelLarge),
             const SizedBox(height: 4),
             TextButton(

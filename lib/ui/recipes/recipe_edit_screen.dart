@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/units.dart';
+import 'recipe_photo.dart';
 
 class RecipeEditScreen extends StatefulWidget {
   const RecipeEditScreen({super.key, this.existing});
@@ -37,7 +41,14 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   late final TextEditingController _info;
   late final List<_IngredientRow> _ingredients;
   late final List<TextEditingController> _steps;
+  final _picker = ImagePicker();
+  XFile? _pickedPhoto;
+  bool _photoRemoved = false;
   bool _saving = false;
+
+  String? get _existingPhoto => widget.existing?.recipe.photoPath;
+
+  bool get _hasPhoto => _pickedPhoto != null || (_existingPhoto != null && !_photoRemoved);
 
   bool get _isNew => widget.existing == null;
 
@@ -72,9 +83,35 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
 
   double? _parseAmount(String text) => double.tryParse(text.trim().replaceAll(',', '.'));
 
+  Future<void> _pickPhoto(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(source: source, maxWidth: 1600, maxHeight: 1600, imageQuality: 85);
+      if (picked == null || !mounted) return;
+      setState(() {
+        _pickedPhoto = picked;
+        _photoRemoved = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load the photo: $e')));
+    }
+  }
+
+  void _removePhoto() => setState(() {
+        _pickedPhoto = null;
+        _photoRemoved = true;
+      });
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
+    final scope = AppScope.of(context);
+    var photoPath = _photoRemoved ? null : _existingPhoto;
+    String? stalePhoto = _photoRemoved ? _existingPhoto : null;
+    if (_pickedPhoto != null) {
+      photoPath = await scope.photos.save(_pickedPhoto!.path);
+      stalePhoto = _existingPhoto;
+    }
     final draft = RecipeDraft(
       id: widget.existing?.recipe.id,
       name: _name.text.trim(),
@@ -83,6 +120,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       cookMinutes: int.tryParse(_cook.text.trim()),
       cookingInfo: _info.text.trim(),
       isFavorite: widget.existing?.recipe.isFavorite ?? false,
+      photoPath: photoPath,
       ingredients: [
         for (final row in _ingredients)
           if (row.name.text.trim().isNotEmpty)
@@ -90,8 +128,56 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       ],
       steps: [for (final s in _steps) if (s.text.trim().isNotEmpty) s.text.trim()],
     );
-    await AppScope.of(context).db.saveRecipe(draft);
+    await scope.db.saveRecipe(draft);
+    await scope.photos.delete(stalePhoto);
     if (mounted) Navigator.pop(context);
+  }
+
+  Widget _photoSection(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final Widget image;
+    if (_pickedPhoto != null) {
+      image = PickedPhoto(file: File(_pickedPhoto!.path));
+    } else if (_hasPhoto) {
+      image = RecipePhoto(recipe: widget.existing!.recipe, cacheWidth: 1200);
+    } else {
+      image = ColoredBox(
+        color: scheme.surfaceContainerHighest,
+        child: Center(child: Icon(Icons.add_a_photo_outlined, size: 48, color: scheme.onSurfaceVariant)),
+      );
+    }
+    final camera = _picker.supportsImageSource(ImageSource.camera);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: InkWell(onTap: () => _pickPhoto(ImageSource.gallery), child: image),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          children: [
+            if (camera)
+              TextButton.icon(
+                onPressed: () => _pickPhoto(ImageSource.camera),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('Camera'),
+              ),
+            TextButton.icon(
+              onPressed: () => _pickPhoto(ImageSource.gallery),
+              icon: const Icon(Icons.photo_library_outlined),
+              label: Text(camera ? 'Gallery' : 'Choose photo'),
+            ),
+            if (_hasPhoto)
+              TextButton.icon(onPressed: _removePhoto, icon: const Icon(Icons.delete_outline), label: const Text('Remove')),
+          ],
+        ),
+      ],
+    );
   }
 
   String? _required(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
@@ -117,6 +203,8 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            _photoSection(context),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _name,
               decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
