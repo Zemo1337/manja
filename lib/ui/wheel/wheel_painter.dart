@@ -188,9 +188,11 @@ class WheelPainter extends CustomPainter {
       ellipsis: '…',
     )..layout(maxWidth: radius * (sweep >= pi ? 1.3 : 0.9));
 
-    final y = sweep >= 1.5 * pi ? radius * 0.45 : -radius * 0.58;
+    final flip = flipText && shouldFlipWideLabel(angle + rotation);
+    final outward = sweep >= 1.5 * pi ? radius * 0.45 : -radius * 0.58;
+    final y = flip ? -outward : outward;
     canvas.save();
-    canvas.rotate(angle + pi / 2);
+    canvas.rotate(angle + pi / 2 + (flip ? pi : 0));
     painter.paint(canvas, Offset(-painter.width / 2, y - painter.height / 2));
     canvas.restore();
   }

@@ -94,3 +94,5 @@ double labelFontSize({required double sweep, required double radius}) {
 }
 
 bool shouldFlipLabel(double screenAngle) => cos(screenAngle) < 0;
+
+bool shouldFlipWideLabel(double screenAngle) => sin(screenAngle) > 0;

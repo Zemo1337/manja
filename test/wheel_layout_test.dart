@@ -145,4 +145,11 @@ void main() {
     expect(shouldFlipLabel(pi / 2 + 0.1), isTrue);
     expect(shouldFlipLabel(-pi + 0.1), isTrue);
   });
+
+  test('wide labels on the lower half are flipped', () {
+    expect(shouldFlipWideLabel(-pi / 2), isFalse);
+    expect(shouldFlipWideLabel(-0.1), isFalse);
+    expect(shouldFlipWideLabel(pi / 2), isTrue);
+    expect(shouldFlipWideLabel(0.1), isTrue);
+  });
 }
