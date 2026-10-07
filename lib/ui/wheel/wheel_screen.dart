@@ -38,6 +38,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   Recipe? _picked;
   Recipe? _result;
   WheelImageCache? _images;
+  int _reloadGeneration = 0;
 
   WheelService get _wheel => AppScope.of(context).wheel;
 
@@ -64,8 +65,9 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   }
 
   Future<void> _reload() async {
+    final generation = ++_reloadGeneration;
     final state = await _wheel.computeState();
-    if (!mounted) return;
+    if (!mounted || generation != _reloadGeneration) return;
     setState(() {
       _state = state;
       if (!_spinning) {
