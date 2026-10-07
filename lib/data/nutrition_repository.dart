@@ -3,19 +3,54 @@ import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:nutrition_core/nutrition_core.dart';
+import 'package:nutrition_usda/nutrition_usda.dart';
 
 import 'database.dart';
 
+enum ApiKeyOrigin { demo, developer, user }
+
 class NutritionRepository {
-  NutritionRepository(this.db, {this._remotes = const {}, Random? random}) : _random = random ?? Random();
+  NutritionRepository(this.db, {this._remotes = const {}, this.buildApiKey = UsdaSource.demoKey, Random? random})
+      : _random = random ?? Random();
 
   static const _keyBundleVersion = 'nutrition.bundleVersion';
+  static const _keyUsdaApiKey = 'nutrition.usdaApiKey';
 
   final AppDatabase db;
   final Map<FoodSource, NutritionSource> _remotes;
+  final String buildApiKey;
   final Random _random;
 
   bool get hasRemote => _remotes.isNotEmpty;
+
+  UsdaSource? get _usda => switch (_remotes[FoodSource.usda]) {
+        final UsdaSource usda => usda,
+        _ => null,
+      };
+
+  bool get usingDemoKey => _usda?.usingDemoKey ?? false;
+
+  Future<String?> userApiKey() async {
+    final key = (await db.getSetting(_keyUsdaApiKey))?.trim();
+    return key == null || key.isEmpty ? null : key;
+  }
+
+  Future<ApiKeyOrigin> loadApiKey() async {
+    final user = await userApiKey();
+    _usda?.apiKey = user ?? buildApiKey;
+    if (user != null) return ApiKeyOrigin.user;
+    return buildApiKey == UsdaSource.demoKey ? ApiKeyOrigin.demo : ApiKeyOrigin.developer;
+  }
+
+  Future<ApiKeyOrigin> setUserApiKey(String? key) async {
+    final trimmed = key?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      await db.deleteSetting(_keyUsdaApiKey);
+    } else {
+      await db.setSetting(_keyUsdaApiKey, trimmed);
+    }
+    return loadApiKey();
+  }
 
   Future<List<FoodSummary>> searchLocal(String query, {int limit = 25}) async {
     final rows = await db.searchFoodRows(query, limit: 300);

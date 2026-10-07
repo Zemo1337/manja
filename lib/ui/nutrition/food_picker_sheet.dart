@@ -5,6 +5,7 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../data/nutrition_repository.dart';
+import 'api_key_dialogs.dart';
 import 'food_edit_screen.dart';
 
 Future<Food?> showFoodPicker(BuildContext context, {String initialQuery = ''}) {
@@ -79,20 +80,24 @@ class _FoodPickerState extends State<_FoodPicker> {
       _remoteError = null;
       _remoteQuery = query;
     });
+    NutritionSourceException? error;
     try {
       final localKeys = {for (final f in _local) f.key};
       final remote = await _repo.searchRemote(query);
       if (!mounted || _remoteQuery != query) return;
       setState(() => _remote = [for (final f in remote) if (!localKeys.contains(f.key)) f]);
     } on NutritionSourceException catch (e) {
+      error = e;
       if (mounted && _remoteQuery == query) setState(() => _remoteError = e.message);
     } finally {
       if (mounted) setState(() => _remoteLoading = false);
     }
+    if (error != null && mounted) await handleNutritionError(context, error);
   }
 
   Future<void> _open(FoodSummary summary) async {
     setState(() => _opening = summary.key);
+    NutritionSourceException? error;
     try {
       final food = await _repo.food(summary.key);
       if (!mounted) return;
@@ -102,10 +107,11 @@ class _FoodPickerState extends State<_FoodPicker> {
       }
       Navigator.pop(context, food);
     } on NutritionSourceException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      error = e;
     } finally {
       if (mounted) setState(() => _opening = null);
     }
+    if (error != null && mounted) await handleNutritionError(context, error);
   }
 
   Future<void> _createOwn() async {

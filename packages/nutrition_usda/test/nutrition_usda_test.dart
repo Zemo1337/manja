@@ -146,18 +146,34 @@ void main() {
       final limited = source((_) => http.Response('', 429));
       await expectLater(
         limited.search('egg'),
-        throwsA(isA<NutritionSourceException>().having((e) => e.message, 'message', contains('limit'))),
+        throwsA(isA<NutritionSourceException>()
+            .having((e) => e.message, 'message', contains('limit'))
+            .having((e) => e.kind, 'kind', NutritionErrorKind.rateLimited)),
       );
       final rejected = source((_) => http.Response('', 403));
       await expectLater(
         rejected.fetch('1'),
-        throwsA(isA<NutritionSourceException>().having((e) => e.message, 'message', contains('API key'))),
+        throwsA(isA<NutritionSourceException>()
+            .having((e) => e.message, 'message', contains('API key'))
+            .having((e) => e.kind, 'kind', NutritionErrorKind.unauthorized)),
       );
     });
 
     test('network failures become NutritionSourceException', () async {
       final offline = source((_) => throw http.ClientException('offline'));
-      await expectLater(offline.search('egg'), throwsA(isA<NutritionSourceException>()));
+      await expectLater(
+        offline.search('egg'),
+        throwsA(isA<NutritionSourceException>().having((e) => e.kind, 'kind', NutritionErrorKind.unreachable)),
+      );
+    });
+
+    test('the key can be changed and the demo key is recognised', () async {
+      final usda = source((_) => http.Response(jsonEncode(fixture('search_flour.json')), 200));
+      expect(usda.usingDemoKey, isFalse);
+      usda.apiKey = UsdaSource.demoKey;
+      expect(usda.usingDemoKey, isTrue);
+      await usda.search('flour');
+      expect(requests.single.queryParameters['api_key'], 'DEMO_KEY');
     });
   });
 }

@@ -18,7 +18,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDatabase();
   final photos = PhotoStore(await getApplicationSupportDirectory());
-  final nutrition = NutritionRepository(db, remotes: {FoodSource.usda: UsdaSource(apiKey: usdaApiKey)});
+  final nutrition = NutritionRepository(
+    db,
+    remotes: {FoodSource.usda: UsdaSource(apiKey: usdaApiKey)},
+    buildApiKey: usdaApiKey,
+  );
+  await nutrition.loadApiKey();
   runApp(AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: nutrition, child: const ManjaManjaApp()));
   unawaited(importBundledFoods(nutrition).catchError((Object e) {
     debugPrint('Built-in foods could not be imported: $e');

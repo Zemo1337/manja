@@ -18,7 +18,9 @@ class UsdaSource implements NutritionSource {
 
   static const demoKey = 'DEMO_KEY';
 
-  final String apiKey;
+  bool get usingDemoKey => apiKey == demoKey;
+
+  String apiKey;
   final List<String> dataTypes;
   final Duration timeout;
   final http.Client _client;
@@ -63,9 +65,9 @@ class UsdaSource implements NutritionSource {
     try {
       response = await _client.get(uri).timeout(timeout);
     } on TimeoutException catch (e) {
-      throw NutritionSourceException('USDA did not answer in time', cause: e);
+      throw NutritionSourceException('USDA did not answer in time', kind: NutritionErrorKind.unreachable, cause: e);
     } on http.ClientException catch (e) {
-      throw NutritionSourceException('Could not reach USDA', cause: e);
+      throw NutritionSourceException('Could not reach USDA', kind: NutritionErrorKind.unreachable, cause: e);
     }
     switch (response.statusCode) {
       case 200:
@@ -73,9 +75,12 @@ class UsdaSource implements NutritionSource {
       case 404:
         throw const _NotFound();
       case 429:
-        throw const NutritionSourceException('USDA request limit reached, try again later');
+        throw const NutritionSourceException(
+          'USDA request limit reached, try again later',
+          kind: NutritionErrorKind.rateLimited,
+        );
       case 401 || 403:
-        throw const NutritionSourceException('USDA rejected the API key');
+        throw const NutritionSourceException('USDA rejected the API key', kind: NutritionErrorKind.unauthorized);
       default:
         throw NutritionSourceException('USDA returned HTTP ${response.statusCode}');
     }

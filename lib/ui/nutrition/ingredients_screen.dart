@@ -3,6 +3,7 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../data/nutrition_repository.dart';
+import 'api_key_dialogs.dart';
 import 'food_edit_screen.dart';
 import 'nutrition_panel.dart';
 
@@ -18,6 +19,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   List<Food> _usedUsda = const [];
   int? _builtIn;
   String? _builtInVersion;
+  ApiKeyOrigin? _keyOrigin;
   bool _loaded = false;
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
@@ -36,12 +38,14 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final linked = await scope.db.linkedFoodKeys();
     final builtIn = await scope.nutrition.countBySource(FoodSource.usda);
     final version = await scope.nutrition.bundleVersion();
+    final keyOrigin = scope.nutrition.hasRemote ? await scope.nutrition.loadApiKey() : null;
     final used = (await scope.nutrition.foodsByKey(linked)).values.where((f) => f.source != FoodSource.user).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     if (mounted) {
       setState(() {
         _linked = linked;
         _usedUsda = used;
+        _keyOrigin = keyOrigin;
         _builtIn = builtIn;
         _builtInVersion = version;
       });
@@ -81,9 +85,14 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         SnackBar(content: Text(fresh == null ? 'USDA no longer has this food' : 'Updated "${fresh.name}"')),
       );
     } on NutritionSourceException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) await handleNutritionError(context, e);
     }
     await _loadMeta();
+  }
+
+  Future<void> _editKey() async {
+    final origin = await showApiKeyDialog(context);
+    if (origin != null && mounted) setState(() => _keyOrigin = origin);
   }
 
   void _show(Food food) => showModalBottomSheet<void>(
@@ -133,6 +142,20 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 ),
                 isThreeLine: _builtInVersion != null,
               ),
+              if (_keyOrigin != null)
+                ListTile(
+                  leading: const Icon(Icons.travel_explore),
+                  title: const Text('USDA online lookup'),
+                  subtitle: Text(switch (_keyOrigin!) {
+                    ApiKeyOrigin.demo => 'Shared demo key, a few lookups per hour. Add your own free key for more.',
+                    ApiKeyOrigin.developer => 'Developer key from config/local.json',
+                    ApiKeyOrigin.user => 'Your own API key',
+                  }),
+                  trailing: TextButton(
+                    onPressed: _editKey,
+                    child: Text(_keyOrigin == ApiKeyOrigin.user ? 'Change' : 'Add key'),
+                  ),
+                ),
               const Divider(height: 24),
               _section(context, 'My ingredients', mine, 'Add ingredients you cannot find, e.g. from a package label.'),
               if (_usedUsda.isNotEmpty)

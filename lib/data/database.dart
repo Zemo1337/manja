@@ -279,6 +279,8 @@ class AppDatabase extends _$AppDatabase {
   Future<String?> getSetting(String key) async =>
       (await (select(appSettings)..where((s) => s.key.equals(key))).getSingleOrNull())?.value;
 
+  Future<void> deleteSetting(String key) => (delete(appSettings)..where((s) => s.key.equals(key))).go();
+
   Future<void> setSetting(String key, String value) =>
       into(appSettings).insertOnConflictUpdate(AppSettingsCompanion.insert(key: key, value: value));
 }
