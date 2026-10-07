@@ -31,17 +31,20 @@ class _FoodPickerState extends State<_FoodPicker> {
   Timer? _debounce;
   int _generation = 0;
   List<FoodSummary> _local = const [];
-  List<FoodSummary> _remote = const [];
+  List<FoodSummary>? _remote;
+  String? _remoteQuery;
   bool _remoteLoading = false;
   String? _remoteError;
   String? _opening;
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
 
+  String get _text => _query.text.trim();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_generation == 0) _search(_query.text);
+    if (_generation == 0) _searchLocal();
   }
 
   @override
@@ -51,40 +54,47 @@ class _FoodPickerState extends State<_FoodPicker> {
     super.dispose();
   }
 
-  void _onChanged(String text) {
+  void _onChanged(String _) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () => _search(text));
+    _debounce = Timer(const Duration(milliseconds: 250), _searchLocal);
   }
 
-  Future<void> _search(String text) async {
+  Future<void> _searchLocal() async {
     final generation = ++_generation;
-    final repo = _repo;
-    final local = await repo.searchLocal(text);
+    final local = await _repo.searchLocal(_text, limit: 40);
     if (!mounted || generation != _generation) return;
     setState(() {
       _local = local;
-      _remote = const [];
-      _remoteError = null;
-      _remoteLoading = text.trim().length >= 2;
+      if (_remoteQuery != _text) {
+        _remote = null;
+        _remoteError = null;
+      }
     });
-    if (!_remoteLoading) return;
+  }
+
+  Future<void> _searchRemote() async {
+    final query = _text;
+    setState(() {
+      _remoteLoading = true;
+      _remoteError = null;
+      _remoteQuery = query;
+    });
     try {
-      final localKeys = {for (final f in local) f.key};
-      final remote = await repo.searchRemote(text);
-      if (!mounted || generation != _generation) return;
+      final localKeys = {for (final f in _local) f.key};
+      final remote = await _repo.searchRemote(query);
+      if (!mounted || _remoteQuery != query) return;
       setState(() => _remote = [for (final f in remote) if (!localKeys.contains(f.key)) f]);
     } on NutritionSourceException catch (e) {
-      if (!mounted || generation != _generation) return;
-      setState(() => _remoteError = e.message);
+      if (mounted && _remoteQuery == query) setState(() => _remoteError = e.message);
     } finally {
-      if (mounted && generation == _generation) setState(() => _remoteLoading = false);
+      if (mounted) setState(() => _remoteLoading = false);
     }
   }
 
   Future<void> _open(FoodSummary summary) async {
     setState(() => _opening = summary.key);
     try {
-      final food = await _repo.food(summary.key, keep: true);
+      final food = await _repo.food(summary.key);
       if (!mounted) return;
       if (food == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This ingredient is no longer available')));
@@ -101,7 +111,7 @@ class _FoodPickerState extends State<_FoodPicker> {
   Future<void> _createOwn() async {
     final food = await Navigator.push<Food>(
       context,
-      MaterialPageRoute(builder: (_) => FoodEditScreen(initialName: _query.text.trim())),
+      MaterialPageRoute(builder: (_) => FoodEditScreen(initialName: _text)),
     );
     if (food != null && mounted) Navigator.pop(context, food);
   }
@@ -109,6 +119,7 @@ class _FoodPickerState extends State<_FoodPicker> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final remote = _remote;
     return Column(
       children: [
         Padding(
@@ -123,7 +134,7 @@ class _FoodPickerState extends State<_FoodPicker> {
             ),
             textInputAction: TextInputAction.search,
             onChanged: _onChanged,
-            onSubmitted: _search,
+            onSubmitted: (_) => _searchLocal(),
           ),
         ),
         Expanded(
@@ -135,27 +146,32 @@ class _FoodPickerState extends State<_FoodPicker> {
                 subtitle: const Text('Enter values from a package label'),
                 onTap: _opening == null ? _createOwn : null,
               ),
-              if (_local.isNotEmpty) ...[
-                _Header('On this device'),
-                for (final f in _local) _tile(f),
-              ],
-              _Header('USDA FoodData Central'),
-              if (_remoteLoading) const Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()),
-              if (_remoteError != null)
-                ListTile(
-                  leading: Icon(Icons.cloud_off, color: theme.colorScheme.error),
-                  title: Text(_remoteError!),
-                  trailing: TextButton(onPressed: () => _search(_query.text), child: const Text('Retry')),
-                ),
-              if (!_remoteLoading && _remoteError == null && _remote.isEmpty)
-                ListTile(
-                  dense: true,
-                  title: Text(
-                    _query.text.trim().length < 2 ? 'Type at least 2 letters to search online' : 'No online results',
-                    style: theme.textTheme.bodySmall,
+              if (_local.isEmpty && _text.isNotEmpty)
+                ListTile(dense: true, title: Text('Nothing found on this device', style: theme.textTheme.bodySmall)),
+              for (final f in _local) _tile(f),
+              if (_repo.hasRemote) ...[
+                const Divider(),
+                if (remote == null && !_remoteLoading && _remoteError == null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: OutlinedButton.icon(
+                      onPressed: _text.length < 2 ? null : _searchRemote,
+                      icon: const Icon(Icons.travel_explore),
+                      label: Text(_text.length < 2 ? 'Search USDA online' : 'Search USDA online for "$_text"'),
+                    ),
                   ),
-                ),
-              for (final f in _remote) _tile(f),
+                if (_remoteLoading) const Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()),
+                if (_remoteError != null)
+                  ListTile(
+                    leading: Icon(Icons.cloud_off, color: theme.colorScheme.error),
+                    title: Text(_remoteError!),
+                    trailing: TextButton(onPressed: _searchRemote, child: const Text('Retry')),
+                  ),
+                if (remote != null && remote.isEmpty)
+                  ListTile(dense: true, title: Text('No additional online results', style: theme.textTheme.bodySmall)),
+                if (remote != null)
+                  for (final f in remote) _tile(f),
+              ],
               const SizedBox(height: 24),
             ],
           ),
@@ -173,17 +189,5 @@ class _FoodPickerState extends State<_FoodPicker> {
             : null,
         enabled: _opening == null,
         onTap: () => _open(f),
-      );
-}
-
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        child: Text(text, style: Theme.of(context).textTheme.labelLarge),
       );
 }

@@ -223,10 +223,25 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  Stream<List<FoodRow>> watchFoodRows() =>
-      (select(foods)..orderBy([(f) => OrderingTerm.asc(f.name.collate(Collate.noCase))])).watch();
+  Stream<List<FoodRow>> watchFoodRows({String? source}) {
+    final q = select(foods)..orderBy([(f) => OrderingTerm.asc(f.name.collate(Collate.noCase))]);
+    if (source != null) q.where((f) => f.source.equals(source));
+    return q.watch();
+  }
+
+  Future<int> countFoodRows(String source) {
+    final count = foods.key.count();
+    return (selectOnly(foods)
+          ..addColumns([count])
+          ..where(foods.source.equals(source)))
+        .map((r) => r.read(count)!)
+        .getSingle();
+  }
 
   Future<void> upsertFoodRow(FoodsCompanion row) => into(foods).insertOnConflictUpdate(row);
+
+  Future<void> upsertFoodRows(List<FoodsCompanion> rows) =>
+      batch((b) => b.insertAllOnConflictUpdate(foods, rows));
 
   Future<void> deleteFoodRow(String key) => (delete(foods)..where((f) => f.key.equals(key))).go();
 

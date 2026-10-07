@@ -20,6 +20,16 @@ flutter test
 flutter run
 ```
 
+### Built-in ingredient data
+
+`assets/food/usda.json.gz` holds the USDA Foundation and SR Legacy foods (about 8,000 foods, 330 KB). The app imports
+it on first start and again whenever the file's version changes, so corrected values reach users with app updates.
+To rebuild it from the bulk downloads at [fdc.nal.usda.gov/download-datasets](https://fdc.nal.usda.gov/download-datasets):
+
+```bash
+cd packages/nutrition_usda && dart run tool/build_bundle.dart "FDC Foundation <date> + SR Legacy 2018-04" ../../assets/food/usda.json.gz <foundation.json> <sr_legacy.json>
+```
+
 ### USDA API key
 
 Ingredient nutrition comes from [USDA FoodData Central](https://fdc.nal.usda.gov/). Get a free key at

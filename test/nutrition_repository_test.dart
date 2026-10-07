@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja_manja/data/database.dart';
+import 'package:manja_manja/data/food_bundle.dart';
 import 'package:manja_manja/data/nutrition_repository.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
@@ -57,40 +60,29 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('default mode saves looked-up foods and serves them locally afterwards', () async {
-    expect(await repo.mode(), FoodCacheMode.cacheUsed);
+  test('a food looked up online is stored and served locally afterwards', () async {
     final flour = await repo.food('usda:1');
-    expect(flour!.name, 'Wheat flour, white');
-    expect(flour.portions.single.grams, 125);
+    expect(flour!.portions.single.grams, 125);
     expect(usda.fetches, 1);
 
     usda.offline = true;
-    final again = await repo.food('usda:1');
-    expect(again!.per100g, flour.per100g);
+    expect((await repo.food('usda:1'))!.per100g, flour.per100g);
     expect(usda.fetches, 1);
     expect((await repo.searchLocal('flour')).single.key, 'usda:1');
   });
 
-  test('online mode only keeps foods that are linked to a recipe', () async {
-    await repo.setMode(FoodCacheMode.online);
-    await repo.food('usda:1');
+  test('online search only happens when asked for', () async {
     expect(await repo.searchLocal('flour'), isEmpty);
-    await repo.food('usda:2', keep: true);
-    expect((await repo.searchLocal('milk')).single.key, 'usda:2');
-
-    await repo.food('usda:2');
-    expect(usda.fetches, 3, reason: 'online mode always asks the source');
-    usda.offline = true;
-    expect((await repo.food('usda:2'))!.name, 'Milk, whole', reason: 'falls back to the kept copy');
-    await expectLater(repo.food('usda:1'), throwsA(isA<NutritionSourceException>()));
+    expect(usda.searches, 0);
+    expect(await repo.searchRemote('flour'), hasLength(1));
+    expect(usda.searches, 1);
   });
 
-  test('full mode searches locally only', () async {
-    await repo.setMode(FoodCacheMode.full);
-    expect(await repo.searchRemote('flour'), isEmpty);
-    expect(usda.searches, 0);
-    await repo.setMode(FoodCacheMode.cacheUsed);
-    expect(await repo.searchRemote('flour'), hasLength(1));
+  test('without a remote, unknown foods are null', () async {
+    final offlineRepo = NutritionRepository(db);
+    expect(offlineRepo.hasRemote, isFalse);
+    expect(await offlineRepo.food('usda:1'), isNull);
+    expect(await offlineRepo.searchRemote('flour'), isEmpty);
   });
 
   test('user foods are stored and found like any other food', () async {
@@ -100,11 +92,26 @@ void main() {
       portions: const [FoodPortion(label: '1 tbsp', grams: 16, unit: CookingUnit.tbsp)],
     );
     expect(food.source, FoodSource.user);
-    final found = await repo.searchLocal('ajvar');
-    expect(found.single.key, food.key);
+    expect((await repo.searchLocal('ajvar')).single.key, food.key);
     final loaded = await repo.food(food.key);
     expect(loaded!.per100g[Nutrient.fat], 9);
     expect(gramsFor(loaded, 2, CookingUnit.tbsp), 32);
+    expect(await repo.countBySource(FoodSource.user), 1);
+  });
+
+  test('a single food can be updated from the source', () async {
+    final old = (await repo.food('usda:1'))!;
+    usda.foods['1'] = Food(
+      source: FoodSource.usda,
+      sourceId: '1',
+      name: 'Wheat flour, white, corrected',
+      per100g: Nutrients.of(energyKcal: 360),
+    );
+    expect((await repo.food('usda:1'))!.name, old.name, reason: 'local copy until updated');
+    final fresh = await repo.refresh(old);
+    expect(fresh!.name, endsWith('corrected'));
+    expect((await repo.food('usda:1'))!.per100g[Nutrient.energy], 360);
+    expect(await NutritionRepository(db).refresh(old), isNull, reason: 'no source, nothing to update');
   });
 
   test('search words match in any order and wildcards are literal', () async {
@@ -114,27 +121,14 @@ void main() {
     expect(await repo.searchLocal('%'), isEmpty);
   });
 
-  test('refresh updates cached foods and prune drops the unused ones', () async {
-    await repo.food('usda:1');
-    await repo.food('usda:2');
-    await db.saveRecipe(RecipeDraft(
-      name: 'Palačinke',
-      portions: 4,
-      ingredients: [IngredientDraft(name: 'Flour', amount: 250, unit: 'g', foodKey: 'usda:1')],
-    ));
-    usda.foods['1'] = Food(
-      source: FoodSource.usda,
-      sourceId: '1',
-      name: 'Wheat flour, white, updated',
-      per100g: Nutrients.of(energyKcal: 360),
-    );
-    final result = await repo.refreshCached();
-    expect(result.updated, 2);
-    expect((await repo.food('usda:1'))!.name, endsWith('updated'));
-
-    expect(await repo.pruneUnused(), 1);
-    expect(await repo.searchLocal('milk'), isEmpty);
-    expect(await repo.searchLocal('flour'), hasLength(1));
+  test('a bundle is imported once per version', () async {
+    final foods = usda.foods.values.toList();
+    expect(await repo.importBundle('v1', foods), isTrue);
+    expect(await repo.countBySource(FoodSource.usda), 2);
+    expect(await repo.importBundle('v1', foods), isFalse);
+    expect(await repo.bundleVersion(), 'v1');
+    expect(await repo.importBundle('v2', foods.take(1).toList()), isTrue);
+    expect(await repo.countBySource(FoodSource.usda), 2, reason: 'foods from older bundles stay for linked recipes');
   });
 
   test('recipe ingredients keep their food link and the finished weight', () async {
@@ -150,5 +144,25 @@ void main() {
     final full = await db.recipeFull(id);
     expect(full!.recipe.finishedWeightG, 900);
     expect(full.ingredients.map((i) => i.foodKey), ['usda:1', null]);
+  });
+
+  test('the shipped USDA bundle imports and is searchable', () async {
+    final bundle = decodeGzipBundle(File(usdaBundleAsset).readAsBytesSync());
+    expect(bundle.foods.length, greaterThan(8000));
+    expect(bundle.version, contains('SR Legacy'));
+
+    final offlineRepo = NutritionRepository(db);
+    final watch = Stopwatch()..start();
+    await offlineRepo.importBundle(bundle.version, bundle.foods);
+    watch.stop();
+    expect(await offlineRepo.countBySource(FoodSource.usda), bundle.foods.length);
+    // ignore: avoid_print
+    print('imported ${bundle.foods.length} foods in ${watch.elapsedMilliseconds} ms');
+
+    final flour = (await offlineRepo.searchLocal('flour wheat all-purpose enriched bleached')).first;
+    final food = await offlineRepo.food(flour.key);
+    expect(gramsFor(food!, 1, CookingUnit.cup), closeTo(125, 1e-9));
+    final milk = (await offlineRepo.searchLocal('milk whole 3.25')).first;
+    expect((await offlineRepo.food(milk.key))!.per100g[Nutrient.energy], 61);
   });
 }

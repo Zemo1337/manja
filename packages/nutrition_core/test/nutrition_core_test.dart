@@ -83,6 +83,51 @@ void main() {
     });
   });
 
+  group('search ranking', () {
+    List<String> rank(String query, Map<String, bool> names) {
+      final list = names.keys.toList()
+        ..sort((a, b) => searchScore(query, b, hasPortions: names[b]!).compareTo(searchScore(query, a, hasPortions: names[a]!)));
+      return list;
+    }
+
+    test('the basic ingredient beats things that merely contain the word', () {
+      expect(
+        rank('milk', {
+          'Crackers, milk': true,
+          'SILK Nog, soymilk': true,
+          'Milk, whole, 3.25% milkfat, with added vitamin D': true,
+          'Buttermilk, low fat': false,
+        }).first,
+        'Milk, whole, 3.25% milkfat, with added vitamin D',
+      );
+      expect(
+        rank('egg', {
+          'Eggnog': true,
+          'Bread, egg': true,
+          'Egg, whole, raw, fresh': true,
+          'Eggplant, raw': true,
+        }).first,
+        'Egg, whole, raw, fresh',
+      );
+      expect(rank('onion', {'Onion rings, breaded': true, 'Onions, raw': true}).first, 'Onions, raw');
+    });
+
+    test('foods with portions win over the same food without', () {
+      expect(
+        rank('flour wheat all-purpose', {
+          'Flour, wheat, all-purpose, enriched, bleached': false,
+          'Wheat flour, white, all-purpose, enriched, bleached': true,
+        }).first,
+        'Wheat flour, white, all-purpose, enriched, bleached',
+      );
+    });
+
+    test('brand products rank below generic foods', () {
+      expect(rank('soymilk', {'SILK Plain, soymilk': true, 'Soymilk, original and vanilla, unfortified': true}).first,
+          'Soymilk, original and vanilla, unfortified');
+    });
+  });
+
   group('recipe', () {
     final lines = [
       const IngredientLine(name: 'Flour', amount: 250, unit: CookingUnit.g, food: flour),

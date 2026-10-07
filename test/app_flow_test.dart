@@ -133,7 +133,6 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Ingredient'), 'flour');
     await tester.tap(find.text('Link nutrition'));
     await tester.pumpAndSettle();
-    expect(find.text('On this device'), findsOneWidget);
     await tester.tap(find.text('Wheat flour, white'));
     await tester.pumpAndSettle();
     expect(find.text('Link nutrition'), findsNothing);
@@ -214,9 +213,7 @@ void main() {
     expect(find.text('My ingredients (1)'), findsOneWidget);
     expect(find.text('85 kcal / 100 g · used in recipes'), findsOneWidget);
 
-    await tester.tap(find.text('Always online'));
-    await tester.pumpAndSettle();
-    expect(await nutrition.mode(), FoodCacheMode.online);
+    expect(find.textContaining('Built-in ingredients'), findsOneWidget);
   });
 
   testWidgets('recipes hidden behind the +n slice can still be drawn', (tester) async {

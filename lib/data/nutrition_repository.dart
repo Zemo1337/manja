@@ -6,61 +6,48 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import 'database.dart';
 
-enum FoodCacheMode {
-  online('Always online', 'Ingredients are looked up live. Only ingredients used in recipes are kept on the device.'),
-  cacheUsed('Save what I use', 'Every ingredient you look up is saved on the device and works offline.'),
-  full('Download everything', 'The whole ingredient list is stored on the device. Search works fully offline.');
-
-  const FoodCacheMode(this.label, this.description);
-
-  final String label;
-  final String description;
-}
-
 class NutritionRepository {
   NutritionRepository(this.db, {this._remotes = const {}, Random? random}) : _random = random ?? Random();
 
-  static const _keyMode = 'nutrition.cacheMode';
+  static const _keyBundleVersion = 'nutrition.bundleVersion';
 
   final AppDatabase db;
   final Map<FoodSource, NutritionSource> _remotes;
   final Random _random;
 
-  Iterable<NutritionSource> get remotes => _remotes.values;
+  bool get hasRemote => _remotes.isNotEmpty;
 
-  Future<FoodCacheMode> mode() async =>
-      FoodCacheMode.values.asNameMap()[await db.getSetting(_keyMode)] ?? FoodCacheMode.cacheUsed;
-
-  Future<void> setMode(FoodCacheMode mode) => db.setSetting(_keyMode, mode.name);
-
-  Future<List<FoodSummary>> searchLocal(String query, {int limit = 25}) async =>
-      [for (final row in await db.searchFoodRows(query, limit: limit)) foodFromRow(row).summary];
-
-  Future<List<FoodSummary>> searchRemote(String query, {int limit = 25}) async {
-    if (await mode() == FoodCacheMode.full) return const [];
-    final results = <FoodSummary>[];
-    for (final remote in _remotes.values) {
-      results.addAll(await remote.search(query, limit: limit));
-    }
-    return results;
+  Future<List<FoodSummary>> searchLocal(String query, {int limit = 25}) async {
+    final rows = await db.searchFoodRows(query, limit: 300);
+    final scored = [
+      for (final row in rows)
+        (
+          row,
+          searchScore(query, row.name, hasPortions: row.portions != '[]') + (row.source == FoodSource.user.id ? 30 : 0),
+        ),
+    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    return [for (final (row, _) in scored.take(limit)) foodFromRow(row).summary];
   }
 
-  Future<Food?> food(String key, {bool keep = false}) async {
+  Future<Food?> refresh(Food food) async {
+    final remote = _remotes[food.source];
+    if (remote == null) return null;
+    final fresh = await remote.fetch(food.sourceId);
+    if (fresh != null) await store(fresh);
+    return fresh;
+  }
+
+  Future<List<FoodSummary>> searchRemote(String query, {int limit = 25}) async => [
+        for (final remote in _remotes.values) ...await remote.search(query, limit: limit),
+      ];
+
+  Future<Food?> food(String key) async {
     final local = await db.foodRow(key);
-    final source = FoodSource.fromId(key.substring(0, key.indexOf(':')));
-    final remote = _remotes[source];
-    final currentMode = await mode();
-    if (local != null && (currentMode != FoodCacheMode.online || remote == null)) return foodFromRow(local);
-    if (remote == null) return local == null ? null : foodFromRow(local);
-    final Food? fetched;
-    try {
-      fetched = await remote.fetch(key.substring(key.indexOf(':') + 1));
-    } on NutritionSourceException {
-      if (local != null) return foodFromRow(local);
-      rethrow;
-    }
-    if (fetched != null && (keep || local != null || currentMode != FoodCacheMode.online)) await store(fetched);
-    return fetched ?? (local == null ? null : foodFromRow(local));
+    if (local != null) return foodFromRow(local);
+    final remote = _remotes[FoodSource.fromId(key.substring(0, key.indexOf(':')))];
+    final fetched = await remote?.fetch(key.substring(key.indexOf(':') + 1));
+    if (fetched != null) await store(fetched);
+    return fetched;
   }
 
   Future<Map<String, Food>> foodsByKey(Iterable<String> keys) async {
@@ -68,7 +55,14 @@ class NutritionRepository {
     return {for (final row in rows) row.key: foodFromRow(row)};
   }
 
-  Future<void> store(Food food, {DateTime? at}) => db.upsertFoodRow(FoodsCompanion.insert(
+  Future<void> store(Food food, {DateTime? at}) => db.upsertFoodRow(_row(food, at ?? DateTime.now()));
+
+  Future<void> storeAll(List<Food> foods, {DateTime? at}) {
+    final now = at ?? DateTime.now();
+    return db.upsertFoodRows([for (final f in foods) _row(f, now)]);
+  }
+
+  FoodsCompanion _row(Food food, DateTime at) => FoodsCompanion.insert(
         key: food.key,
         source: food.source.id,
         sourceId: food.sourceId,
@@ -77,8 +71,19 @@ class NutritionRepository {
         nutrients: jsonEncode(food.per100g.toJson()),
         portions: Value(jsonEncode([for (final p in food.portions) p.toJson()])),
         densityGPerMl: Value(food.densityGPerMl),
-        fetchedAt: at ?? DateTime.now(),
-      ));
+        fetchedAt: at,
+      );
+
+  Future<String?> bundleVersion() => db.getSetting(_keyBundleVersion);
+
+  Future<bool> importBundle(String version, List<Food> foods) async {
+    if (await bundleVersion() == version) return false;
+    await storeAll(foods);
+    await db.setSetting(_keyBundleVersion, version);
+    return true;
+  }
+
+  Future<int> countBySource(FoodSource source) => db.countFoodRows(source.id);
 
   Future<Food> saveUserFood({
     String? sourceId,
@@ -103,40 +108,8 @@ class NutritionRepository {
 
   Future<List<Food>> library() async => [for (final r in await db.select(db.foods).get()) foodFromRow(r)];
 
-  Stream<List<Food>> watchLibrary() => db.watchFoodRows().map((rows) => [for (final r in rows) foodFromRow(r)]);
-
-  Future<({int updated, int failed})> refreshCached() async {
-    var updated = 0;
-    var failed = 0;
-    for (final food in await library()) {
-      final remote = _remotes[food.source];
-      if (remote == null) continue;
-      try {
-        final fresh = await remote.fetch(food.sourceId);
-        if (fresh == null) {
-          failed++;
-          continue;
-        }
-        await store(fresh);
-        updated++;
-      } on NutritionSourceException {
-        failed++;
-      }
-    }
-    return (updated: updated, failed: failed);
-  }
-
-  Future<int> pruneUnused() async {
-    final linked = await db.linkedFoodKeys();
-    var removed = 0;
-    for (final food in await library()) {
-      if (food.source != FoodSource.user && !linked.contains(food.key)) {
-        await delete(food.key);
-        removed++;
-      }
-    }
-    return removed;
-  }
+  Stream<List<Food>> watchUserFoods() =>
+      db.watchFoodRows(source: FoodSource.user.id).map((rows) => [for (final r in rows) foodFromRow(r)]);
 }
 
 Food foodFromRow(FoodRow row) => Food(

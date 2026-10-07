@@ -72,6 +72,33 @@ void main() {
     });
   });
 
+  group('bundle', () {
+    test('bulk files are parsed, empty entries skipped, and the bundle round-trips', () {
+      final bulk = {
+        'FoundationFoods': [fixture('foundation_egg.json'), null],
+        'SRLegacyFoods': [fixture('sr_milk.json'), fixture('sr_flour.json')],
+      };
+      final foods = parseUsdaBulk(bulk);
+      expect(foods.map((f) => f.sourceId), ['323604', '171265', '168894']);
+
+      final encoded = jsonDecode(jsonEncode(encodeUsdaBundle(foods, version: 'test')));
+      final decoded = decodeUsdaBundle(encoded as Map<String, dynamic>);
+      expect(decoded.version, 'test');
+      for (final (i, f) in decoded.foods.indexed) {
+        expect(f.key, foods[i].key);
+        expect(f.name, foods[i].name);
+        expect(f.detail, foods[i].detail);
+        expect(f.per100g, foods[i].per100g);
+        expect(f.portions.map((p) => (p.label, p.grams, p.unit, p.amount)),
+            foods[i].portions.map((p) => (p.label, p.grams, p.unit, p.amount)));
+      }
+    });
+
+    test('unknown bundle formats are rejected', () {
+      expect(() => decodeUsdaBundle({'format': 99, 'version': 'x', 'foods': []}), throwsFormatException);
+    });
+  });
+
   group('source', () {
     late List<Uri> requests;
 
