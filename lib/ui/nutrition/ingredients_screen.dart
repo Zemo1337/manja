@@ -20,6 +20,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   int? _builtIn;
   String? _builtInVersion;
   ApiKeyOrigin? _keyOrigin;
+  final _updating = <String>{};
   bool _loaded = false;
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
@@ -78,15 +79,21 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   Future<void> _update(Food food) async {
+    if (_updating.contains(food.key)) return;
     final messenger = ScaffoldMessenger.of(context);
+    setState(() => _updating.add(food.key));
+    NutritionSourceException? error;
     try {
       final fresh = await _repo.refresh(food);
       messenger.showSnackBar(
         SnackBar(content: Text(fresh == null ? 'USDA no longer has this food' : 'Updated "${fresh.name}"')),
       );
     } on NutritionSourceException catch (e) {
-      if (mounted) await handleNutritionError(context, e);
+      error = e;
+    } finally {
+      if (mounted) setState(() => _updating.remove(food.key));
     }
+    if (error != null && mounted) await handleNutritionError(context, error);
     await _loadMeta();
   }
 
@@ -101,12 +108,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         showDragHandle: true,
         builder: (_) => _FoodSheet(
           food: food,
-          onUpdate: food.source == FoodSource.user || !_repo.hasRemote
-              ? null
-              : () {
-                  Navigator.pop(context);
-                  _update(food);
-                },
+          canUpdate: food.source != FoodSource.user && _repo.hasRemote,
+          updating: _updating.contains(food.key),
+          onUpdate: () {
+            Navigator.pop(context);
+            _update(food);
+          },
           onEdit: () {
             Navigator.pop(context);
             _edit(food);
@@ -184,10 +191,21 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         for (final f in foods)
           ListTile(
             title: Text(f.name),
-            subtitle: Text([
-              if (f.per100g[Nutrient.energy] case final kcal?) '${kcal.round()} kcal / 100 g',
-              if (_linked.contains(f.key)) 'used in recipes',
-            ].join(' · ')),
+            subtitle: Text(
+              _updating.contains(f.key)
+                  ? 'Asking USDA for the latest values…'
+                  : [
+                      if (f.per100g[Nutrient.energy] case final kcal?) '${kcal.round()} kcal / 100 g',
+                      if (_linked.contains(f.key)) 'used in recipes',
+                    ].join(' · '),
+            ),
+            trailing: _updating.contains(f.key)
+                ? const SizedBox.square(
+                    key: ValueKey('updating'),
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
             onTap: () => _show(f),
           ),
       ],
@@ -196,12 +214,21 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 }
 
 class _FoodSheet extends StatelessWidget {
-  const _FoodSheet({required this.food, required this.onEdit, required this.onDelete, this.onUpdate});
+  const _FoodSheet({
+    required this.food,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onUpdate,
+    this.canUpdate = false,
+    this.updating = false,
+  });
 
   final Food food;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback? onUpdate;
+  final VoidCallback onUpdate;
+  final bool canUpdate;
+  final bool updating;
 
   @override
   Widget build(BuildContext context) {
@@ -239,11 +266,11 @@ class _FoodSheet extends StatelessWidget {
                   icon: Icon(mine ? Icons.edit_outlined : Icons.copy),
                   label: Text(mine ? 'Edit' : 'Copy to my ingredients'),
                 ),
-                if (onUpdate != null)
+                if (canUpdate)
                   OutlinedButton.icon(
-                    onPressed: onUpdate,
+                    onPressed: updating ? null : onUpdate,
                     icon: const Icon(Icons.sync),
-                    label: const Text('Update from USDA'),
+                    label: Text(updating ? 'Updating…' : 'Update from USDA'),
                   ),
                 if (mine)
                   TextButton.icon(
