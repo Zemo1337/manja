@@ -166,7 +166,18 @@ class _FoodPickerState extends State<_FoodPicker> {
                       label: Text(_text.length < 2 ? 'Search USDA online' : 'Search USDA online for "$_text"'),
                     ),
                   ),
-                if (_remoteLoading) const Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()),
+                if (_remoteLoading)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const LinearProgressIndicator(),
+                        const SizedBox(height: 8),
+                        Text('Asking USDA, this can take a few seconds…', style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
                 if (_remoteError != null)
                   ListTile(
                     leading: Icon(Icons.cloud_off, color: theme.colorScheme.error),

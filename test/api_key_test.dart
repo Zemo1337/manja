@@ -52,6 +52,7 @@ void main() {
     status = 200;
     await r.searchRemote('flour');
     expect(requests.last.queryParameters['api_key'], 'my-key');
+    expect(requests.last.queryParameters['pageSize'], '10', reason: 'USDA answers much faster with fewer results');
 
     expect(await r.setUserApiKey(''), ApiKeyOrigin.demo);
     await r.searchRemote('flour');

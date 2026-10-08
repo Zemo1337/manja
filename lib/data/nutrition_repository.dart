@@ -72,7 +72,7 @@ class NutritionRepository {
     return fresh;
   }
 
-  Future<List<FoodSummary>> searchRemote(String query, {int limit = 25}) async => [
+  Future<List<FoodSummary>> searchRemote(String query, {int limit = 10}) async => [
         for (final remote in _remotes.values) ...await remote.search(query, limit: limit),
       ];
 

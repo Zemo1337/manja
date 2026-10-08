@@ -12,7 +12,7 @@ class UsdaSource implements NutritionSource {
     http.Client? client,
     this.dataTypes = const ['Foundation', 'SR Legacy'],
     Uri? baseUri,
-    this.timeout = const Duration(seconds: 15),
+    this.timeout = const Duration(seconds: 30),
   })  : _client = client ?? http.Client(),
         _base = baseUri ?? Uri.parse('https://api.nal.usda.gov/fdc/v1/');
 
