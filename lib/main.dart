@@ -12,6 +12,7 @@ import 'data/food_bundle.dart';
 import 'data/nutrition_repository.dart';
 import 'data/photo_store.dart';
 import 'domain/wheel_service.dart';
+import 'ui/app_theme.dart';
 import 'ui/home_shell.dart';
 
 Future<void> main() async {
@@ -24,26 +25,42 @@ Future<void> main() async {
     buildApiKey: usdaApiKey,
   );
   await nutrition.loadApiKey();
-  runApp(AppScope(db: db, wheel: WheelService(db), photos: photos, nutrition: nutrition, child: const ManjaManjaApp()));
-  unawaited(importBundledFoods(nutrition).catchError((Object e) {
-    debugPrint('Built-in foods could not be imported: $e');
-    return false;
-  }));
+  final appearance = AppearanceController(db);
+  await appearance.load();
+  runApp(
+    AppScope(
+      db: db,
+      wheel: WheelService(db),
+      photos: photos,
+      nutrition: nutrition,
+      appearance: appearance,
+      child: const ManjaManjaApp(),
+    ),
+  );
+  unawaited(
+    importBundledFoods(nutrition).catchError((Object e) {
+      debugPrint('Built-in foods could not be imported: $e');
+      return false;
+    }),
+  );
 }
 
 class ManjaManjaApp extends StatelessWidget {
   const ManjaManjaApp({super.key});
 
-  static const _seed = Color(0xFFE4572E);
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Manja Manja',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: _seed, brightness: Brightness.light),
-      darkTheme: ThemeData(colorSchemeSeed: _seed, brightness: Brightness.dark),
-      home: const HomeShell(),
+    final appearance = AppScope.of(context).appearance;
+    return ListenableBuilder(
+      listenable: appearance,
+      builder: (context, _) => MaterialApp(
+        title: 'Manja Manja',
+        debugShowCheckedModeBanner: false,
+        theme: appTheme(appearance.theme, Brightness.light),
+        darkTheme: appTheme(appearance.theme, Brightness.dark),
+        themeMode: appearance.themeMode,
+        home: const HomeShell(),
+      ),
     );
   }
 }

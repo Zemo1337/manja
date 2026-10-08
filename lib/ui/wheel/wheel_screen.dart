@@ -265,7 +265,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                           },
                         ),
                       ),
-                      CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(wheelTheme.pointer)),
+                      CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(wheelTheme.pointer, outline: theme.colorScheme.onSurface)),
                     ],
                   ),
                 ),

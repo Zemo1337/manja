@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../nutrition/ingredients_screen.dart';
+import 'appearance_screen.dart';
 import 'option_card.dart';
 import 'wheel_look_screen.dart';
 import 'wheel_rounds_screen.dart';
@@ -16,6 +17,14 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
+          const SettingsSectionTitle('App'),
+          ListTile(
+            leading: const Icon(Icons.brightness_6_outlined),
+            title: const Text('Appearance'),
+            subtitle: const Text('Theme, light and dark mode'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(context, const AppearanceScreen()),
+          ),
           const SettingsSectionTitle('Wheel'),
           ListTile(
             leading: const Icon(Icons.palette_outlined),

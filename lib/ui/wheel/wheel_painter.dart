@@ -52,10 +52,11 @@ class WheelPainter extends CustomPainter {
       starts.add(angle);
       angle += sweep;
     }
-    final colors = [
-      for (var i = 0; i < count; i++) slices[i].isOverflow ? theme.overflow : theme.sliceColor(i, count),
+    final colors = [for (var i = 0; i < count; i++) slices[i].isOverflow ? theme.overflow : theme.sliceColor(i, count)];
+    final visible = [
+      for (var i = 0; i < count; i++)
+        if (sweeps[i] > _minSweep) i,
     ];
-    final visible = [for (var i = 0; i < count; i++) if (sweeps[i] > _minSweep) i];
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -202,9 +203,10 @@ class WheelPainter extends CustomPainter {
 }
 
 class WheelPointerPainter extends CustomPainter {
-  WheelPointerPainter(this.color);
+  WheelPointerPainter(this.color, {this.outline});
 
   final Color color;
+  final Color? outline;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -215,8 +217,18 @@ class WheelPointerPainter extends CustomPainter {
       ..close();
     canvas.drawShadow(path, Colors.black, 3, false);
     canvas.drawPath(path, Paint()..color = color);
+    if (outline != null && outline != color) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = outline!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(WheelPointerPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(WheelPointerPainter oldDelegate) => oldDelegate.color != color || oldDelegate.outline != outline;
 }
