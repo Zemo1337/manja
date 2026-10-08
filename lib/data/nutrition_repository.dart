@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
 
@@ -64,12 +65,19 @@ class NutritionRepository {
     return [for (final (row, _) in scored.take(limit)) foodFromRow(row).summary];
   }
 
+  final updating = ValueNotifier<Set<String>>(const {});
+
   Future<Food?> refresh(Food food) async {
     final remote = _remotes[food.source];
     if (remote == null) return null;
-    final fresh = await remote.fetch(food.sourceId);
-    if (fresh != null) await store(fresh);
-    return fresh;
+    updating.value = {...updating.value, food.key};
+    try {
+      final fresh = await remote.fetch(food.sourceId);
+      if (fresh != null) await store(fresh);
+      return fresh;
+    } finally {
+      updating.value = {...updating.value}..remove(food.key);
+    }
   }
 
   Future<List<FoodSummary>> searchRemote(String query, {int limit = 10}) async => [

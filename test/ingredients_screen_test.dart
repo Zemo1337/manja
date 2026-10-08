@@ -95,6 +95,76 @@ void main() {
     expect(find.text('Milk, whole, 3.25% milkfat'), findsOneWidget);
   });
 
+  testWidgets('leaving the screen during an update and coming back still works', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 2400)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    Future<void> settle() async {
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    }
+
+    final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    addTearDown(db.close);
+    final usda = SlowUsda();
+    final repo = NutritionRepository(db, remotes: {FoodSource.usda: usda});
+    await repo.store(_milk);
+    await db.saveRecipe(RecipeDraft(
+      name: 'Palačinke',
+      portions: 4,
+      ingredients: [IngredientDraft(name: 'Milk', amount: 500, unit: 'ml', foodKey: _milk.key)],
+    ));
+    await tester.pumpWidget(AppScope(
+      db: db,
+      wheel: WheelService(db),
+      photos: PhotoStore(Directory.systemTemp),
+      nutrition: repo,
+      child: MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IngredientsScreen())),
+              child: const Text('Open ingredients'),
+            ),
+          ),
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('Open ingredients'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Milk, whole'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Update from USDA'));
+    await settle();
+    final first = usda.pending!;
+
+    await tester.pageBack();
+    await settle();
+    expect(find.byType(IngredientsScreen), findsNothing, reason: 'back left the screen');
+    await tester.tap(find.text('Open ingredients'));
+    await settle();
+    await tester.tap(find.text('Milk, whole'));
+    await settle();
+    expect(find.text('Per 100 g'), findsOneWidget, reason: 'the details sheet opens');
+    expect(find.byKey(const ValueKey('updating')), findsOneWidget, reason: 'the new screen knows the update runs');
+    expect(find.text('Updating…'), findsOneWidget, reason: 'and greys out a second update');
+
+    first.complete(Food(
+      source: FoodSource.usda,
+      sourceId: '171265',
+      name: 'Milk, whole, 3.25% milkfat',
+      per100g: Nutrients.of(energyKcal: 61),
+    ));
+    await settle();
+    expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(20, 20));
+    await settle();
+    expect(find.text('Milk, whole, 3.25% milkfat'), findsOneWidget, reason: 'the new screen shows the update');
+  });
+
   testWidgets('a failed update stops the spinner and explains why', (tester) async {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     addTearDown(db.close);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
@@ -20,21 +22,27 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   int? _builtIn;
   String? _builtInVersion;
   ApiKeyOrigin? _keyOrigin;
-  final _updating = <String>{};
-  bool _loaded = false;
+  StreamSubscription<void>? _foodChanges;
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
+    if (_foodChanges == null) {
+      _foodChanges = AppScope.of(context).db.watchFoodChanges().listen((_) => _loadMeta());
       _loadMeta();
     }
   }
 
+  @override
+  void dispose() {
+    _foodChanges?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadMeta() async {
+    if (!mounted) return;
     final scope = AppScope.of(context);
     final linked = await scope.db.linkedFoodKeys();
     final builtIn = await scope.nutrition.countBySource(FoodSource.usda);
@@ -79,22 +87,21 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   Future<void> _update(Food food) async {
-    if (_updating.contains(food.key)) return;
+    final repo = _repo;
+    if (repo.updating.value.contains(food.key)) return;
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _updating.add(food.key));
-    NutritionSourceException? error;
     try {
-      final fresh = await _repo.refresh(food);
+      final fresh = await repo.refresh(food);
       messenger.showSnackBar(
         SnackBar(content: Text(fresh == null ? 'USDA no longer has this food' : 'Updated "${fresh.name}"')),
       );
     } on NutritionSourceException catch (e) {
-      error = e;
-    } finally {
-      if (mounted) setState(() => _updating.remove(food.key));
+      if (mounted) {
+        await handleNutritionError(context, e);
+      } else {
+        messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      }
     }
-    if (error != null && mounted) await handleNutritionError(context, error);
-    await _loadMeta();
   }
 
   Future<void> _editKey() async {
@@ -103,27 +110,30 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   void _show(Food food) => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (_) => _FoodSheet(
-          food: food,
-          canUpdate: food.source != FoodSource.user && _repo.hasRemote,
-          updating: _updating.contains(food.key),
-          onUpdate: () {
-            Navigator.pop(context);
-            _update(food);
-          },
-          onEdit: () {
-            Navigator.pop(context);
-            _edit(food);
-          },
-          onDelete: () {
-            Navigator.pop(context);
-            _delete(food);
-          },
-        ),
-      );
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => ValueListenableBuilder<Set<String>>(
+      valueListenable: _repo.updating,
+      builder: (_, updating, _) => _FoodSheet(
+        food: food,
+        canUpdate: food.source != FoodSource.user && _repo.hasRemote,
+        updating: updating.contains(food.key),
+        onUpdate: () {
+          Navigator.pop(context);
+          _update(food);
+        },
+        onEdit: () {
+          Navigator.pop(context);
+          _edit(food);
+        },
+        onDelete: () {
+          Navigator.pop(context);
+          _delete(food);
+        },
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -136,45 +146,52 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       ),
       body: StreamBuilder<List<Food>>(
         stream: _repo.watchUserFoods(),
-        builder: (context, snapshot) {
-          final mine = snapshot.data ?? const <Food>[];
-          return ListView(
-            padding: const EdgeInsets.only(bottom: 96),
-            children: [
-              ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
-                title: Text(_builtIn == null ? 'Built-in ingredients' : 'Built-in ingredients: $_builtIn'),
-                subtitle: Text(
-                  'USDA FoodData Central, works offline${_builtInVersion == null ? '' : '\n$_builtInVersion'}',
-                ),
-                isThreeLine: _builtInVersion != null,
-              ),
-              if (_keyOrigin != null)
-                ListTile(
-                  leading: const Icon(Icons.travel_explore),
-                  title: const Text('USDA online lookup'),
-                  subtitle: Text(switch (_keyOrigin!) {
-                    ApiKeyOrigin.demo => 'Shared demo key, a few lookups per hour. Add your own free key for more.',
-                    ApiKeyOrigin.developer => 'Developer key from config/local.json',
-                    ApiKeyOrigin.user => 'Your own API key',
-                  }),
-                  trailing: TextButton(
-                    onPressed: _editKey,
-                    child: Text(_keyOrigin == ApiKeyOrigin.user ? 'Change' : 'Add key'),
-                  ),
-                ),
-              const Divider(height: 24),
-              _section(context, 'My ingredients', mine, 'Add ingredients you cannot find, e.g. from a package label.'),
-              if (_usedUsda.isNotEmpty)
-                _section(context, 'USDA ingredients in your recipes', _usedUsda, ''),
-            ],
-          );
-        },
+        builder: (context, snapshot) => ValueListenableBuilder<Set<String>>(
+          valueListenable: _repo.updating,
+          builder: (context, updating, _) => _body(context, snapshot.data ?? const <Food>[], updating),
+        ),
       ),
     );
   }
 
-  Widget _section(BuildContext context, String title, List<Food> foods, String empty) {
+  Widget _body(BuildContext context, List<Food> mine, Set<String> updating) {
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 96),
+      children: [
+        ListTile(
+          leading: const Icon(Icons.inventory_2_outlined),
+          title: Text(_builtIn == null ? 'Built-in ingredients' : 'Built-in ingredients: $_builtIn'),
+          subtitle: Text('USDA FoodData Central, works offline${_builtInVersion == null ? '' : '\n$_builtInVersion'}'),
+          isThreeLine: _builtInVersion != null,
+        ),
+        if (_keyOrigin != null)
+          ListTile(
+            leading: const Icon(Icons.travel_explore),
+            title: const Text('USDA online lookup'),
+            subtitle: Text(switch (_keyOrigin!) {
+              ApiKeyOrigin.demo => 'Shared demo key, a few lookups per hour. Add your own free key for more.',
+              ApiKeyOrigin.developer => 'Developer key from config/local.json',
+              ApiKeyOrigin.user => 'Your own API key',
+            }),
+            trailing: TextButton(
+              onPressed: _editKey,
+              child: Text(_keyOrigin == ApiKeyOrigin.user ? 'Change' : 'Add key'),
+            ),
+          ),
+        const Divider(height: 24),
+        _section(
+          context,
+          'My ingredients',
+          mine,
+          'Add ingredients you cannot find, e.g. from a package label.',
+          updating,
+        ),
+        if (_usedUsda.isNotEmpty) _section(context, 'USDA ingredients in your recipes', _usedUsda, '', updating),
+      ],
+    );
+  }
+
+  Widget _section(BuildContext context, String title, List<Food> foods, String empty, Set<String> updating) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,14 +209,14 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           ListTile(
             title: Text(f.name),
             subtitle: Text(
-              _updating.contains(f.key)
+              updating.contains(f.key)
                   ? 'Asking USDA for the latest values…'
                   : [
                       if (f.per100g[Nutrient.energy] case final kcal?) '${kcal.round()} kcal / 100 g',
                       if (_linked.contains(f.key)) 'used in recipes',
                     ].join(' · '),
             ),
-            trailing: _updating.contains(f.key)
+            trailing: updating.contains(f.key)
                 ? const SizedBox.square(
                     key: ValueKey('updating'),
                     dimension: 20,
@@ -241,20 +258,37 @@ class _FoodSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(food.name, style: theme.textTheme.titleLarge),
-            Text(food.detail?.isNotEmpty == true ? '${food.source.label} · ${food.detail}' : food.source.label,
-                style: theme.textTheme.bodySmall),
+            Text(
+              food.detail?.isNotEmpty == true ? '${food.source.label} · ${food.detail}' : food.source.label,
+              style: theme.textTheme.bodySmall,
+            ),
             const SizedBox(height: 12),
             Text('Per 100 g', style: theme.textTheme.titleSmall),
             for (final n in Nutrient.values)
               if (food.per100g[n] case final v?)
-                Row(children: [Expanded(child: Text(n.label)), Text('${formatNutrient(n, v)} ${n.unit}')]),
+                Row(
+                  children: [
+                    Expanded(child: Text(n.label)),
+                    Text('${formatNutrient(n, v)} ${n.unit}'),
+                  ],
+                ),
             if (food.per100g.saltG case final salt?)
-              Row(children: [const Expanded(child: Text('Salt')), Text('${formatNutrient(Nutrient.fat, salt)} g')]),
+              Row(
+                children: [
+                  const Expanded(child: Text('Salt')),
+                  Text('${formatNutrient(Nutrient.fat, salt)} g'),
+                ],
+              ),
             if (food.portions.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text('Portions', style: theme.textTheme.titleSmall),
               for (final p in food.portions)
-                Row(children: [Expanded(child: Text(p.label)), Text('${p.grams.round()} g')]),
+                Row(
+                  children: [
+                    Expanded(child: Text(p.label)),
+                    Text('${p.grams.round()} g'),
+                  ],
+                ),
             ],
             const SizedBox(height: 16),
             Wrap(

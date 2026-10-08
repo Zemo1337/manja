@@ -229,6 +229,8 @@ class AppDatabase extends _$AppDatabase {
     return q.watch();
   }
 
+  Stream<void> watchFoodChanges() => tableUpdates(TableUpdateQuery.onTable(foods));
+
   Future<int> countFoodRows(String source) {
     final count = foods.key.count();
     return (selectOnly(foods)
