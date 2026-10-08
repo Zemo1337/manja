@@ -9,9 +9,9 @@ import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../recipes/recipe_photo.dart';
+import '../settings/wheel_look_screen.dart';
 import 'wheel_image_cache.dart';
 import 'wheel_painter.dart';
-import 'wheel_settings_sheet.dart';
 import 'wheel_themes.dart';
 
 class WheelScreen extends StatefulWidget {
@@ -197,9 +197,9 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
             onPressed: _spinning || state == null || state.eaten == 0 ? null : _resetCycle,
           ),
           IconButton(
-            tooltip: 'Wheel settings',
+            tooltip: 'Wheel look',
             icon: const Icon(Icons.tune),
-            onPressed: state == null ? null : () => showWheelSettings(context, state.settings, state.appearance),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WheelLookScreen())),
           ),
         ],
       ),

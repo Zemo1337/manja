@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'history/history_screen.dart';
 import 'recipes/recipe_list_screen.dart';
+import 'settings/settings_screen.dart';
 import 'wheel/wheel_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -19,7 +20,7 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       body: IndexedStack(
         index: _index,
-        children: const [WheelScreen(), RecipeListScreen(), HistoryScreen()],
+        children: const [WheelScreen(), RecipeListScreen(), HistoryScreen(), SettingsScreen()],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
@@ -29,6 +30,11 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
               icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Recipes'),
           NavigationDestination(icon: Icon(Icons.history), label: 'History'),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );
