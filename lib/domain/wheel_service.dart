@@ -27,7 +27,9 @@ enum WheelContent {
 enum WheelThemeKind {
   classic('Classic'),
   pizza('Pizza'),
-  burek('Burek');
+  burek('Burek'),
+  sacher('Sachertorte'),
+  baklava('Baklava');
 
   const WheelThemeKind(this.label);
 

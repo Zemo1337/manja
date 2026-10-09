@@ -55,30 +55,36 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
               children: [
                 const SettingsSectionTitle('Theme'),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    children: [
-                      for (final kind in WheelThemeKind.values)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: OptionCard(
-                              label: kind.label,
-                              selected: look.theme == kind,
-                              onTap: () => _change(look.copyWith(theme: kind)),
-                              preview: CustomPaint(
-                                size: const Size.square(64),
-                                painter: WheelPainter(
-                                  slices: _sample,
-                                  sweeps: sliceSweeps(_sample.length),
-                                  rotation: 0,
-                                  theme: WheelTheme.of(kind, theme.colorScheme),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const spacing = 8.0;
+                      final width = (constraints.maxWidth - 2 * spacing) / 3;
+                      return Wrap(
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        children: [
+                          for (final kind in WheelThemeKind.values)
+                            SizedBox(
+                              width: width,
+                              child: OptionCard(
+                                label: kind.label,
+                                selected: look.theme == kind,
+                                onTap: () => _change(look.copyWith(theme: kind)),
+                                preview: CustomPaint(
+                                  size: const Size.square(64),
+                                  painter: WheelPainter(
+                                    slices: _sample,
+                                    sweeps: sliceSweeps(_sample.length),
+                                    rotation: 0,
+                                    theme: WheelTheme.of(kind, theme.colorScheme),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                 ),
                 const SettingsSectionTitle('Show on the wheel'),

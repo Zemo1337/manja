@@ -24,13 +24,15 @@ void main() {
     addTearDown(db.close);
     wheel = WheelService(db);
     await db.saveRecipe(RecipeDraft(name: 'Sarma', portions: 4));
-    await tester.pumpWidget(AppScope(
-      db: db,
-      wheel: wheel,
-      photos: PhotoStore(Directory.systemTemp),
-      nutrition: NutritionRepository(db),
-      child: const ManjaManjaApp(),
-    ));
+    await tester.pumpWidget(
+      AppScope(
+        db: db,
+        wheel: wheel,
+        photos: PhotoStore(Directory.systemTemp),
+        nutrition: NutritionRepository(db),
+        child: const ManjaManjaApp(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -45,11 +47,21 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Text'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Keep names upright'), 200, scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Keep names upright'));
     await tester.pumpAndSettle();
 
-    final look = await wheel.loadAppearance();
+    var look = await wheel.loadAppearance();
     expect(look.theme, WheelThemeKind.pizza);
+    for (final kind in [WheelThemeKind.sacher, WheelThemeKind.baklava]) {
+      await tester.scrollUntilVisible(find.text(kind.label), -200, scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(kind.label));
+      await tester.pumpAndSettle();
+      expect((await wheel.loadAppearance()).theme, kind);
+    }
+    look = await wheel.loadAppearance();
     expect(look.content, WheelContent.text);
     expect(look.flipText, isFalse);
   });
