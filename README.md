@@ -63,6 +63,7 @@ packages/
                     recipe nutrition calculation (plain Dart)
   nutrition_usda/   USDA FoodData Central adapter (search, food details,
                     portion parsing)
+  recipe_import/    reads schema.org recipe data from web pages
 ```
 
 Packages are tested on their own:

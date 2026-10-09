@@ -1,0 +1,16 @@
+name: recipe_import
+description: Reads schema.org Recipe data (JSON-LD) from recipe web pages for Manja Manja.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  html: ^0.15.6
+  nutrition_core:
+    path: ../nutrition_core
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0
