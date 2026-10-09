@@ -41,6 +41,7 @@ void main() {
           final header = appHeaderColors(kind, s);
           final highlight = appHighlightColors(kind, s);
           pairs['header'] = (header.background, header.foreground);
+          pairs['header title'] = (header.background, header.title);
           pairs['highlight'] = (highlight.background, highlight.foreground);
           pairs['add button'] = (s.secondaryContainer, s.onSecondaryContainer);
           for (final MapEntry(key: name, value: (bg, fg)) in pairs.entries) {
@@ -66,14 +67,16 @@ void main() {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     addTearDown(db.close);
     final appearance = AppearanceController(db);
-    await tester.pumpWidget(AppScope(
-      db: db,
-      wheel: WheelService(db),
-      photos: PhotoStore(Directory.systemTemp),
-      nutrition: NutritionRepository(db),
-      appearance: appearance,
-      child: const ManjaManjaApp(),
-    ));
+    await tester.pumpWidget(
+      AppScope(
+        db: db,
+        wheel: WheelService(db),
+        photos: PhotoStore(Directory.systemTemp),
+        nutrition: NutritionRepository(db),
+        appearance: appearance,
+        child: const ManjaManjaApp(),
+      ),
+    );
     await tester.pumpAndSettle();
     MaterialApp app() => tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app().themeMode, ThemeMode.system);

@@ -66,6 +66,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.35.1
   build_runner: ^2.16.1
+  flutter_launcher_icons: ^0.14.4
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -76,6 +77,11 @@ flutter:
   assets:
     - assets/food/usda.json.gz
     - assets/fonts/
+
+  fonts:
+    - family: Lobster
+      fonts:
+        - asset: assets/fonts/Lobster-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -107,3 +113,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  image_path: assets/icon/icon.png
+  android: true
+  adaptive_icon_background: "#FFF4EC"
+  adaptive_icon_foreground: assets/icon/foreground.png
+  adaptive_icon_foreground_inset: 0
+  ios: true
+  remove_alpha_ios: true
+  windows:
+    generate: true
+    image_path: assets/icon/icon_rounded.png
+    icon_size: 256

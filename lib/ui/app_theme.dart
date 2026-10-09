@@ -79,14 +79,22 @@ ColorScheme appColorScheme(AppThemeKind kind, Brightness brightness) {
   };
 }
 
-({Color background, Color foreground}) appHeaderColors(AppThemeKind kind, ColorScheme scheme) => switch (kind) {
-  AppThemeKind.manja when scheme.brightness == Brightness.light => (
-    background: scheme.primary,
-    foreground: scheme.onPrimary,
-  ),
-  AppThemeKind.manja => (background: const Color(0xFF5C1F05), foreground: const Color(0xFFFFDBCC)),
-  _ => (background: scheme.surface, foreground: scheme.onSurface),
-};
+({Color background, Color foreground, Color title}) appHeaderColors(AppThemeKind kind, ColorScheme scheme) =>
+    switch (kind) {
+      AppThemeKind.manja when scheme.brightness == Brightness.light => (
+        background: scheme.primary,
+        foreground: scheme.onPrimary,
+        title: const Color(0xFFFFF4EC),
+      ),
+      AppThemeKind.manja => (
+        background: const Color(0xFF5C1F05),
+        foreground: const Color(0xFFFFDBCC),
+        title: const Color(0xFFFFC94D),
+      ),
+      _ => (background: scheme.surface, foreground: scheme.onSurface, title: scheme.primary),
+    };
+
+const appTitleFont = 'Lobster';
 
 ({Color background, Color foreground}) appHighlightColors(AppThemeKind kind, ColorScheme scheme) => switch (kind) {
   AppThemeKind.manja => (background: scheme.tertiaryContainer, foreground: scheme.onTertiaryContainer),
@@ -100,7 +108,11 @@ ThemeData appTheme(AppThemeKind kind, Brightness brightness) {
   return ThemeData(
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
-    appBarTheme: AppBarTheme(backgroundColor: header.background, foregroundColor: header.foreground),
+    appBarTheme: AppBarTheme(
+      backgroundColor: header.background,
+      foregroundColor: header.foreground,
+      titleTextStyle: TextStyle(fontFamily: appTitleFont, fontSize: 26, color: header.title),
+    ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: scheme.surfaceContainer,
       indicatorColor: highlight.background,

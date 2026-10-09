@@ -9,6 +9,7 @@ import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../app_theme.dart';
+import '../app_logo.dart';
 import '../pantry/pantry_screen.dart';
 import '../recipes/recipe_photo.dart';
 import '../settings/wheel_look_screen.dart';
@@ -214,7 +215,14 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     final state = _state;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manja Manja'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppLogo(size: 34),
+            SizedBox(width: 10),
+            Flexible(child: Text('Manja Manja', overflow: TextOverflow.ellipsis)),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'What can I cook?',
