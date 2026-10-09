@@ -8,6 +8,7 @@ import '../../data/database.dart';
 import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
+import '../app_theme.dart';
 import '../recipes/recipe_photo.dart';
 import '../settings/wheel_look_screen.dart';
 import 'wheel_image_cache.dart';
@@ -22,8 +23,10 @@ class WheelScreen extends StatefulWidget {
 }
 
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 4200));
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 4200),
+  );
   late final AnimationController _grow = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
   late final Animation<double> _growCurve = CurvedAnimation(parent: _grow, curve: Curves.easeInOutCubic);
   int? _winner;
@@ -48,9 +51,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   void didChangeDependencies() {
     super.didChangeDependencies();
     final scope = AppScope.of(context);
-    _images ??= WheelImageCache(scope.photos, onLoaded: () {
-      if (mounted) setState(() {});
-    });
+    _images ??= WheelImageCache(
+      scope.photos,
+      onLoaded: () {
+        if (mounted) setState(() {});
+      },
+    );
     _subscription ??= scope.db.watchWheelInputs().listen((_) => _reload());
     _reload();
   }
@@ -98,14 +104,14 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   }
 
   List<WheelSliceData> _sliceData() => [
-        for (final e in _entries)
-          if (!e.isOverflow)
-            WheelSliceData(label: e.recipe!.name, image: _images![e.recipe!.photoPath])
-          else if (_result != null && e.represents(_result!))
-            WheelSliceData(label: _result!.name, image: _images![_result!.photoPath], isOverflow: true)
-          else
-            WheelSliceData(label: '+${e.hidden.length}', isOverflow: true),
-      ];
+    for (final e in _entries)
+      if (!e.isOverflow)
+        WheelSliceData(label: e.recipe!.name, image: _images![e.recipe!.photoPath])
+      else if (_result != null && e.represents(_result!))
+        WheelSliceData(label: _result!.name, image: _images![_result!.photoPath], isOverflow: true)
+      else
+        WheelSliceData(label: '+${e.hidden.length}', isOverflow: true),
+  ];
 
   ({List<double> sweeps, double rotation}) _frame() {
     final count = _entries.length;
@@ -222,7 +228,11 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         icon: Icons.celebration_outlined,
         title: 'You ate everything!',
         message: 'Every dish on the wheel has been cooked this round.',
-        action: FilledButton.icon(onPressed: _resetCycle, icon: const Icon(Icons.restart_alt), label: const Text('Reset wheel')),
+        action: FilledButton.icon(
+          onPressed: _resetCycle,
+          icon: const Icon(Icons.restart_alt),
+          label: const Text('Reset wheel'),
+        ),
       );
     }
     return LayoutBuilder(
@@ -232,7 +242,21 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              Text('${_available.length} of ${state.total} dishes left', style: theme.textTheme.titleMedium),
+              Builder(
+                builder: (context) {
+                  final badge = appHighlightColors(AppScope.of(context).appearance.theme, theme.colorScheme);
+                  return DecoratedBox(
+                    decoration: BoxDecoration(color: badge.background, borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      child: Text(
+                        '${_available.length} of ${state.total} dishes left',
+                        style: theme.textTheme.titleMedium?.copyWith(color: badge.foreground),
+                      ),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               GestureDetector(
                 key: const ValueKey('wheel'),
@@ -265,7 +289,10 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                           },
                         ),
                       ),
-                      CustomPaint(size: const Size(28, 34), painter: WheelPointerPainter(wheelTheme.pointer, outline: theme.colorScheme.onSurface)),
+                      CustomPaint(
+                        size: const Size(28, 34),
+                        painter: WheelPointerPainter(wheelTheme.pointer, outline: theme.colorScheme.onSurface),
+                      ),
                     ],
                   ),
                 ),
@@ -361,6 +388,10 @@ class _ResultCard extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: onConfirm,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.secondary,
+                        foregroundColor: theme.colorScheme.onSecondary,
+                      ),
                       icon: const Icon(Icons.check),
                       label: const Text("Let's cook it"),
                     ),

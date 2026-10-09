@@ -90,10 +90,7 @@ class _NutritionPanelState extends State<NutritionPanel> {
             '* Some linked foods have no data for this value, so it is a lower bound.',
             style: theme.textTheme.bodySmall,
           ),
-        if (!r.complete) ...[
-          const SizedBox(height: 8),
-          _MissingCard(missing: r.missing),
-        ],
+        if (!r.complete) ...[const SizedBox(height: 8), _MissingCard(missing: r.missing)],
       ],
     );
   }
@@ -113,23 +110,32 @@ class _NutrientTable extends StatelessWidget {
         if (values[n] case final v?) (n.label, '${formatNutrient(n, v)} ${n.unit}', n == Nutrient.energy),
       if (values.saltG case final salt?) ('Salt', '${formatNutrient(Nutrient.fat, salt)} g', false),
     ];
+    final highlight = theme.chipTheme.backgroundColor ?? theme.colorScheme.primaryContainer;
+    final onHighlight = theme.chipTheme.labelStyle?.color ?? theme.colorScheme.onPrimaryContainer;
     return Table(
       columnWidths: const {0: FlexColumnWidth(), 1: IntrinsicColumnWidth()},
       children: [
         for (final (label, value, bold) in rows)
           TableRow(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5))),
+            decoration: bold
+                ? BoxDecoration(color: highlight, borderRadius: BorderRadius.circular(8))
+                : BoxDecoration(
+                    border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5)),
+                  ),
             children: [
               Padding(
-                padding: EdgeInsets.only(left: _indented(label) ? 16 : 0, top: 6, bottom: 6),
-                child: Text(label, style: bold ? theme.textTheme.titleSmall : theme.textTheme.bodyMedium),
+                padding: EdgeInsets.only(left: _indented(label) ? 24 : 8, top: 6, bottom: 6),
+                child: Text(
+                  label,
+                  style: bold ? theme.textTheme.titleSmall?.copyWith(color: onHighlight) : theme.textTheme.bodyMedium,
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.fromLTRB(0, 6, 8, 6),
                 child: Text(
                   '$value${_isPartial(label) ? ' *' : ''}',
                   textAlign: TextAlign.end,
-                  style: bold ? theme.textTheme.titleSmall : theme.textTheme.bodyMedium,
+                  style: bold ? theme.textTheme.titleSmall?.copyWith(color: onHighlight) : theme.textTheme.bodyMedium,
                 ),
               ),
             ],

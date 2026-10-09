@@ -79,20 +79,46 @@ ColorScheme appColorScheme(AppThemeKind kind, Brightness brightness) {
   };
 }
 
+({Color background, Color foreground}) appHeaderColors(AppThemeKind kind, ColorScheme scheme) => switch (kind) {
+  AppThemeKind.manja when scheme.brightness == Brightness.light => (
+    background: scheme.primary,
+    foreground: scheme.onPrimary,
+  ),
+  AppThemeKind.manja => (background: const Color(0xFF5C1F05), foreground: const Color(0xFFFFDBCC)),
+  _ => (background: scheme.surface, foreground: scheme.onSurface),
+};
+
+({Color background, Color foreground}) appHighlightColors(AppThemeKind kind, ColorScheme scheme) => switch (kind) {
+  AppThemeKind.manja => (background: scheme.tertiaryContainer, foreground: scheme.onTertiaryContainer),
+  _ => (background: scheme.primaryContainer, foreground: scheme.onPrimaryContainer),
+};
+
 ThemeData appTheme(AppThemeKind kind, Brightness brightness) {
   final scheme = appColorScheme(kind, brightness);
+  final header = appHeaderColors(kind, scheme);
+  final highlight = appHighlightColors(kind, scheme);
   return ThemeData(
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
-    appBarTheme: AppBarTheme(backgroundColor: scheme.surface, foregroundColor: scheme.onSurface),
+    appBarTheme: AppBarTheme(backgroundColor: header.background, foregroundColor: header.foreground),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: scheme.surfaceContainer,
-      indicatorColor: scheme.primaryContainer,
+      indicatorColor: highlight.background,
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
-          color: states.contains(WidgetState.selected) ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+          color: states.contains(WidgetState.selected) ? highlight.foreground : scheme.onSurfaceVariant,
         ),
       ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: scheme.secondaryContainer,
+      foregroundColor: scheme.onSecondaryContainer,
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: highlight.background,
+      labelStyle: TextStyle(color: highlight.foreground),
+      iconTheme: IconThemeData(color: highlight.foreground),
+      side: BorderSide.none,
     ),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
   );
@@ -145,14 +171,14 @@ final _manjaDark = ColorScheme.fromSeed(
   onTertiary: const Color(0xFF3D2C00),
   tertiaryContainer: const Color(0xFF5C4300),
   onTertiaryContainer: const Color(0xFFFFE8A3),
-  surface: const Color(0xFF141312),
+  surface: const Color(0xFF1E1B19),
   onSurface: const Color(0xFFEDE7E3),
   onSurfaceVariant: const Color(0xFFCFC6C0),
-  surfaceContainerLowest: const Color(0xFF0F0E0D),
-  surfaceContainerLow: const Color(0xFF1C1B1A),
-  surfaceContainer: const Color(0xFF211F1E),
-  surfaceContainerHigh: const Color(0xFF2B2928),
-  surfaceContainerHighest: const Color(0xFF363433),
+  surfaceContainerLowest: const Color(0xFF191614),
+  surfaceContainerLow: const Color(0xFF231F1D),
+  surfaceContainer: const Color(0xFF262220),
+  surfaceContainerHigh: const Color(0xFF2B2725),
+  surfaceContainerHighest: const Color(0xFF36312E),
   outline: const Color(0xFF9A928D),
   outlineVariant: const Color(0xFF4A4542),
 );

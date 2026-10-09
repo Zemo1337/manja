@@ -38,6 +38,11 @@ void main() {
             'surfaceContainerHighest variant text': (s.surfaceContainerHighest, s.onSurfaceVariant),
             'primary text on surface': (s.surface, s.primary),
           };
+          final header = appHeaderColors(kind, s);
+          final highlight = appHighlightColors(kind, s);
+          pairs['header'] = (header.background, header.foreground);
+          pairs['highlight'] = (highlight.background, highlight.foreground);
+          pairs['add button'] = (s.secondaryContainer, s.onSecondaryContainer);
           for (final MapEntry(key: name, value: (bg, fg)) in pairs.entries) {
             expect(contrast(bg, fg), greaterThanOrEqualTo(4.5), reason: '$name ${contrast(bg, fg).toStringAsFixed(2)}');
           }
