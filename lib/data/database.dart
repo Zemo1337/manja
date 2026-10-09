@@ -33,6 +33,22 @@ class PantryItems extends Table {
   TextColumn get foodKey => text().nullable()();
 }
 
+class Tags extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 60)();
+  IntColumn get position => integer().withDefault(const Constant(0))();
+}
+
+class RecipeTags extends Table {
+  IntColumn get recipeId => integer().references(Recipes, #id, onDelete: KeyAction.cascade)();
+  IntColumn get tagId => integer().references(Tags, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {recipeId, tagId};
+}
+
+const defaultTags = ['Main', 'Soup', 'Side or salad', 'Breakfast', 'Dessert', 'Snack'];
+
 @DataClassName('FoodRow')
 class Foods extends Table {
   TextColumn get key => text()();
@@ -71,11 +87,12 @@ class AppSettings extends Table {
 }
 
 class RecipeFull {
-  RecipeFull(this.recipe, this.ingredients, this.steps);
+  RecipeFull(this.recipe, this.ingredients, this.steps, {this.tags = const []});
 
   final Recipe recipe;
   final List<RecipeIngredient> ingredients;
   final List<RecipeStep> steps;
+  final List<Tag> tags;
 }
 
 class IngredientDraft {
@@ -101,6 +118,7 @@ class RecipeDraft {
     this.sourceUrl,
     this.ingredients = const [],
     this.steps = const [],
+    this.tagIds,
   });
 
   final int? id;
@@ -115,6 +133,7 @@ class RecipeDraft {
   final String? sourceUrl;
   final List<IngredientDraft> ingredients;
   final List<String> steps;
+  final List<int>? tagIds;
 }
 
 class MealLogEntry {
@@ -124,15 +143,19 @@ class MealLogEntry {
   final Recipe recipe;
 }
 
-@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods, PantryItems])
+@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods, PantryItems, Tags, RecipeTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+          await _seedTags();
+        },
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.addColumn(recipes, recipes.photoPath);
           if (from < 3) {
@@ -142,6 +165,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) await m.addColumn(recipes, recipes.sourceUrl);
           if (from < 5) await m.createTable(pantryItems);
+          if (from < 6) {
+            await m.createTable(tags);
+            await m.createTable(recipeTags);
+            final main = await _seedTags();
+            await customStatement('INSERT INTO recipe_tags (recipe_id, tag_id) SELECT id, ? FROM recipes', [main]);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -164,7 +193,7 @@ class AppDatabase extends _$AppDatabase {
           ..where((s) => s.recipeId.equals(id))
           ..orderBy([(s) => OrderingTerm.asc(s.position)]))
         .get();
-    return RecipeFull(recipe, ingredients, steps);
+    return RecipeFull(recipe, ingredients, steps, tags: await tagsOf(id));
   }
 
   Future<int> saveRecipe(RecipeDraft draft) => transaction(() async {
@@ -205,6 +234,7 @@ class AppDatabase extends _$AppDatabase {
               RecipeStepsCompanion.insert(recipeId: id, position: index, body: step),
           ]);
         });
+        if (draft.tagIds case final tagIds?) await setRecipeTags(id, tagIds);
         return id;
       });
 
@@ -304,7 +334,71 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Stream<void> watchWheelInputs() =>
-      tableUpdates(TableUpdateQuery.onAllTables([recipes, mealLogs, appSettings]));
+      tableUpdates(TableUpdateQuery.onAllTables([recipes, mealLogs, appSettings, tags, recipeTags]));
+
+  Future<int> _seedTags() async {
+    int? main;
+    for (final (i, name) in defaultTags.indexed) {
+      final id = await into(tags).insert(TagsCompanion.insert(name: name, position: Value(i)));
+      main ??= id;
+    }
+    return main!;
+  }
+
+  Stream<List<Tag>> watchTags() => (select(tags)..orderBy([(t) => OrderingTerm.asc(t.position)])).watch();
+
+  Future<List<Tag>> allTags() => (select(tags)..orderBy([(t) => OrderingTerm.asc(t.position)])).get();
+
+  Future<Tag?> tagByName(String name) async {
+    final key = name.trim().toLowerCase();
+    for (final t in await allTags()) {
+      if (t.name.toLowerCase() == key) return t;
+    }
+    return null;
+  }
+
+  Future<int> addTag(String name) async {
+    final existing = await tagByName(name);
+    if (existing != null) return existing.id;
+    final last = await (select(tags)..orderBy([(t) => OrderingTerm.desc(t.position)])..limit(1)).getSingleOrNull();
+    return into(tags).insert(TagsCompanion.insert(name: name.trim(), position: Value((last?.position ?? -1) + 1)));
+  }
+
+  Future<void> renameTag(int id, String name) =>
+      (update(tags)..where((t) => t.id.equals(id))).write(TagsCompanion(name: Value(name.trim())));
+
+  Future<void> deleteTag(int id) => (delete(tags)..where((t) => t.id.equals(id))).go();
+
+  Future<void> reorderTags(List<int> ids) => transaction(() async {
+        for (final (i, id) in ids.indexed) {
+          await (update(tags)..where((t) => t.id.equals(id))).write(TagsCompanion(position: Value(i)));
+        }
+      });
+
+  Future<List<Tag>> tagsOf(int recipeId) {
+    final query = select(tags).join([innerJoin(recipeTags, recipeTags.tagId.equalsExp(tags.id))])
+      ..where(recipeTags.recipeId.equals(recipeId))
+      ..orderBy([OrderingTerm.asc(tags.position)]);
+    return query.map((row) => row.readTable(tags)).get();
+  }
+
+  Future<void> setRecipeTags(int recipeId, Iterable<int> tagIds) => transaction(() async {
+        await (delete(recipeTags)..where((r) => r.recipeId.equals(recipeId))).go();
+        await batch((b) => b.insertAll(recipeTags, [
+              for (final tagId in {...tagIds}) RecipeTagsCompanion.insert(recipeId: recipeId, tagId: tagId),
+            ]));
+      });
+
+  Future<Set<int>> recipeIdsWithTag(int tagId) async =>
+      {for (final r in await (select(recipeTags)..where((r) => r.tagId.equals(tagId))).get()) r.recipeId};
+
+  Future<Map<int, Set<int>>> tagsByRecipe() async {
+    final map = <int, Set<int>>{};
+    for (final r in await select(recipeTags).get()) {
+      map.putIfAbsent(r.recipeId, () => {}).add(r.tagId);
+    }
+    return map;
+  }
 
   Future<String?> getSetting(String key) async =>
       (await (select(appSettings)..where((s) => s.key.equals(key))).getSingleOrNull())?.value;

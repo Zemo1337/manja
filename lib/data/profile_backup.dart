@@ -41,6 +41,7 @@ class ProfileBackup {
   static const _version = 1;
   static const _dataFile = 'manja.json';
   static const _localOnlySettings = {'nutrition.usdaApiKey', 'nutrition.bundleVersion'};
+  static const _deviceSettings = {'wheel.tag'};
   static final _photoName = RegExp(r'^photos/[A-Za-z0-9_.-]+$');
 
   final AppDatabase db;
@@ -58,6 +59,9 @@ class ProfileBackup {
     final meals = await db.select(db.mealLogs).get();
     final pantry = await db.pantry();
     final settings = await db.select(db.appSettings).get();
+    final tags = await db.allTags();
+    final tagNames = {for (final t in tags) t.id: t.name};
+    final tagsByRecipe = await db.tagsByRecipe();
     final usedFoods = {for (final i in ingredients) ?i.foodKey, for (final i in pantry) ?i.foodKey};
     final foods = await (db.select(db.foods)..where((f) => f.source.equals('user') | f.key.isIn(usedFoods))).get();
 
@@ -83,6 +87,7 @@ class ProfileBackup {
         'photo': photo,
         'finishedWeightG': r.finishedWeightG,
         'sourceUrl': r.sourceUrl,
+        'tags': [for (final id in tagsByRecipe[r.id] ?? const <int>{}) ?tagNames[id]],
         'ingredients': [
           for (final i in ingredients)
             if (i.recipeId == r.id) {'name': i.name, 'amount': i.amount, 'unit': i.unit, 'foodKey': i.foodKey},
@@ -102,6 +107,7 @@ class ProfileBackup {
       'meals': [
         for (final m in meals) {'recipeId': m.recipeId, 'eatenAt': _date(m.eatenAt)},
       ],
+      'tags': [for (final t in tags) t.name],
       'pantry': [
         for (final i in pantry) {'name': i.name, 'foodKey': i.foodKey},
       ],
@@ -121,7 +127,7 @@ class ProfileBackup {
       ],
       'settings': {
         for (final s in settings)
-          if (!_localOnlySettings.contains(s.key)) s.key: s.value,
+          if (!_localOnlySettings.contains(s.key) && !_deviceSettings.contains(s.key)) s.key: s.value,
       },
     };
     archive.addFile(ArchiveFile.string(_dataFile, const JsonEncoder.withIndent(' ').convert(data)));
@@ -208,6 +214,7 @@ class ProfileBackup {
     if (replace) {
       await db.delete(db.recipes).go();
       await db.delete(db.pantryItems).go();
+      if (data['tags'] is List) await db.delete(db.tags).go();
       await (db.delete(db.foods)..where((f) => f.source.equals('user'))).go();
       await (db.delete(db.appSettings)..where((s) => s.key.isNotIn(_localOnlySettings))).go();
     }
@@ -233,6 +240,15 @@ class ProfileBackup {
         b.insertAll(db.foods, foods, mode: InsertMode.insertOrIgnore);
       }
     });
+
+    final tagIds = <String, int>{};
+    for (final name in [for (final t in data['tags'] as List? ?? const []) t as String]) {
+      tagIds[_nameKey(name)] = await db.addTag(name);
+    }
+    Future<List<int>> tagsFor(Map<String, Object?> recipe) async => [
+      for (final name in [for (final t in recipe['tags'] as List? ?? const []) t as String])
+        tagIds[_nameKey(name)] ??= await db.addTag(name),
+    ];
 
     final existing = {for (final r in await db.allRecipes()) _nameKey(r.name): r.id};
     final ids = <int, int>{};
@@ -267,6 +283,7 @@ class ProfileBackup {
               ),
           ],
           steps: [for (final s in r['steps'] as List? ?? const []) s as String],
+          tagIds: await tagsFor(r),
         ),
       );
       if (r['createdAt'] != null) {
@@ -300,7 +317,7 @@ class ProfileBackup {
     if (replace) {
       final settings = data['settings'] as Map<String, Object?>? ?? const {};
       for (final MapEntry(:key, :value) in settings.entries) {
-        if (_localOnlySettings.contains(key) || value is! String) continue;
+        if (_localOnlySettings.contains(key) || _deviceSettings.contains(key) || value is! String) continue;
         await db.setSetting(key, value);
       }
     }

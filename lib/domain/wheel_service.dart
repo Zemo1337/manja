@@ -85,12 +85,21 @@ class WheelSettings {
 }
 
 class WheelState {
-  const WheelState({required this.available, required this.total, required this.settings, required this.appearance});
+  const WheelState({
+    required this.available,
+    required this.total,
+    required this.settings,
+    required this.appearance,
+    this.tags = const [],
+    this.tag,
+  });
 
   final List<Recipe> available;
   final int total;
   final WheelSettings settings;
   final WheelAppearance appearance;
+  final List<Tag> tags;
+  final Tag? tag;
 
   int get eaten => total - available.length;
   bool get exhausted => total > 0 && available.isEmpty;
@@ -108,6 +117,7 @@ class WheelService {
   static const _keyFlipText = 'wheel.flipText';
   static const _keyTheme = 'wheel.theme';
   static const _keySpinSeconds = 'wheel.spinSeconds';
+  static const _keyTag = 'wheel.tag';
 
   final AppDatabase db;
   final Random _random;
@@ -180,14 +190,30 @@ class WheelService {
       settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: start);
       available = recipes;
     }
+    final tags = await db.allTags();
+    final tagId = int.tryParse(await db.getSetting(_keyTag) ?? '');
+    final tag = tags.where((t) => t.id == tagId).firstOrNull;
+    var total = recipes.length;
+    if (tag != null) {
+      final ids = await db.recipeIdsWithTag(tag.id);
+      available = [
+        for (final r in available)
+          if (ids.contains(r.id)) r,
+      ];
+      total = recipes.where((r) => ids.contains(r.id)).length;
+    }
     available.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return WheelState(
       available: available,
-      total: recipes.length,
+      total: total,
       settings: settings,
       appearance: await loadAppearance(),
+      tags: tags,
+      tag: tag,
     );
   }
+
+  Future<void> selectTag(int? tagId) => tagId == null ? db.deleteSetting(_keyTag) : db.setSetting(_keyTag, '$tagId');
 
   final focus = ValueNotifier<Set<int>?>(null);
 

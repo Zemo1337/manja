@@ -243,13 +243,35 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           ),
         ],
       ),
-      body: state == null ? const Center(child: CircularProgressIndicator()) : _body(context, state),
+      body: state == null
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                if (state.tags.isNotEmpty)
+                  _TagBar(
+                    tags: state.tags,
+                    selected: state.tag?.id,
+                    onSelected: _spinning ? null : (id) => _wheel.selectTag(id),
+                  ),
+                Expanded(child: _body(context, state)),
+              ],
+            ),
     );
   }
 
   Widget _body(BuildContext context, WheelState state) {
     final theme = Theme.of(context);
     final wheelTheme = WheelTheme.of(state.appearance.theme, theme.colorScheme);
+    final tag = state.tag;
+    final showAll = TextButton(onPressed: () => _wheel.selectTag(null), child: const Text('Show all dishes'));
+    if (state.total == 0 && tag != null) {
+      return _EmptyMessage(
+        icon: Icons.label_outline,
+        title: 'Nothing tagged ${tag.name}',
+        message: 'Add the tag to recipes in the recipe editor, or pick another tag.',
+        action: showAll,
+      );
+    }
     if (state.total == 0) {
       return const _EmptyMessage(
         icon: Icons.menu_book_outlined,
@@ -260,18 +282,28 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     if (_entries.isEmpty) {
       return _EmptyMessage(
         icon: Icons.celebration_outlined,
-        title: 'You ate everything!',
-        message: 'Every dish on the wheel has been cooked this round.',
-        action: FilledButton.icon(
-          onPressed: _resetCycle,
-          icon: const Icon(Icons.restart_alt),
-          label: const Text('Reset wheel'),
+        title: tag == null ? 'You ate everything!' : 'All ${tag.name} dishes eaten',
+        message: tag == null
+            ? 'Every dish on the wheel has been cooked this round.'
+            : 'Every dish tagged ${tag.name} has been cooked this round.',
+        action: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: _resetCycle,
+              icon: const Icon(Icons.restart_alt),
+              label: const Text('Reset wheel'),
+            ),
+            if (tag != null) showAll,
+          ],
         ),
       );
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = min(constraints.maxWidth - 32, constraints.maxHeight - 280).clamp(200.0, 560.0);
+        final size = min(constraints.maxWidth - 32, constraints.maxHeight - 280).clamp(150.0, 560.0);
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
@@ -290,7 +322,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                             child: Text(
                               _focused
                                   ? '${_available.length} ${_available.length == 1 ? 'dish' : 'dishes'} you can make now'
-                                  : '${_available.length} of ${state.total} dishes left',
+                                  : '${tag == null ? '' : '${tag.name} · '}'
+                                        '${_available.length} of ${state.total} dishes left',
                               style: theme.textTheme.titleMedium?.copyWith(color: badge.foreground),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -452,6 +485,36 @@ class _ResultCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TagBar extends StatelessWidget {
+  const _TagBar({required this.tags, required this.selected, required this.onSelected});
+
+  final List<Tag> tags;
+  final int? selected;
+  final ValueChanged<int?>? onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+        children: [
+          for (final (id, label) in [(null, 'All'), for (final t in tags) (t.id, t.name)])
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: ChoiceChip(
+                label: Text(label),
+                selected: selected == id,
+                onSelected: onSelected == null ? null : (_) => onSelected!(id),
+              ),
+            ),
+        ],
       ),
     );
   }

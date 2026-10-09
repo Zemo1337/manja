@@ -5,6 +5,7 @@ import '../tools/converter_screen.dart';
 import 'appearance_screen.dart';
 import 'backup_screen.dart';
 import 'option_card.dart';
+import 'tags_screen.dart';
 import 'wheel_look_screen.dart';
 import 'wheel_rounds_screen.dart';
 
@@ -48,6 +49,13 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('When eaten dishes come back'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const WheelRoundsScreen()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.label_outline),
+            title: const Text('Tags'),
+            subtitle: const Text('Courses and your own groups of dishes'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(context, const TagsScreen()),
           ),
           const SettingsSectionTitle('Kitchen'),
           ListTile(

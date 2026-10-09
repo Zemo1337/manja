@@ -12,6 +12,7 @@ class ImportedRecipe {
     this.ingredients = const [],
     this.steps = const [],
     this.sourceUrl,
+    this.categories = const [],
   });
 
   final String name;
@@ -24,4 +25,5 @@ class ImportedRecipe {
   final List<ParsedIngredient> ingredients;
   final List<String> steps;
   final Uri? sourceUrl;
+  final List<String> categories;
 }

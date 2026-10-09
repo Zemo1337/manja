@@ -61,7 +61,7 @@ Future<Uint8List> makeCookbookPdf(List<CookbookRecipe> recipes, CookbookOptions 
   );
 }
 
-enum _Selection { all, favorites, chosen }
+enum _Selection { all, favorites, tag, chosen }
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});
@@ -78,6 +78,9 @@ class _CookbookScreenState extends State<CookbookScreen> {
   bool _photos = true;
   bool _nutrition = true;
   _Selection _selection = _Selection.all;
+  List<Tag> _tags = const [];
+  Map<int, Set<int>> _tagsByRecipe = const {};
+  int? _tagId;
   Set<int> _chosen = {};
   List<Recipe>? _recipes;
 
@@ -94,11 +97,17 @@ class _CookbookScreenState extends State<CookbookScreen> {
   }
 
   Future<void> _load() async {
-    final recipes = await AppScope.of(context).db.allRecipes();
+    final db = AppScope.of(context).db;
+    final recipes = await db.allRecipes();
+    final tags = await db.allTags();
+    final tagsByRecipe = await db.tagsByRecipe();
     recipes.sort((a, b) => compareNames(a.name, b.name));
     if (!mounted) return;
     setState(() {
       _recipes = recipes;
+      _tags = tags;
+      _tagsByRecipe = tagsByRecipe;
+      _tagId = tags.isEmpty ? null : tags.first.id;
       _chosen = {for (final r in recipes) r.id};
     });
   }
@@ -108,6 +117,10 @@ class _CookbookScreenState extends State<CookbookScreen> {
     _Selection.favorites => [
       for (final r in _recipes ?? const <Recipe>[])
         if (r.isFavorite) r,
+    ],
+    _Selection.tag => [
+      for (final r in _recipes ?? const <Recipe>[])
+        if (_tagsByRecipe[r.id]?.contains(_tagId) ?? false) r,
     ],
     _Selection.chosen => [
       for (final r in _recipes ?? const <Recipe>[])
@@ -221,6 +234,19 @@ class _CookbookScreenState extends State<CookbookScreen> {
                         enabled: favorites > 0,
                         title: Text('Favorites ($favorites)'),
                       ),
+                      if (_tags.isNotEmpty)
+                        RadioListTile(
+                          value: _Selection.tag,
+                          title: const Text('Tagged'),
+                          secondary: DropdownButton<int>(
+                            value: _tagId,
+                            items: [for (final t in _tags) DropdownMenuItem(value: t.id, child: Text(t.name))],
+                            onChanged: (id) => setState(() {
+                              _tagId = id;
+                              _selection = _Selection.tag;
+                            }),
+                          ),
+                        ),
                       RadioListTile(
                         value: _Selection.chosen,
                         title: Text('Chosen (${_chosen.length})'),

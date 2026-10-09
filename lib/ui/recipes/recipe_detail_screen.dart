@@ -122,6 +122,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 _InfoChip(icon: Icons.timer_outlined, label: 'Prep ${recipe.prepMinutes} min'),
               if (recipe.cookMinutes != null)
                 _InfoChip(icon: Icons.local_fire_department_outlined, label: 'Cook ${recipe.cookMinutes} min'),
+              for (final t in full.tags) _InfoChip(icon: Icons.label_outline, label: t.name),
             ],
           ),
           const SizedBox(height: 8),

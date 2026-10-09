@@ -89,6 +89,7 @@ class RecipeTemplate {
     this.steps = const [],
     this.photoPath,
     this.sourceUrl,
+    this.categories = const [],
   });
 
   factory RecipeTemplate.fromImported(ImportedRecipe r, {String? photoPath}) => RecipeTemplate(
@@ -104,6 +105,7 @@ class RecipeTemplate {
     steps: r.steps,
     photoPath: photoPath,
     sourceUrl: r.sourceUrl?.toString(),
+    categories: r.categories,
   );
 
   final String name;
@@ -115,4 +117,5 @@ class RecipeTemplate {
   final List<String> steps;
   final String? photoPath;
   final String? sourceUrl;
+  final List<String> categories;
 }

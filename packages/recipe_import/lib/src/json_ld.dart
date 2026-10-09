@@ -44,6 +44,10 @@ ImportedRecipe? recipeFromSchema(Map<String, dynamic> recipe, {Uri? pageUrl}) {
     ],
     steps: _steps(recipe['recipeInstructions']),
     sourceUrl: pageUrl ?? Uri.tryParse(recipe['url'] as String? ?? ''),
+    categories: [
+      for (final c in _strings(recipe['recipeCategory']))
+        if (cleanText(c) case final text? when text.isNotEmpty) text,
+    ],
   );
 }
 

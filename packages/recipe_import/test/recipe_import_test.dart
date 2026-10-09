@@ -90,6 +90,13 @@ void main() {
       expect(recipeFromJsonLd([block])!.name, 'Sarma');
     });
 
+    test('categories come from recipeCategory as text or list', () {
+      String block(Object category) => jsonEncode({'@type': 'Recipe', 'name': 'X', 'recipeCategory': category});
+      expect(recipeFromJsonLd([block('Kolači')])!.categories, ['Kolači']);
+      expect(recipeFromJsonLd([block(['Dessert', ' Cake '])])!.categories, ['Dessert', 'Cake']);
+      expect(recipeFromJsonLd([jsonEncode({'@type': 'Recipe', 'name': 'X'})])!.categories, isEmpty);
+    });
+
     test('blocks are found in raw HTML', () {
       final page = '<html><head><script type="application/ld+json">$flatRecipe</script></head></html>';
       expect(recipeFromJsonLd(jsonLdBlocksFromHtml(page))!.name, 'Kolač sa šljivama');

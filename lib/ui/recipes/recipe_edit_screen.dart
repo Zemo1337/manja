@@ -7,8 +7,10 @@ import 'package:nutrition_core/nutrition_core.dart' show Food, gramsFor;
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../data/recipe_importer.dart';
+import '../../domain/tag_matching.dart';
 import '../../domain/units.dart';
 import '../nutrition/food_picker_sheet.dart';
+import '../settings/tags_screen.dart';
 import 'recipe_photo.dart';
 
 class RecipeEditScreen extends StatefulWidget {
@@ -53,6 +55,8 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   bool _photoRemoved = false;
   bool _saving = false;
   bool _foodsLoaded = false;
+  List<Tag> _tags = const [];
+  Set<int>? _tagIds;
 
   String? get _existingPhoto => widget.existing?.recipe.photoPath;
 
@@ -97,6 +101,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     if (!_foodsLoaded) {
       _foodsLoaded = true;
       _loadFoods();
+      _loadTags();
     }
   }
 
@@ -110,6 +115,60 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
         r.food = foods[r.foodKey];
       }
     });
+  }
+
+  Future<void> _loadTags() async {
+    final tags = await AppScope.of(context).db.allTags();
+    if (!mounted) return;
+    final Set<int> selected;
+    if (widget.existing case final existing?) {
+      selected = {for (final t in existing.tags) t.id};
+    } else {
+      final names = matchTagNames(widget.template?.categories ?? const [], [for (final t in tags) t.name]);
+      final wanted = names.isEmpty ? {defaultTags.first.toLowerCase()} : {for (final n in names) n.toLowerCase()};
+      selected = {
+        for (final t in tags)
+          if (wanted.contains(t.name.toLowerCase())) t.id,
+      };
+    }
+    setState(() {
+      _tags = tags;
+      _tagIds = selected;
+    });
+  }
+
+  Future<void> _newTag() async {
+    final name = await showTagNameDialog(context);
+    if (name == null || !mounted) return;
+    final db = AppScope.of(context).db;
+    final id = await db.addTag(name);
+    final tags = await db.allTags();
+    if (!mounted) return;
+    setState(() {
+      _tags = tags;
+      _tagIds = {...?_tagIds, id};
+    });
+  }
+
+  Widget _tagSection(BuildContext context) {
+    final selected = _tagIds ?? const <int>{};
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        for (final t in _tags)
+          FilterChip(
+            label: Text(t.name),
+            selected: selected.contains(t.id),
+            onSelected: (on) => setState(() {
+              final ids = {...?_tagIds};
+              on ? ids.add(t.id) : ids.remove(t.id);
+              _tagIds = ids;
+            }),
+          ),
+        ActionChip(avatar: const Icon(Icons.add, size: 18), label: const Text('New tag'), onPressed: _newTag),
+      ],
+    );
   }
 
   Future<void> _linkFood(_IngredientRow row) async {
@@ -250,6 +309,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
         for (final s in _steps)
           if (s.text.trim().isNotEmpty) s.text.trim(),
       ],
+      tagIds: _tagIds?.toList(),
     );
     await scope.db.saveRecipe(draft);
     await scope.photos.delete(stalePhoto);
@@ -367,6 +427,10 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Text('Tags', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            _tagSection(context),
             const SizedBox(height: 24),
             Text('Ingredients', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),

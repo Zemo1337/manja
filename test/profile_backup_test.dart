@@ -9,6 +9,7 @@ import 'package:manja/data/database.dart';
 import 'package:manja/data/nutrition_repository.dart';
 import 'package:manja/data/photo_store.dart';
 import 'package:manja/data/profile_backup.dart';
+import 'package:manja/domain/wheel_service.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
 class _Device {
@@ -59,7 +60,11 @@ void main() {
       photoBytes: 'cabbage photo',
       ingredients: [IngredientDraft(name: 'ajvar', amount: 2, unit: 'tbsp', foodKey: ajvar.key)],
     );
-    await phone.recipe('Grah');
+    final grah = await phone.recipe('Grah');
+    final mama = await phone.db.addTag('Mama');
+    await phone.db.setRecipeTags(grah, [(await phone.db.tagByName('Soup'))!.id, mama]);
+    await phone.db.renameTag((await phone.db.tagByName('Snack'))!.id, 'Bites');
+    await WheelService(phone.db).selectTag(mama);
     final eaten = DateTime(2026, 10, 1, 18, 30);
     await phone.db.logMeal(sarma, eaten);
     await phone.db.addPantryItem('Salt');
@@ -85,6 +90,10 @@ void main() {
     expect(await pc.nutrition.userApiKey(), 'PC-KEY', reason: 'the own key stays on the device');
     expect(await pc.db.getSetting('app.theme'), 'dev');
     expect([for (final p in await pc.db.pantry()) p.name], ['Salt']);
+    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags.take(5), 'Bites', 'Mama']);
+    final pcGrah = (await pc.db.allRecipes()).singleWhere((r) => r.name == 'Grah');
+    expect([for (final t in (await pc.db.recipeFull(pcGrah.id))!.tags) t.name], ['Soup', 'Mama']);
+    expect(await pc.db.getSetting('wheel.tag'), isNull, reason: 'the chosen wheel tag stays on its device');
 
     final imported = (await pc.db.allRecipes()).singleWhere((r) => r.name == 'Sarma');
     final full = (await pc.db.recipeFull(imported.id))!;
@@ -104,7 +113,8 @@ void main() {
   test('adding skips recipes and meals that are already there', () async {
     final phone = _Device();
     final sarma = await phone.recipe('Sarma');
-    await phone.recipe('Burek', photoBytes: 'flaky');
+    final burek = await phone.recipe('Burek', photoBytes: 'flaky');
+    await phone.db.setRecipeTags(burek, [await phone.db.addTag('Pita')]);
     await phone.db.logMeal(sarma, DateTime(2026, 10, 1));
     await phone.db.addPantryItem('Salt');
     await phone.db.setSetting('app.theme', 'dev');
@@ -118,6 +128,9 @@ void main() {
     var result = await pc.backup.import(bytes, replace: false);
     expect((result.added, result.skipped, result.meals), (1, 1, 1));
     expect(await pc.names(), ['Burek', 'sarma']);
+    final pcBurek = (await pc.db.allRecipes()).singleWhere((r) => r.name == 'Burek');
+    expect([for (final t in (await pc.db.recipeFull(pcBurek.id))!.tags) t.name], ['Pita']);
+    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags, 'Pita'], reason: 'no duplicate tags');
     expect((await pc.db.select(pc.db.mealLogs).get()).single.recipeId, own);
     expect(await pc.db.pantry(), hasLength(1));
     expect(await pc.db.getSetting('app.theme'), 'neutral', reason: 'adding keeps own settings');
