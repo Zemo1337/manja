@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../cookbook/cookbook_screen.dart';
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
 import 'import_recipe_screen.dart';
@@ -30,6 +31,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             tooltip: 'Import from link',
             icon: const Icon(Icons.add_link),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportRecipeScreen())),
+          ),
+          IconButton(
+            tooltip: 'Cookbook PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CookbookScreen())),
           ),
           IconButton(
             tooltip: 'Unit converter',
