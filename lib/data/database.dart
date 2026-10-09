@@ -14,6 +14,7 @@ class Recipes extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get photoPath => text().nullable()();
   RealColumn get finishedWeightG => real().nullable()();
+  TextColumn get sourceUrl => text().nullable()();
 }
 
 class RecipeIngredients extends Table {
@@ -91,6 +92,7 @@ class RecipeDraft {
     this.isFavorite = false,
     this.photoPath,
     this.finishedWeightG,
+    this.sourceUrl,
     this.ingredients = const [],
     this.steps = const [],
   });
@@ -104,6 +106,7 @@ class RecipeDraft {
   final bool isFavorite;
   final String? photoPath;
   final double? finishedWeightG;
+  final String? sourceUrl;
   final List<IngredientDraft> ingredients;
   final List<String> steps;
 }
@@ -120,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja_manja'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -131,6 +134,7 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(recipeIngredients, recipeIngredients.foodKey);
             await m.createTable(foods);
           }
+          if (from < 4) await m.addColumn(recipes, recipes.sourceUrl);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -166,6 +170,7 @@ class AppDatabase extends _$AppDatabase {
           isFavorite: Value(draft.isFavorite),
           photoPath: Value(draft.photoPath),
           finishedWeightG: Value(draft.finishedWeightG),
+          sourceUrl: Value(draft.sourceUrl),
         );
         final int id;
         if (draft.id == null) {

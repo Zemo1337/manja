@@ -6,14 +6,16 @@ import 'package:nutrition_core/nutrition_core.dart' show Food, gramsFor;
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../data/recipe_importer.dart';
 import '../../domain/units.dart';
 import '../nutrition/food_picker_sheet.dart';
 import 'recipe_photo.dart';
 
 class RecipeEditScreen extends StatefulWidget {
-  const RecipeEditScreen({super.key, this.existing});
+  const RecipeEditScreen({super.key, this.existing, this.template});
 
   final RecipeFull? existing;
+  final RecipeTemplate? template;
 
   @override
   State<RecipeEditScreen> createState() => _RecipeEditScreenState();
@@ -62,26 +64,31 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   void initState() {
     super.initState();
     final r = widget.existing?.recipe;
-    _name = TextEditingController(text: r?.name ?? '');
-    _portions = TextEditingController(text: '${r?.portions ?? 2}');
-    _prep = TextEditingController(text: r?.prepMinutes?.toString() ?? '');
-    _cook = TextEditingController(text: r?.cookMinutes?.toString() ?? '');
-    _info = TextEditingController(text: r?.cookingInfo ?? '');
-    _finishedWeight = TextEditingController(
-      text: r?.finishedWeightG == null ? '' : formatAmount(r!.finishedWeightG!),
-    );
+    final t = widget.template;
+    _name = TextEditingController(text: r?.name ?? t?.name ?? '');
+    _portions = TextEditingController(text: '${r?.portions ?? t?.portions ?? 2}');
+    _prep = TextEditingController(text: (r?.prepMinutes ?? t?.prepMinutes)?.toString() ?? '');
+    _cook = TextEditingController(text: (r?.cookMinutes ?? t?.cookMinutes)?.toString() ?? '');
+    _info = TextEditingController(text: r?.cookingInfo ?? t?.cookingInfo ?? '');
+    _finishedWeight = TextEditingController(text: r?.finishedWeightG == null ? '' : formatAmount(r!.finishedWeightG!));
     _ingredients = [
       for (final i in widget.existing?.ingredients ?? const <RecipeIngredient>[])
         _IngredientRow(
           name: i.name,
-          amount: formatAmount(i.amount),
+          amount: i.amount > 0 ? formatAmount(i.amount) : '',
           unit: CookingUnit.fromName(i.unit),
           foodKey: i.foodKey,
         ),
+      for (final i in t?.ingredients ?? const <({String name, double? amount, CookingUnit unit})>[])
+        _IngredientRow(name: i.name, amount: i.amount == null ? '' : formatAmount(i.amount!), unit: i.unit),
     ];
     if (_ingredients.isEmpty) _ingredients.add(_IngredientRow());
-    _steps = [for (final s in widget.existing?.steps ?? const <RecipeStep>[]) TextEditingController(text: s.body)];
+    _steps = [
+      for (final s in widget.existing?.steps ?? const <RecipeStep>[]) TextEditingController(text: s.body),
+      for (final s in t?.steps ?? const <String>[]) TextEditingController(text: s),
+    ];
     if (_steps.isEmpty) _steps.add(TextEditingController());
+    if (t?.photoPath != null) _pickedPhoto = XFile(t!.photoPath!);
   }
 
   @override
@@ -226,6 +233,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       cookMinutes: int.tryParse(_cook.text.trim()),
       cookingInfo: _info.text.trim(),
       finishedWeightG: _parseAmount(_finishedWeight.text),
+      sourceUrl: widget.existing?.recipe.sourceUrl ?? widget.template?.sourceUrl,
       isFavorite: widget.existing?.recipe.isFavorite ?? false,
       photoPath: photoPath,
       ingredients: [
@@ -377,8 +385,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                             controller: row.amount,
                             decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (v) =>
-                                row.name.text.trim().isNotEmpty && _parseAmount(v ?? '') == null ? '?' : null,
+                            validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
                           ),
                         ),
                         const SizedBox(width: 6),

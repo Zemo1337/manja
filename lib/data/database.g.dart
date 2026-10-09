@@ -129,6 +129,17 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceUrlMeta = const VerificationMeta(
+    'sourceUrl',
+  );
+  @override
+  late final GeneratedColumn<String> sourceUrl = GeneratedColumn<String>(
+    'source_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -141,6 +152,7 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     createdAt,
     photoPath,
     finishedWeightG,
+    sourceUrl,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -225,6 +237,12 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         ),
       );
     }
+    if (data.containsKey('source_url')) {
+      context.handle(
+        _sourceUrlMeta,
+        sourceUrl.isAcceptableOrUnknown(data['source_url']!, _sourceUrlMeta),
+      );
+    }
     return context;
   }
 
@@ -274,6 +292,10 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         DriftSqlType.double,
         data['${effectivePrefix}finished_weight_g'],
       ),
+      sourceUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_url'],
+      ),
     );
   }
 
@@ -294,6 +316,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
   final DateTime createdAt;
   final String? photoPath;
   final double? finishedWeightG;
+  final String? sourceUrl;
   const Recipe({
     required this.id,
     required this.name,
@@ -305,6 +328,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     required this.createdAt,
     this.photoPath,
     this.finishedWeightG,
+    this.sourceUrl,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -326,6 +350,9 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     }
     if (!nullToAbsent || finishedWeightG != null) {
       map['finished_weight_g'] = Variable<double>(finishedWeightG);
+    }
+    if (!nullToAbsent || sourceUrl != null) {
+      map['source_url'] = Variable<String>(sourceUrl);
     }
     return map;
   }
@@ -350,6 +377,9 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       finishedWeightG: finishedWeightG == null && nullToAbsent
           ? const Value.absent()
           : Value(finishedWeightG),
+      sourceUrl: sourceUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceUrl),
     );
   }
 
@@ -369,6 +399,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       photoPath: serializer.fromJson<String?>(json['photoPath']),
       finishedWeightG: serializer.fromJson<double?>(json['finishedWeightG']),
+      sourceUrl: serializer.fromJson<String?>(json['sourceUrl']),
     );
   }
   @override
@@ -385,6 +416,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'photoPath': serializer.toJson<String?>(photoPath),
       'finishedWeightG': serializer.toJson<double?>(finishedWeightG),
+      'sourceUrl': serializer.toJson<String?>(sourceUrl),
     };
   }
 
@@ -399,6 +431,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     DateTime? createdAt,
     Value<String?> photoPath = const Value.absent(),
     Value<double?> finishedWeightG = const Value.absent(),
+    Value<String?> sourceUrl = const Value.absent(),
   }) => Recipe(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -412,6 +445,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     finishedWeightG: finishedWeightG.present
         ? finishedWeightG.value
         : this.finishedWeightG,
+    sourceUrl: sourceUrl.present ? sourceUrl.value : this.sourceUrl,
   );
   Recipe copyWithCompanion(RecipesCompanion data) {
     return Recipe(
@@ -435,6 +469,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       finishedWeightG: data.finishedWeightG.present
           ? data.finishedWeightG.value
           : this.finishedWeightG,
+      sourceUrl: data.sourceUrl.present ? data.sourceUrl.value : this.sourceUrl,
     );
   }
 
@@ -450,7 +485,8 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           ..write('isFavorite: $isFavorite, ')
           ..write('createdAt: $createdAt, ')
           ..write('photoPath: $photoPath, ')
-          ..write('finishedWeightG: $finishedWeightG')
+          ..write('finishedWeightG: $finishedWeightG, ')
+          ..write('sourceUrl: $sourceUrl')
           ..write(')'))
         .toString();
   }
@@ -467,6 +503,7 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     createdAt,
     photoPath,
     finishedWeightG,
+    sourceUrl,
   );
   @override
   bool operator ==(Object other) =>
@@ -481,7 +518,8 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           other.isFavorite == this.isFavorite &&
           other.createdAt == this.createdAt &&
           other.photoPath == this.photoPath &&
-          other.finishedWeightG == this.finishedWeightG);
+          other.finishedWeightG == this.finishedWeightG &&
+          other.sourceUrl == this.sourceUrl);
 }
 
 class RecipesCompanion extends UpdateCompanion<Recipe> {
@@ -495,6 +533,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
   final Value<DateTime> createdAt;
   final Value<String?> photoPath;
   final Value<double?> finishedWeightG;
+  final Value<String?> sourceUrl;
   const RecipesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -506,6 +545,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     this.createdAt = const Value.absent(),
     this.photoPath = const Value.absent(),
     this.finishedWeightG = const Value.absent(),
+    this.sourceUrl = const Value.absent(),
   });
   RecipesCompanion.insert({
     this.id = const Value.absent(),
@@ -518,6 +558,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     this.createdAt = const Value.absent(),
     this.photoPath = const Value.absent(),
     this.finishedWeightG = const Value.absent(),
+    this.sourceUrl = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Recipe> custom({
     Expression<int>? id,
@@ -530,6 +571,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Expression<DateTime>? createdAt,
     Expression<String>? photoPath,
     Expression<double>? finishedWeightG,
+    Expression<String>? sourceUrl,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -542,6 +584,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       if (createdAt != null) 'created_at': createdAt,
       if (photoPath != null) 'photo_path': photoPath,
       if (finishedWeightG != null) 'finished_weight_g': finishedWeightG,
+      if (sourceUrl != null) 'source_url': sourceUrl,
     });
   }
 
@@ -556,6 +599,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Value<DateTime>? createdAt,
     Value<String?>? photoPath,
     Value<double?>? finishedWeightG,
+    Value<String?>? sourceUrl,
   }) {
     return RecipesCompanion(
       id: id ?? this.id,
@@ -568,6 +612,7 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       createdAt: createdAt ?? this.createdAt,
       photoPath: photoPath ?? this.photoPath,
       finishedWeightG: finishedWeightG ?? this.finishedWeightG,
+      sourceUrl: sourceUrl ?? this.sourceUrl,
     );
   }
 
@@ -604,6 +649,9 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     if (finishedWeightG.present) {
       map['finished_weight_g'] = Variable<double>(finishedWeightG.value);
     }
+    if (sourceUrl.present) {
+      map['source_url'] = Variable<String>(sourceUrl.value);
+    }
     return map;
   }
 
@@ -619,7 +667,8 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
           ..write('isFavorite: $isFavorite, ')
           ..write('createdAt: $createdAt, ')
           ..write('photoPath: $photoPath, ')
-          ..write('finishedWeightG: $finishedWeightG')
+          ..write('finishedWeightG: $finishedWeightG, ')
+          ..write('sourceUrl: $sourceUrl')
           ..write(')'))
         .toString();
   }
@@ -2453,6 +2502,7 @@ typedef $$RecipesTableCreateCompanionBuilder = RecipesCompanion Function({
   Value<DateTime> createdAt,
   Value<String?> photoPath,
   Value<double?> finishedWeightG,
+  Value<String?> sourceUrl,
 });
 typedef $$RecipesTableUpdateCompanionBuilder = RecipesCompanion Function({
   Value<int> id,
@@ -2465,6 +2515,7 @@ typedef $$RecipesTableUpdateCompanionBuilder = RecipesCompanion Function({
   Value<DateTime> createdAt,
   Value<String?> photoPath,
   Value<double?> finishedWeightG,
+  Value<String?> sourceUrl,
 });
 
 final class $$RecipesTableReferences
@@ -2586,6 +2637,11 @@ class $$RecipesTableFilterComposer
 
   ColumnFilters<double> get finishedWeightG => $composableBuilder(
     column: $table.finishedWeightG,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceUrl => $composableBuilder(
+    column: $table.sourceUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2723,6 +2779,11 @@ class $$RecipesTableOrderingComposer
     column: $table.finishedWeightG,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get sourceUrl => $composableBuilder(
+    column: $table.sourceUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecipesTableAnnotationComposer
@@ -2773,6 +2834,9 @@ class $$RecipesTableAnnotationComposer
     column: $table.finishedWeightG,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get sourceUrl =>
+      $composableBuilder(column: $table.sourceUrl, builder: (column) => column);
 
   Expression<T> recipeIngredientsRefs<T extends Object>(
     Expression<T> Function($$RecipeIngredientsTableAnnotationComposer a) f,
@@ -2893,6 +2957,7 @@ class $$RecipesTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 Value<double?> finishedWeightG = const Value.absent(),
+                Value<String?> sourceUrl = const Value.absent(),
               }) => RecipesCompanion(
                 id: id,
                 name: name,
@@ -2904,6 +2969,7 @@ class $$RecipesTableTableManager
                 createdAt: createdAt,
                 photoPath: photoPath,
                 finishedWeightG: finishedWeightG,
+                sourceUrl: sourceUrl,
               ),
           createCompanionCallback:
               ({
@@ -2917,6 +2983,7 @@ class $$RecipesTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 Value<double?> finishedWeightG = const Value.absent(),
+                Value<String?> sourceUrl = const Value.absent(),
               }) => RecipesCompanion.insert(
                 id: id,
                 name: name,
@@ -2928,6 +2995,7 @@ class $$RecipesTableTableManager
                 createdAt: createdAt,
                 photoPath: photoPath,
                 finishedWeightG: finishedWeightG,
+                sourceUrl: sourceUrl,
               ),
           withReferenceMapper: (p0) => p0
               .map(

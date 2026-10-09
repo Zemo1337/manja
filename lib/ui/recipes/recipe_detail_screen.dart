@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:nutrition_core/nutrition_core.dart' show IngredientLine, RecipeNutrition;
 
 import '../../app_scope.dart';
@@ -151,7 +152,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   SizedBox(
                     width: 110,
                     child: Text(
-                      '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbol}',
+                      ingredient.amount > 0
+                          ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbol}'
+                          : '',
                       style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -169,6 +172,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             const SizedBox(height: 8),
             Text(recipe.cookingInfo),
           ],
+          if (recipe.sourceUrl case final source?)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+                onPressed: () => launchUrl(Uri.parse(source), mode: LaunchMode.externalApplication),
+                icon: const Icon(Icons.link, size: 18),
+                label: Text('Source: ${Uri.tryParse(source)?.host ?? source}', overflow: TextOverflow.ellipsis),
+              ),
+            ),
           const Divider(),
           Text('Preparation', style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),

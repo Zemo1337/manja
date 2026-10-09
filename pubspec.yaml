@@ -42,8 +42,12 @@ dependencies:
     path: packages/nutrition_core
   nutrition_usda:
     path: packages/nutrition_usda
+  recipe_import:
+    path: packages/recipe_import
   path: ^1.9.1
   url_launcher: ^6.3.3
+  webview_flutter: ^4.14.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -57,12 +61,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.35.1
   build_runner: ^2.16.1
-  http: ^1.6.0
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
 
   # The following line ensures that the Material Icons font is

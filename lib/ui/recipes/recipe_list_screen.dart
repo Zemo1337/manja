@@ -4,6 +4,7 @@ import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
+import 'import_recipe_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
@@ -25,6 +26,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       appBar: AppBar(
         title: const Text('Recipes'),
         actions: [
+          IconButton(
+            tooltip: 'Import from link',
+            icon: const Icon(Icons.add_link),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportRecipeScreen())),
+          ),
           IconButton(
             tooltip: 'Unit converter',
             icon: const Icon(Icons.scale_outlined),
@@ -51,7 +57,12 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             return const Center(child: Text('No recipes yet. Tap "Add recipe" to start.'));
           }
           final query = _query.trim().toLowerCase();
-          final recipes = query.isEmpty ? all : [for (final r in all) if (r.name.toLowerCase().contains(query)) r];
+          final recipes = query.isEmpty
+              ? all
+              : [
+                  for (final r in all)
+                    if (r.name.toLowerCase().contains(query)) r,
+                ];
           return Column(
             children: [
               Padding(
@@ -97,10 +108,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
 
   String _subtitle(Recipe recipe) {
     final total = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-    final parts = [
-      '${recipe.portions} ${recipe.portions == 1 ? 'portion' : 'portions'}',
-      if (total > 0) '$total min',
-    ];
+    final parts = ['${recipe.portions} ${recipe.portions == 1 ? 'portion' : 'portions'}', if (total > 0) '$total min'];
     return parts.join(' · ');
   }
 }
