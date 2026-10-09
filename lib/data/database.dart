@@ -283,8 +283,11 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<DateTime?> latestMealAt() async {
-    final latest = mealLogs.eatenAt.max();
-    return (selectOnly(mealLogs)..addColumns([latest])).map((row) => row.read(latest)).getSingle();
+    final latest = await (select(mealLogs)
+          ..orderBy([(m) => OrderingTerm.desc(m.eatenAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    return latest?.eatenAt;
   }
 
   Future<List<MealLog>> mealLogsSince(DateTime since) async {
