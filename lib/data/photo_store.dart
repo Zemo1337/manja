@@ -15,13 +15,25 @@ class PhotoStore {
   File file(String relativePath) => File(p.join(baseDir.path, relativePath));
 
   Future<String> save(String sourcePath) async {
+    final (file, relative) = await _newFile(p.extension(sourcePath));
+    await File(sourcePath).copy(file.path);
+    return relative;
+  }
+
+  Future<String> saveBytes(List<int> bytes, String extension) async {
+    final (file, relative) = await _newFile(extension);
+    await file.writeAsBytes(bytes, flush: true);
+    return relative;
+  }
+
+  Future<(File, String)> _newFile(String extension) async {
     final dir = Directory(p.join(baseDir.path, _folder));
     await dir.create(recursive: true);
-    final ext = p.extension(sourcePath).toLowerCase();
-    final name = '${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1 << 32).toRadixString(16)}'
+    final ext = extension.toLowerCase();
+    final name =
+        '${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1 << 32).toRadixString(16)}'
         '${_extensions.contains(ext) ? ext : '.jpg'}';
-    await File(sourcePath).copy(p.join(dir.path, name));
-    return p.posix.join(_folder, name);
+    return (File(p.join(dir.path, name)), p.posix.join(_folder, name));
   }
 
   Future<void> delete(String? relativePath) async {

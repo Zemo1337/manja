@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
 import 'appearance_screen.dart';
+import 'backup_screen.dart';
 import 'option_card.dart';
 import 'wheel_look_screen.dart';
 import 'wheel_rounds_screen.dart';
@@ -25,6 +26,13 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Theme, light and dark mode'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const AppearanceScreen()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.import_export),
+            title: const Text('Backup & move'),
+            subtitle: const Text('Export or import your whole profile'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(context, const BackupScreen()),
           ),
           const SettingsSectionTitle('Wheel'),
           ListTile(
