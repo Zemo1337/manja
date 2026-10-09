@@ -27,6 +27,12 @@ class RecipeIngredients extends Table {
   TextColumn get foodKey => text().nullable()();
 }
 
+class PantryItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get foodKey => text().nullable()();
+}
+
 @DataClassName('FoodRow')
 class Foods extends Table {
   TextColumn get key => text()();
@@ -118,12 +124,12 @@ class MealLogEntry {
   final Recipe recipe;
 }
 
-@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods])
+@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods, PantryItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja_manja'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -135,6 +141,7 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(foods);
           }
           if (from < 4) await m.addColumn(recipes, recipes.sourceUrl);
+          if (from < 5) await m.createTable(pantryItems);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -210,6 +217,19 @@ class AppDatabase extends _$AppDatabase {
       into(mealLogs).insert(MealLogsCompanion.insert(recipeId: recipeId, eatenAt: eatenAt));
 
   Future<void> deleteMealLog(int id) => (delete(mealLogs)..where((m) => m.id.equals(id))).go();
+
+  Stream<List<PantryItem>> watchPantry() =>
+      (select(pantryItems)..orderBy([(p) => OrderingTerm.asc(p.name.collate(Collate.noCase))])).watch();
+
+  Future<List<PantryItem>> pantry() => select(pantryItems).get();
+
+  Future<int> addPantryItem(String name, {String? foodKey}) =>
+      into(pantryItems).insert(PantryItemsCompanion.insert(name: name, foodKey: Value(foodKey)));
+
+  Future<void> deletePantryItem(int id) => (delete(pantryItems)..where((p) => p.id.equals(id))).go();
+
+  Future<List<RecipeIngredient>> allRecipeIngredients() =>
+      (select(recipeIngredients)..orderBy([(i) => OrderingTerm.asc(i.position)])).get();
 
   Future<FoodRow?> foodRow(String key) => (select(foods)..where((f) => f.key.equals(key))).getSingleOrNull();
 

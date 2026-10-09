@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../data/database.dart';
 
 enum ResetMode {
@@ -57,14 +59,13 @@ class WheelAppearance {
     int? winnerPercent,
     bool? flipText,
     WheelThemeKind? theme,
-  }) =>
-      WheelAppearance(
-        content: content ?? this.content,
-        maxSlices: maxSlices ?? this.maxSlices,
-        winnerPercent: winnerPercent ?? this.winnerPercent,
-        flipText: flipText ?? this.flipText,
-        theme: theme ?? this.theme,
-      );
+  }) => WheelAppearance(
+    content: content ?? this.content,
+    maxSlices: maxSlices ?? this.maxSlices,
+    winnerPercent: winnerPercent ?? this.winnerPercent,
+    flipText: flipText ?? this.flipText,
+    theme: theme ?? this.theme,
+  );
 }
 
 class WheelSettings {
@@ -158,7 +159,10 @@ class WheelService {
     }
     final recipes = await db.allRecipes();
     final eatenIds = {for (final log in await db.mealLogsSince(settings.cycleStartedAt)) log.recipeId};
-    var available = [for (final r in recipes) if (!eatenIds.contains(r.id)) r];
+    var available = [
+      for (final r in recipes)
+        if (!eatenIds.contains(r.id)) r,
+    ];
     if (available.isEmpty && recipes.isNotEmpty && settings.mode == ResetMode.whenEmpty) {
       final start = await resetCycle(now);
       settings = WheelSettings(mode: settings.mode, resetDays: settings.resetDays, cycleStartedAt: start);
@@ -172,6 +176,8 @@ class WheelService {
       appearance: await loadAppearance(),
     );
   }
+
+  final focus = ValueNotifier<Set<int>?>(null);
 
   Recipe pickRecipe(List<Recipe> available) => available[_random.nextInt(available.length)];
 

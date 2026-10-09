@@ -9,6 +9,7 @@ import '../../domain/wheel_layout.dart';
 import '../../domain/wheel_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../app_theme.dart';
+import '../pantry/pantry_screen.dart';
 import '../recipes/recipe_photo.dart';
 import '../settings/wheel_look_screen.dart';
 import 'wheel_image_cache.dart';
@@ -41,6 +42,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   Recipe? _picked;
   Recipe? _result;
   WheelImageCache? _images;
+  ValueNotifier<Set<int>?>? _focus;
+  bool _focused = false;
   int _reloadGeneration = 0;
 
   WheelService get _wheel => AppScope.of(context).wheel;
@@ -58,11 +61,16 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       },
     );
     _subscription ??= scope.db.watchWheelInputs().listen((_) => _reload());
+    if (_focus == null) {
+      _focus = scope.wheel.focus;
+      _focus!.addListener(_reload);
+    }
     _reload();
   }
 
   @override
   void dispose() {
+    _focus?.removeListener(_reload);
     _subscription?.cancel();
     _controller.dispose();
     _grow.dispose();
@@ -77,7 +85,15 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     setState(() {
       _state = state;
       if (!_spinning) {
-        _available = state.available;
+        final focus = _focus?.value;
+        final focused = focus == null
+            ? null
+            : [
+                for (final r in state.available)
+                  if (focus.contains(r.id)) r,
+              ];
+        _available = focused == null || focused.isEmpty ? state.available : focused;
+        _focused = focused != null && focused.isNotEmpty;
         final key = '${state.appearance.maxSlices}:${[for (final r in _available) r.id].join(',')}';
         if (key != _entriesKey) {
           _entriesKey = key;
@@ -170,6 +186,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   Future<void> _confirm(Recipe recipe) async {
     await _wheel.confirmMeal(recipe);
+    _wheel.focus.value = null;
     if (!mounted) return;
     setState(() => _result = null);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enjoy your ${recipe.name}!')));
@@ -197,6 +214,13 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       appBar: AppBar(
         title: const Text('Manja Manja'),
         actions: [
+          IconButton(
+            tooltip: 'What can I cook?',
+            icon: const Icon(Icons.soup_kitchen_outlined),
+            onPressed: _spinning
+                ? null
+                : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PantryScreen())),
+          ),
           IconButton(
             tooltip: 'Reset wheel',
             icon: const Icon(Icons.restart_alt),
@@ -248,10 +272,27 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                   return DecoratedBox(
                     decoration: BoxDecoration(color: badge.background, borderRadius: BorderRadius.circular(16)),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                      child: Text(
-                        '${_available.length} of ${state.total} dishes left',
-                        style: theme.textTheme.titleMedium?.copyWith(color: badge.foreground),
+                      padding: EdgeInsets.only(left: 14, right: _focused ? 4 : 14, top: 4, bottom: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _focused
+                                  ? '${_available.length} ${_available.length == 1 ? 'dish' : 'dishes'} you can make now'
+                                  : '${_available.length} of ${state.total} dishes left',
+                              style: theme.textTheme.titleMedium?.copyWith(color: badge.foreground),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (_focused)
+                            IconButton(
+                              tooltip: 'Show all dishes',
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(Icons.close, size: 18, color: badge.foreground),
+                              onPressed: _spinning ? null : () => _wheel.focus.value = null,
+                            ),
+                        ],
                       ),
                     ),
                   );

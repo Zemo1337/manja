@@ -2440,6 +2440,255 @@ class FoodsCompanion extends UpdateCompanion<FoodRow> {
   }
 }
 
+class $PantryItemsTable extends PantryItems
+    with TableInfo<$PantryItemsTable, PantryItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PantryItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _foodKeyMeta = const VerificationMeta(
+    'foodKey',
+  );
+  @override
+  late final GeneratedColumn<String> foodKey = GeneratedColumn<String>(
+    'food_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, foodKey];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pantry_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PantryItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('food_key')) {
+      context.handle(
+        _foodKeyMeta,
+        foodKey.isAcceptableOrUnknown(data['food_key']!, _foodKeyMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PantryItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PantryItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      foodKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}food_key'],
+      ),
+    );
+  }
+
+  @override
+  $PantryItemsTable createAlias(String alias) {
+    return $PantryItemsTable(attachedDatabase, alias);
+  }
+}
+
+class PantryItem extends DataClass implements Insertable<PantryItem> {
+  final int id;
+  final String name;
+  final String? foodKey;
+  const PantryItem({required this.id, required this.name, this.foodKey});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || foodKey != null) {
+      map['food_key'] = Variable<String>(foodKey);
+    }
+    return map;
+  }
+
+  PantryItemsCompanion toCompanion(bool nullToAbsent) {
+    return PantryItemsCompanion(
+      id: Value(id),
+      name: Value(name),
+      foodKey: foodKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(foodKey),
+    );
+  }
+
+  factory PantryItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PantryItem(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      foodKey: serializer.fromJson<String?>(json['foodKey']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'foodKey': serializer.toJson<String?>(foodKey),
+    };
+  }
+
+  PantryItem copyWith({
+    int? id,
+    String? name,
+    Value<String?> foodKey = const Value.absent(),
+  }) => PantryItem(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    foodKey: foodKey.present ? foodKey.value : this.foodKey,
+  );
+  PantryItem copyWithCompanion(PantryItemsCompanion data) {
+    return PantryItem(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      foodKey: data.foodKey.present ? data.foodKey.value : this.foodKey,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PantryItem(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('foodKey: $foodKey')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, foodKey);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PantryItem &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.foodKey == this.foodKey);
+}
+
+class PantryItemsCompanion extends UpdateCompanion<PantryItem> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> foodKey;
+  const PantryItemsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.foodKey = const Value.absent(),
+  });
+  PantryItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.foodKey = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<PantryItem> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? foodKey,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (foodKey != null) 'food_key': foodKey,
+    });
+  }
+
+  PantryItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String?>? foodKey,
+  }) {
+    return PantryItemsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      foodKey: foodKey ?? this.foodKey,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (foodKey.present) {
+      map['food_key'] = Variable<String>(foodKey.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PantryItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('foodKey: $foodKey')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2450,6 +2699,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MealLogsTable mealLogs = $MealLogsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $FoodsTable foods = $FoodsTable(this);
+  late final $PantryItemsTable pantryItems = $PantryItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2461,6 +2711,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     mealLogs,
     appSettings,
     foods,
+    pantryItems,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -4450,6 +4701,166 @@ typedef $$FoodsTableProcessedTableManager =
       FoodRow,
       PrefetchHooks Function()
     >;
+typedef $$PantryItemsTableCreateCompanionBuilder =
+    PantryItemsCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String?> foodKey,
+    });
+typedef $$PantryItemsTableUpdateCompanionBuilder =
+    PantryItemsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String?> foodKey,
+    });
+
+class $$PantryItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $PantryItemsTable> {
+  $$PantryItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get foodKey => $composableBuilder(
+    column: $table.foodKey,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PantryItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PantryItemsTable> {
+  $$PantryItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get foodKey => $composableBuilder(
+    column: $table.foodKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PantryItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PantryItemsTable> {
+  $$PantryItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get foodKey =>
+      $composableBuilder(column: $table.foodKey, builder: (column) => column);
+}
+
+class $$PantryItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PantryItemsTable,
+          PantryItem,
+          $$PantryItemsTableFilterComposer,
+          $$PantryItemsTableOrderingComposer,
+          $$PantryItemsTableAnnotationComposer,
+          $$PantryItemsTableCreateCompanionBuilder,
+          $$PantryItemsTableUpdateCompanionBuilder,
+          (
+            PantryItem,
+            BaseReferences<_$AppDatabase, $PantryItemsTable, PantryItem>,
+          ),
+          PantryItem,
+          PrefetchHooks Function()
+        > {
+  $$PantryItemsTableTableManager(_$AppDatabase db, $PantryItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PantryItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PantryItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PantryItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> foodKey = const Value.absent(),
+          }) => PantryItemsCompanion(id: id, name: name, foodKey: foodKey),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String?> foodKey = const Value.absent(),
+              }) => PantryItemsCompanion.insert(
+                id: id,
+                name: name,
+                foodKey: foodKey,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PantryItemsTable, PantryItem>(table),
+                  BaseReferences<_$AppDatabase, $PantryItemsTable, PantryItem>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PantryItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PantryItemsTable,
+      PantryItem,
+      $$PantryItemsTableFilterComposer,
+      $$PantryItemsTableOrderingComposer,
+      $$PantryItemsTableAnnotationComposer,
+      $$PantryItemsTableCreateCompanionBuilder,
+      $$PantryItemsTableUpdateCompanionBuilder,
+      (
+        PantryItem,
+        BaseReferences<_$AppDatabase, $PantryItemsTable, PantryItem>,
+      ),
+      PantryItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4466,4 +4877,6 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$FoodsTableTableManager get foods =>
       $$FoodsTableTableManager(_db, _db.foods);
+  $$PantryItemsTableTableManager get pantryItems =>
+      $$PantryItemsTableTableManager(_db, _db.pantryItems);
 }
