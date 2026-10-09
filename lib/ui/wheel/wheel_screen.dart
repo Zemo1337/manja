@@ -244,7 +244,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
             children: [
               Builder(
                 builder: (context) {
-                  final badge = appHighlightColors(AppScope.of(context).appearance.theme, theme.colorScheme);
+                  final badge = HighlightColors.of(context);
                   return DecoratedBox(
                     decoration: BoxDecoration(color: badge.background, borderRadius: BorderRadius.circular(16)),
                     child: Padding(

@@ -114,14 +114,37 @@ ThemeData appTheme(AppThemeKind kind, Brightness brightness) {
       backgroundColor: scheme.secondaryContainer,
       foregroundColor: scheme.onSecondaryContainer,
     ),
-    chipTheme: ChipThemeData(
-      backgroundColor: highlight.background,
-      labelStyle: TextStyle(color: highlight.foreground),
-      iconTheme: IconThemeData(color: highlight.foreground),
-      side: BorderSide.none,
-    ),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+    extensions: [HighlightColors(background: highlight.background, foreground: highlight.foreground)],
   );
+}
+
+class HighlightColors extends ThemeExtension<HighlightColors> {
+  const HighlightColors({required this.background, required this.foreground});
+
+  final Color background;
+  final Color foreground;
+
+  static HighlightColors of(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.extension<HighlightColors>() ??
+        HighlightColors(
+          background: theme.colorScheme.primaryContainer,
+          foreground: theme.colorScheme.onPrimaryContainer,
+        );
+  }
+
+  @override
+  HighlightColors copyWith({Color? background, Color? foreground}) =>
+      HighlightColors(background: background ?? this.background, foreground: foreground ?? this.foreground);
+
+  @override
+  HighlightColors lerp(HighlightColors? other, double t) => other == null
+      ? this
+      : HighlightColors(
+          background: Color.lerp(background, other.background, t)!,
+          foreground: Color.lerp(foreground, other.foreground, t)!,
+        );
 }
 
 const _paprika = Color(0xFFC2410C);

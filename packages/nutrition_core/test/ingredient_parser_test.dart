@@ -95,6 +95,21 @@ void main() {
       expect(convertAmount(1, CookingUnit.cup, CookingUnit.g), isNull, reason: 'volume to mass needs a food');
     });
 
+    test('an exact portion for the unit wins over the derived density', () {
+      const butter = Food(
+        source: FoodSource.user,
+        sourceId: 'b',
+        name: 'Butter',
+        per100g: Nutrients({}),
+        portions: [
+          FoodPortion(label: '1 cup', grams: 227, unit: CookingUnit.cup),
+          FoodPortion(label: '1 tbsp', grams: 14.2, unit: CookingUnit.tbsp),
+        ],
+      );
+      expect(gramsFor(butter, 2, CookingUnit.tbsp), closeTo(28.4, 1e-9));
+      expect(gramsFor(butter, 1, CookingUnit.tsp), closeTo(227 / 236.5882365 * 4.92892159375, 1e-9));
+    });
+
     test('volume and mass convert through the food', () {
       expect(convertAmount(2, CookingUnit.cup, CookingUnit.g, food: flour), closeTo(250, 1e-9));
       expect(convertAmount(250, CookingUnit.g, CookingUnit.cup, food: flour), closeTo(2, 1e-9));

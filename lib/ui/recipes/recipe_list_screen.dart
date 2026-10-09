@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../nutrition/ingredients_screen.dart';
+import '../tools/converter_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
@@ -24,6 +25,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       appBar: AppBar(
         title: const Text('Recipes'),
         actions: [
+          IconButton(
+            tooltip: 'Unit converter',
+            icon: const Icon(Icons.scale_outlined),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConverterScreen())),
+          ),
           IconButton(
             tooltip: 'Ingredients',
             icon: const Icon(Icons.kitchen_outlined),

@@ -37,6 +37,9 @@ double? gramsFor(Food food, double amount, CookingUnit unit) {
     case UnitKind.mass:
       return amount * unit.toBase;
     case UnitKind.volume:
+      for (final p in food.portions) {
+        if (p.unit == unit && p.amount > 0) return amount * p.gramsPerUnit;
+      }
       final density = densityOf(food);
       return density == null ? null : amount * unit.toBase * density;
     case UnitKind.count:

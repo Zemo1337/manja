@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
+import '../app_theme.dart';
+
 enum NutritionBasis { portion, per100g, custom }
 
 String formatNutrient(Nutrient n, double value) {
@@ -110,8 +112,9 @@ class _NutrientTable extends StatelessWidget {
         if (values[n] case final v?) (n.label, '${formatNutrient(n, v)} ${n.unit}', n == Nutrient.energy),
       if (values.saltG case final salt?) ('Salt', '${formatNutrient(Nutrient.fat, salt)} g', false),
     ];
-    final highlight = theme.chipTheme.backgroundColor ?? theme.colorScheme.primaryContainer;
-    final onHighlight = theme.chipTheme.labelStyle?.color ?? theme.colorScheme.onPrimaryContainer;
+    final colors = HighlightColors.of(context);
+    final highlight = colors.background;
+    final onHighlight = colors.foreground;
     return Table(
       columnWidths: const {0: FlexColumnWidth(), 1: IntrinsicColumnWidth()},
       children: [

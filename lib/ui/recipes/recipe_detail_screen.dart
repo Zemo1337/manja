@@ -4,6 +4,7 @@ import 'package:nutrition_core/nutrition_core.dart' show IngredientLine, RecipeN
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/units.dart';
+import '../app_theme.dart';
 import '../nutrition/nutrition_panel.dart';
 import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
@@ -105,7 +106,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           if (recipe.photoPath != null) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(aspectRatio: 16 / 9, child: RecipePhoto(recipe: recipe, cacheWidth: 1200)),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: RecipePhoto(recipe: recipe, cacheWidth: 1200),
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -113,9 +117,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              if (recipe.prepMinutes != null) Chip(avatar: const Icon(Icons.timer_outlined), label: Text('Prep ${recipe.prepMinutes} min')),
+              if (recipe.prepMinutes != null)
+                _InfoChip(icon: Icons.timer_outlined, label: 'Prep ${recipe.prepMinutes} min'),
               if (recipe.cookMinutes != null)
-                Chip(avatar: const Icon(Icons.local_fire_department_outlined), label: Text('Cook ${recipe.cookMinutes} min')),
+                _InfoChip(icon: Icons.local_fire_department_outlined, label: 'Cook ${recipe.cookMinutes} min'),
             ],
           ),
           const SizedBox(height: 8),
@@ -128,7 +133,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 icon: const Icon(Icons.remove_circle_outline),
               ),
               Text('$portions', style: theme.textTheme.titleMedium),
-              IconButton(onPressed: () => setState(() => _portions = portions + 1), icon: const Icon(Icons.add_circle_outline)),
+              IconButton(
+                onPressed: () => setState(() => _portions = portions + 1),
+                icon: const Icon(Icons.add_circle_outline),
+              ),
             ],
           ),
           const Divider(),
@@ -173,6 +181,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = HighlightColors.of(context);
+    return Chip(
+      avatar: Icon(icon, color: colors.foreground),
+      label: Text(label, style: TextStyle(color: colors.foreground)),
+      backgroundColor: colors.background,
+      side: BorderSide.none,
     );
   }
 }

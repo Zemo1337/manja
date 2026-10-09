@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../nutrition/ingredients_screen.dart';
+import '../tools/converter_screen.dart';
 import 'appearance_screen.dart';
 import 'option_card.dart';
 import 'wheel_look_screen.dart';
@@ -39,6 +40,14 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('When eaten dishes come back'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const WheelRoundsScreen()),
+          ),
+          const SettingsSectionTitle('Kitchen'),
+          ListTile(
+            leading: const Icon(Icons.scale_outlined),
+            title: const Text('Unit converter'),
+            subtitle: const Text('Cups, spoons, grams and millilitres'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(context, const ConverterScreen()),
           ),
           const SettingsSectionTitle('Ingredients'),
           ListTile(
