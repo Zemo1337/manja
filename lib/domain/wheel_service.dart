@@ -41,17 +41,21 @@ class WheelAppearance {
     this.winnerPercent = 100,
     this.flipText = true,
     this.theme = WheelThemeKind.classic,
+    this.spinSeconds = 8,
   });
 
   static const minSlices = 4;
   static const maxSlicesLimit = 50;
   static const minWinnerPercent = 30;
+  static const minSpinSeconds = 2;
+  static const maxSpinSeconds = 20;
 
   final WheelContent content;
   final int maxSlices;
   final int winnerPercent;
   final bool flipText;
   final WheelThemeKind theme;
+  final int spinSeconds;
 
   WheelAppearance copyWith({
     WheelContent? content,
@@ -59,12 +63,14 @@ class WheelAppearance {
     int? winnerPercent,
     bool? flipText,
     WheelThemeKind? theme,
+    int? spinSeconds,
   }) => WheelAppearance(
     content: content ?? this.content,
     maxSlices: maxSlices ?? this.maxSlices,
     winnerPercent: winnerPercent ?? this.winnerPercent,
     flipText: flipText ?? this.flipText,
     theme: theme ?? this.theme,
+    spinSeconds: spinSeconds ?? this.spinSeconds,
   );
 }
 
@@ -99,6 +105,7 @@ class WheelService {
   static const _keyWinnerPercent = 'wheel.winnerPercent';
   static const _keyFlipText = 'wheel.flipText';
   static const _keyTheme = 'wheel.theme';
+  static const _keySpinSeconds = 'wheel.spinSeconds';
 
   final AppDatabase db;
   final Random _random;
@@ -124,12 +131,14 @@ class WheelService {
     const d = WheelAppearance();
     final maxSlices = int.tryParse(await db.getSetting(_keyMaxSlices) ?? '') ?? d.maxSlices;
     final winner = int.tryParse(await db.getSetting(_keyWinnerPercent) ?? '') ?? d.winnerPercent;
+    final spin = int.tryParse(await db.getSetting(_keySpinSeconds) ?? '') ?? d.spinSeconds;
     return WheelAppearance(
       content: WheelContent.values.asNameMap()[await db.getSetting(_keyContent)] ?? d.content,
       maxSlices: maxSlices.clamp(WheelAppearance.minSlices, WheelAppearance.maxSlicesLimit),
       winnerPercent: winner.clamp(WheelAppearance.minWinnerPercent, 100),
       flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
       theme: WheelThemeKind.values.asNameMap()[await db.getSetting(_keyTheme)] ?? d.theme,
+      spinSeconds: spin.clamp(WheelAppearance.minSpinSeconds, WheelAppearance.maxSpinSeconds),
     );
   }
 
@@ -139,6 +148,7 @@ class WheelService {
     await db.setSetting(_keyWinnerPercent, '${a.winnerPercent}');
     await db.setSetting(_keyFlipText, '${a.flipText}');
     await db.setSetting(_keyTheme, a.theme.name);
+    await db.setSetting(_keySpinSeconds, '${a.spinSeconds}');
   }
 
   Future<DateTime> resetCycle([DateTime? at]) async {

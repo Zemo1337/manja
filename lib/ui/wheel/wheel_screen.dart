@@ -26,7 +26,8 @@ class WheelScreen extends StatefulWidget {
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 4200),
+    duration: const Duration(seconds: 8),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final AnimationController _grow = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
   late final Animation<double> _growCurve = CurvedAnimation(parent: _grow, curve: Curves.easeInOutCubic);
@@ -168,6 +169,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       fullSpins: 5 + _random.nextInt(3),
       jitter: (_random.nextDouble() - 0.5) * 0.7,
     );
+    _controller.duration = Duration(seconds: _state?.appearance.spinSeconds ?? const WheelAppearance().spinSeconds);
     _spin = Tween(begin: _rotation, end: end).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     setState(() => _result = null);
     _controller

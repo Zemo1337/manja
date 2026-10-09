@@ -116,6 +116,20 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
                   onChanged: (v) => setState(() => _look = look.copyWith(winnerPercent: v.round())),
                   onChangeEnd: (v) => _change(look.copyWith(winnerPercent: v.round())),
                 ),
+                const SettingsSectionTitle('Spin'),
+                ListTile(
+                  title: Text('Spin time: ${look.spinSeconds} s'),
+                  subtitle: const Text('How long the wheel turns before it stops'),
+                ),
+                Slider(
+                  value: look.spinSeconds.toDouble(),
+                  min: WheelAppearance.minSpinSeconds.toDouble(),
+                  max: WheelAppearance.maxSpinSeconds.toDouble(),
+                  divisions: WheelAppearance.maxSpinSeconds - WheelAppearance.minSpinSeconds,
+                  label: '${look.spinSeconds} s',
+                  onChanged: (v) => setState(() => _look = look.copyWith(spinSeconds: v.round())),
+                  onChangeEnd: (v) => _change(look.copyWith(spinSeconds: v.round())),
+                ),
                 const SettingsSectionTitle('Names'),
                 SwitchListTile(
                   title: const Text('Keep names upright'),
