@@ -8,6 +8,8 @@ enum CookingUnit {
   lb('lb', 'pound', UnitKind.mass, 453.59237),
   ml('ml', 'millilitre', UnitKind.volume, 1),
   l('l', 'litre', UnitKind.volume, 1000),
+  dl('dl', 'decilitre', UnitKind.volume, 100),
+  cl('cl', 'centilitre', UnitKind.volume, 10),
   tsp('tsp', 'teaspoon', UnitKind.volume, 4.92892159375),
   tbsp('tbsp', 'tablespoon', UnitKind.volume, 14.78676478125),
   cup('cup', 'cup (US)', UnitKind.volume, 236.5882365),

@@ -138,15 +138,21 @@ void main() {
     expect(find.text('Link nutrition'), findsNothing);
     expect(find.textContaining('No gram weight'), findsNothing, reason: 'grams are known per g');
 
-    await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, 'g'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('pinch').last);
-    await tester.pumpAndSettle();
+    Future<void> pickUnit(String current, String unit) async {
+      await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, current));
+      await tester.pumpAndSettle();
+      final menu = find.byType(Scrollable).last;
+      final item = find.descendant(of: menu, matching: find.text(unit));
+      await tester.scrollUntilVisible(item, 48, scrollable: menu);
+      await tester.ensureVisible(item);
+      await tester.pumpAndSettle();
+      await tester.tap(item);
+      await tester.pumpAndSettle();
+    }
+
+    await pickUnit('g', 'pinch');
     expect(find.textContaining('No gram weight for "pinch"'), findsOneWidget);
-    await tester.tap(find.widgetWithText(DropdownButtonFormField<CookingUnit>, 'pinch'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('cup').last);
-    await tester.pumpAndSettle();
+    await pickUnit('pinch', 'cup');
     expect(find.textContaining('No gram weight'), findsNothing, reason: 'the food has a cup portion');
 
     await tester.tap(find.text('Save'));

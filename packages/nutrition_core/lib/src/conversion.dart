@@ -22,6 +22,16 @@ double? gramsPerCount(Food food, CookingUnit unit) {
   return null;
 }
 
+double? convertAmount(double amount, CookingUnit from, CookingUnit to, {Food? food}) {
+  if (from.kind == to.kind && from.kind != UnitKind.count) return amount * from.toBase / to.toBase;
+  if (from == to) return amount;
+  if (food == null) return null;
+  final grams = gramsFor(food, amount, from);
+  if (grams == null) return null;
+  final perUnit = gramsFor(food, 1, to);
+  return perUnit == null || perUnit == 0 ? null : grams / perUnit;
+}
+
 double? gramsFor(Food food, double amount, CookingUnit unit) {
   switch (unit.kind) {
     case UnitKind.mass:
