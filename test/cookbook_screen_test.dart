@@ -4,13 +4,13 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/app_scope.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/data/nutrition_repository.dart';
-import 'package:manja_manja/data/photo_store.dart';
-import 'package:manja_manja/domain/cookbook_pdf.dart';
-import 'package:manja_manja/domain/wheel_service.dart';
-import 'package:manja_manja/ui/cookbook/cookbook_screen.dart';
+import 'package:manja/app_scope.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/data/nutrition_repository.dart';
+import 'package:manja/data/photo_store.dart';
+import 'package:manja/domain/cookbook_pdf.dart';
+import 'package:manja/domain/wheel_service.dart';
+import 'package:manja/ui/cookbook/cookbook_screen.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
 AppScope _scope(AppDatabase db, Widget child) => AppScope(

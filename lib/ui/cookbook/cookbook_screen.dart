@@ -71,7 +71,7 @@ class CookbookScreen extends StatefulWidget {
 }
 
 class _CookbookScreenState extends State<CookbookScreen> {
-  final _title = TextEditingController(text: 'Manja Manja cookbook');
+  final _title = TextEditingController(text: 'Manja cookbook');
   CookbookLayout _layout = CookbookLayout.classic;
   bool _cover = true;
   bool _contents = true;

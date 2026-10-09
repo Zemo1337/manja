@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.manjamanja" "\0"
-            VALUE "FileDescription", "manja_manja" "\0"
+            VALUE "CompanyName", "Manja" "\0"
+            VALUE "FileDescription", "Manja" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "manja_manja" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.manjamanja. All rights reserved." "\0"
-            VALUE "OriginalFilename", "manja_manja.exe" "\0"
-            VALUE "ProductName", "manja_manja" "\0"
+            VALUE "InternalName", "manja" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Manja. All rights reserved." "\0"
+            VALUE "OriginalFilename", "manja.exe" "\0"
+            VALUE "ProductName", "Manja" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

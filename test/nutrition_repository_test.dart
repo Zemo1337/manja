@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/data/food_bundle.dart';
-import 'package:manja_manja/data/nutrition_repository.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/data/food_bundle.dart';
+import 'package:manja/data/nutrition_repository.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
 class FakeUsda implements NutritionSource {

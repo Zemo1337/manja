@@ -15,7 +15,7 @@ typedef PickProfile = Future<List<int>?> Function();
 typedef SaveProfile = Future<bool> Function(String fileName, Uint8List bytes);
 
 Future<List<int>?> _pickProfile() async {
-  final files = await FilePicker.pickFiles(dialogTitle: 'Open a Manja Manja profile');
+  final files = await FilePicker.pickFiles(dialogTitle: 'Open a Manja profile');
   return files.isEmpty ? null : await files.first.readAsBytes();
 }
 
@@ -71,7 +71,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (share) {
       final file = File(p.join((await getTemporaryDirectory()).path, name));
       await file.writeAsBytes(bytes, flush: true);
-      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: 'Manja Manja profile'));
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: 'Manja profile'));
     } else if (await widget.save(name, bytes)) {
       _show('Profile saved');
     }

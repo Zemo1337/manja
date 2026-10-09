@@ -20,7 +20,7 @@ enum CookbookLayout {
 
 class CookbookOptions {
   const CookbookOptions({
-    this.title = 'Manja Manja cookbook',
+    this.title = 'Manja cookbook',
     this.layout = CookbookLayout.classic,
     this.cover = true,
     this.contents = true,
@@ -203,7 +203,7 @@ class _Builder {
   pw.Document document(Map<String, String> pages) {
     final doc = pw.Document(
       title: options.title,
-      creator: 'Manja Manja',
+      creator: 'Manja',
       theme: pw.ThemeData.withFont(base: fonts.regular, bold: fonts.bold, italic: fonts.light),
     );
     if (options.cover) doc.addPage(_cover());
@@ -332,7 +332,7 @@ class _Builder {
                   ),
                 pw.Spacer(),
                 pw.Text(
-                  'Made with Manja Manja',
+                  'Made with Manja',
                   style: pw.TextStyle(fontSize: 10 * scale, color: _muted),
                 ),
               ],

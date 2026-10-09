@@ -1,4 +1,4 @@
-package com.manjamanja.app
+package com.manja.app
 
 import io.flutter.embedding.android.FlutterActivity
 

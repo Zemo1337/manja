@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/domain/pantry_matcher.dart';
+import 'package:manja/domain/pantry_matcher.dart';
 
 MatchRecipe<String> recipe(String name, List<String> ingredients) =>
     MatchRecipe(name, [for (final i in ingredients) MatchIngredient(i)]);

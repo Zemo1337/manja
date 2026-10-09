@@ -126,7 +126,7 @@ class MealLogEntry {
 
 @DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods, PantryItems])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja_manja'));
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja'));
 
   @override
   int get schemaVersion => 5;

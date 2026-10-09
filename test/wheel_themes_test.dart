@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/domain/wheel_service.dart';
-import 'package:manja_manja/ui/wheel/wheel_themes.dart';
+import 'package:manja/domain/wheel_service.dart';
+import 'package:manja/ui/wheel/wheel_themes.dart';
 
 double _contrast(Color a, Color b) {
   final (la, lb) = (a.computeLuminance(), b.computeLuminance());

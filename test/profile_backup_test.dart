@@ -5,10 +5,10 @@ import 'package:archive/archive.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/data/nutrition_repository.dart';
-import 'package:manja_manja/data/photo_store.dart';
-import 'package:manja_manja/data/profile_backup.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/data/nutrition_repository.dart';
+import 'package:manja/data/photo_store.dart';
+import 'package:manja/data/profile_backup.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
 class _Device {
@@ -71,7 +71,7 @@ void main() {
     final json = utf8.decode(archive.findFile('manja.json')!.content);
     expect(json, isNot(contains('SECRET-KEY-123')));
     expect(json, isNot(contains('usdaApiKey')));
-    expect(phone.backup.fileName(DateTime(2026, 10, 9)), 'manja-manja-2026-10-09.manja');
+    expect(phone.backup.fileName(DateTime(2026, 10, 9)), 'manja-2026-10-09.manja');
 
     final summary = phone.backup.read(bytes);
     expect([summary.recipes, summary.photos, summary.meals, summary.ownIngredients, summary.pantry], [2, 1, 1, 1, 1]);

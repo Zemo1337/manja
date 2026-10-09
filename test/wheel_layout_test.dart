@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/domain/wheel_layout.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/domain/wheel_layout.dart';
 
 Recipe _recipe(int id) => Recipe(
       id: id,

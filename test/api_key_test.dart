@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:manja_manja/app_scope.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/data/nutrition_repository.dart';
-import 'package:manja_manja/data/photo_store.dart';
-import 'package:manja_manja/domain/wheel_service.dart';
-import 'package:manja_manja/ui/nutrition/food_picker_sheet.dart';
+import 'package:manja/app_scope.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/data/nutrition_repository.dart';
+import 'package:manja/data/photo_store.dart';
+import 'package:manja/domain/wheel_service.dart';
+import 'package:manja/ui/nutrition/food_picker_sheet.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
 

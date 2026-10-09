@@ -1,4 +1,4 @@
-# Manja Manja
+# Manja
 
 Meal Wheel & Recipe Book. Add your favourite dishes, spin the wheel to decide what to cook, and the dishes you ate leave the wheel until it refills.
 
@@ -45,7 +45,7 @@ Put the key into `config/local.json` (ignored by git) and run with:
 flutter run --dart-define-from-file=config/local.json
 ```
 
-The VS Code launch configuration "Manja Manja" does this automatically. Without a key the app uses USDA's
+The VS Code launch configuration "Manja" does this automatically. Without a key the app uses USDA's
 `DEMO_KEY`, which is limited to a few requests per hour.
 
 The database layer uses [drift](https://drift.simonbinder.eu/). After changing tables in `lib/data/database.dart`, rerun `build_runner`.

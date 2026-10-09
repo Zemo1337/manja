@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/data/photo_store.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/data/photo_store.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

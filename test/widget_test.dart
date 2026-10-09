@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/domain/units.dart';
-import 'package:manja_manja/domain/wheel_service.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/domain/units.dart';
+import 'package:manja/domain/wheel_service.dart';
 
 void main() {
   group('units', () {

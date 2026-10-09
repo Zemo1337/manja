@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manja_manja/data/database.dart';
-import 'package:manja_manja/domain/cookbook_pdf.dart';
+import 'package:manja/data/database.dart';
+import 'package:manja/domain/cookbook_pdf.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;

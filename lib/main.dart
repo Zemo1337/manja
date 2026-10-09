@@ -34,7 +34,7 @@ Future<void> main() async {
       photos: photos,
       nutrition: nutrition,
       appearance: appearance,
-      child: const ManjaManjaApp(),
+      child: const ManjaApp(),
     ),
   );
   unawaited(
@@ -45,8 +45,8 @@ Future<void> main() async {
   );
 }
 
-class ManjaManjaApp extends StatelessWidget {
-  const ManjaManjaApp({super.key});
+class ManjaApp extends StatelessWidget {
+  const ManjaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class ManjaManjaApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: appearance,
       builder: (context, _) => MaterialApp(
-        title: 'Manja Manja',
+        title: 'Manja',
         debugShowCheckedModeBanner: false,
         theme: appTheme(appearance.theme, Brightness.light),
         darkTheme: appTheme(appearance.theme, Brightness.dark),

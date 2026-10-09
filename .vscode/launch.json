@@ -2,14 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Manja Manja",
+      "name": "Manja",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "toolArgs": ["--dart-define-from-file=config/local.json"]
     },
     {
-      "name": "Manja Manja (USDA demo key)",
+      "name": "Manja (USDA demo key)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart"

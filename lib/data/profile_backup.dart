@@ -46,7 +46,7 @@ class ProfileBackup {
   final AppDatabase db;
   final PhotoStore photos;
 
-  String fileName(DateTime at) => 'manja-manja-${at.year}-${_two(at.month)}-${_two(at.day)}$extension';
+  String fileName(DateTime at) => 'manja-${at.year}-${_two(at.month)}-${_two(at.day)}$extension';
 
   static String _two(int n) => n.toString().padLeft(2, '0');
 
@@ -141,9 +141,9 @@ class ProfileBackup {
       if (file == null) throw const FormatException();
       data = jsonDecode(utf8.decode(file.content)) as Map<String, Object?>;
     } on Object {
-      throw const FormatException('This is not a Manja Manja profile.');
+      throw const FormatException('This is not a Manja profile.');
     }
-    if (data['format'] != _format) throw const FormatException('This is not a Manja Manja profile.');
+    if (data['format'] != _format) throw const FormatException('This is not a Manja profile.');
     if ((data['version'] as int? ?? 0) > _version) {
       throw const FormatException('This profile was made by a newer version of the app. Please update first.');
     }

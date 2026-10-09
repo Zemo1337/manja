@@ -220,7 +220,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           children: [
             AppLogo(size: 34),
             SizedBox(width: 10),
-            Flexible(child: Text('Manja Manja', overflow: TextOverflow.ellipsis)),
+            Flexible(child: Text('Manja', overflow: TextOverflow.ellipsis)),
           ],
         ),
         actions: [
