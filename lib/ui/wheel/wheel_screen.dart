@@ -96,7 +96,10 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               ];
         _available = focused == null || focused.isEmpty ? state.available : focused;
         _focused = focused != null && focused.isNotEmpty;
-        final key = '${state.appearance.maxSlices}:${[for (final r in _available) r.id].join(',')}';
+        final key = [
+          state.appearance.maxSlices,
+          for (final r in _available) '${r.id}/${r.name}/${r.photoPath}',
+        ].join('|');
         if (key != _entriesKey) {
           _entriesKey = key;
           _entries = buildEntries(_available, state.appearance.maxSlices, _random);
