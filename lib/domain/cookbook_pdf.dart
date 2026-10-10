@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../data/database.dart';
+import 'text_fold.dart';
 import 'units.dart';
 
 enum CookbookLayout {
@@ -172,14 +173,6 @@ pw.Document buildCookbookDocument(
   return builder.document(recipePages(firstPass));
 }
 
-const _folded = {'č': 'c', 'ć': 'c', 'š': 's', 'ž': 'z', 'đ': 'd', 'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'};
-
-String _sortKey(String name) => name.toLowerCase().split('').map((c) => _folded[c] ?? c).join();
-
-int compareNames(String a, String b) {
-  final byKey = _sortKey(a).compareTo(_sortKey(b));
-  return byKey != 0 ? byKey : a.toLowerCase().compareTo(b.toLowerCase());
-}
 
 Map<String, String> recipePages(pw.Document doc) => {
   for (final o in doc.document.outline.outlines)

@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/cookbook_pdf.dart';
+import '../../domain/text_fold.dart';
 import '../settings/option_card.dart';
 import '../app_theme.dart';
 
