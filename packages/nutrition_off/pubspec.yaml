@@ -1,0 +1,16 @@
+name: nutrition_off
+description: Open Food Facts adapter for nutrition_core.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  http: ^1.5.0
+  nutrition_core:
+    path: ../nutrition_core
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0

@@ -17,6 +17,14 @@ Future<void> openApiSignup(BuildContext context) async {
 
 Future<void> handleNutritionError(BuildContext context, NutritionSourceException error) async {
   final repo = AppScope.of(context).nutrition;
+  if (error.source != FoodSource.usda) {
+    final message = switch (error.kind) {
+      NutritionErrorKind.unreachable => 'Open Food Facts could not be reached. Check your internet connection.',
+      _ => error.message,
+    };
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    return;
+  }
   if (error.kind == NutritionErrorKind.rateLimited && repo.usingDemoKey) {
     await showDemoLimitDialog(context);
     return;

@@ -87,7 +87,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(requests, isEmpty, reason: 'typing never calls USDA');
-    await tester.tap(find.text('Search USDA online for "ajvar"'));
+    await tester.tap(find.text('USDA ingredients'));
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await tester.pumpAndSettle();
     expect(requests, hasLength(1));

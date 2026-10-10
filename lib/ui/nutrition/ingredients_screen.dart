@@ -93,7 +93,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     try {
       final fresh = await repo.refresh(food);
       messenger.showSnackBar(
-        SnackBar(content: Text(fresh == null ? 'USDA no longer has this food' : 'Updated "${fresh.name}"')),
+        SnackBar(content: Text(fresh == null ? '${food.source.label} no longer has this food' : 'Updated "${fresh.name}"')),
       );
     } on NutritionSourceException catch (e) {
       if (mounted) {
@@ -186,7 +186,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           'Add ingredients you cannot find, e.g. from a package label.',
           updating,
         ),
-        if (_usedUsda.isNotEmpty) _section(context, 'USDA ingredients in your recipes', _usedUsda, '', updating),
+        if (_usedUsda.isNotEmpty) _section(context, 'Online ingredients in your recipes', _usedUsda, '', updating),
       ],
     );
   }
@@ -210,7 +210,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             title: Text(f.name),
             subtitle: Text(
               updating.contains(f.key)
-                  ? 'Asking USDA for the latest values…'
+                  ? 'Asking ${f.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'} for the latest values…'
                   : [
                       if (f.per100g[Nutrient.energy] case final kcal?) '${kcal.round()} kcal / 100 g',
                       if (_linked.contains(f.key)) 'used in recipes',
@@ -304,7 +304,7 @@ class _FoodSheet extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: updating ? null : onUpdate,
                     icon: const Icon(Icons.sync),
-                    label: Text(updating ? 'Updating…' : 'Update from USDA'),
+                    label: Text(updating ? 'Updating…' : 'Update from ${food.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'}'),
                   ),
                 if (mine)
                   TextButton.icon(

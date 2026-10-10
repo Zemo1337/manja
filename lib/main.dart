@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nutrition_core/nutrition_core.dart';
+import 'package:nutrition_off/nutrition_off.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -21,7 +22,7 @@ Future<void> main() async {
   final photos = PhotoStore(await getApplicationSupportDirectory());
   final nutrition = NutritionRepository(
     db,
-    remotes: {FoodSource.usda: UsdaSource(apiKey: usdaApiKey)},
+    remotes: {FoodSource.usda: UsdaSource(apiKey: usdaApiKey), FoodSource.openFoodFacts: OffSource()},
     buildApiKey: usdaApiKey,
   );
   await nutrition.loadApiKey();

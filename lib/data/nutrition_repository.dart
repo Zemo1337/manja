@@ -80,9 +80,14 @@ class NutritionRepository {
     }
   }
 
-  Future<List<FoodSummary>> searchRemote(String query, {int limit = 10}) async => [
-        for (final remote in _remotes.values) ...await remote.search(query, limit: limit),
+  bool hasSource(FoodSource source) => _remotes.containsKey(source);
+
+  Future<List<FoodSummary>> searchRemote(String query, {int limit = 10, FoodSource? source}) async => [
+        for (final remote in _remotes.values)
+          if (source == null || remote.source == source) ...await remote.search(query, limit: limit),
       ];
+
+  Future<Food?> productByBarcode(String barcode) => food('${FoodSource.openFoodFacts.id}:$barcode');
 
   Future<Food?> food(String key) async {
     final local = await db.foodRow(key);

@@ -58,7 +58,7 @@ void main() {
       child: const MaterialApp(home: IngredientsScreen()),
     ));
     await tester.pumpAndSettle();
-    expect(find.text('USDA ingredients in your recipes (1)'), findsOneWidget);
+    expect(find.text('Online ingredients in your recipes (1)'), findsOneWidget);
 
     await tester.tap(find.text('Milk, whole'));
     await tester.pumpAndSettle();
