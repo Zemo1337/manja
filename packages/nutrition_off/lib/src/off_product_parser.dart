@@ -30,6 +30,24 @@ double? _number(Object? value) => switch (value) {
   _ => null,
 };
 
+const _mg = 1000.0;
+const _ug = 1000000.0;
+
+const _detailedKeys = [
+  (Nutrient.cholesterol, ['cholesterol'], _mg),
+  (Nutrient.calcium, ['calcium'], _mg),
+  (Nutrient.iron, ['iron'], _mg),
+  (Nutrient.magnesium, ['magnesium'], _mg),
+  (Nutrient.potassium, ['potassium'], _mg),
+  (Nutrient.zinc, ['zinc'], _mg),
+  (Nutrient.vitaminA, ['vitamin-a'], _ug),
+  (Nutrient.vitaminC, ['vitamin-c'], _mg),
+  (Nutrient.vitaminD, ['vitamin-d'], _ug),
+  (Nutrient.vitaminE, ['vitamin-e'], _mg),
+  (Nutrient.vitaminB12, ['vitamin-b12'], _ug),
+  (Nutrient.folate, ['vitamin-b9', 'folates'], _ug),
+];
+
 Food? parseOffProduct(Map<String, dynamic> json) {
   final product = json['product'];
   if (json['status'] != 1 || product is! Map<String, dynamic>) return null;
@@ -51,6 +69,10 @@ Food? parseOffProduct(Map<String, dynamic> json) {
     fiber: per100('fiber'),
     sodiumMg: sodium == null ? null : sodium * 1000,
   );
+  final detailed = <Nutrient, double>{
+    for (final (nutrient, keys, factor) in _detailedKeys)
+      if (keys.map(per100).nonNulls.firstOrNull case final grams?) nutrient: grams * factor,
+  };
   final serving = _number(product['serving_quantity']);
   final servingUnit = (product['serving_quantity_unit'] as String?)?.toLowerCase();
   final package = _number(product['product_quantity']);
@@ -61,7 +83,7 @@ Food? parseOffProduct(Map<String, dynamic> json) {
     sourceId: code,
     name: offProductName(product),
     detail: offProductDetail(product),
-    per100g: nutrients,
+    per100g: Nutrients({...nutrients.values, ...detailed}),
     portions: [
       if (serving != null && serving > 0 && (servingUnit == null || servingUnit == 'g'))
         FoodPortion(

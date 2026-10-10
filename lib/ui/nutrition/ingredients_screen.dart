@@ -93,7 +93,9 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     try {
       final fresh = await repo.refresh(food);
       messenger.showSnackBar(
-        SnackBar(content: Text(fresh == null ? '${food.source.label} no longer has this food' : 'Updated "${fresh.name}"')),
+        SnackBar(
+          content: Text(fresh == null ? '${food.source.label} no longer has this food' : 'Updated "${fresh.name}"'),
+        ),
       );
     } on NutritionSourceException catch (e) {
       if (mounted) {
@@ -264,7 +266,7 @@ class _FoodSheet extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text('Per 100 g', style: theme.textTheme.titleSmall),
-            for (final n in Nutrient.values)
+            for (final n in Nutrient.basic)
               if (food.per100g[n] case final v?)
                 Row(
                   children: [
@@ -279,6 +281,7 @@ class _FoodSheet extends StatelessWidget {
                   Text('${formatNutrient(Nutrient.fat, salt)} g'),
                 ],
               ),
+            if (Nutrient.vitaminsAndMinerals.any(food.per100g.has)) VitaminsAndMinerals(values: food.per100g),
             if (food.portions.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text('Portions', style: theme.textTheme.titleSmall),
@@ -304,7 +307,11 @@ class _FoodSheet extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: updating ? null : onUpdate,
                     icon: const Icon(Icons.sync),
-                    label: Text(updating ? 'Updating…' : 'Update from ${food.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'}'),
+                    label: Text(
+                      updating
+                          ? 'Updating…'
+                          : 'Update from ${food.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'}',
+                    ),
                   ),
                 if (mine)
                   TextButton.icon(

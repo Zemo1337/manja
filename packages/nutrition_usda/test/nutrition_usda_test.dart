@@ -11,6 +11,26 @@ Map<String, dynamic> fixture(String name) =>
     jsonDecode(File('test/fixtures/$name').readAsStringSync()) as Map<String, dynamic>;
 
 void main() {
+  test('vitamins and minerals are read, folate falls back to the total', () {
+    final food = parseUsdaFood({
+      'fdcId': 1,
+      'description': 'Spinach, raw',
+      'foodNutrients': [
+        {'nutrient': {'id': 1087}, 'amount': 99},
+        {'nutrient': {'id': 1162}, 'amount': 28.1},
+        {'nutrient': {'id': 1106}, 'amount': 469},
+        {'nutrient': {'id': 1177}, 'amount': 194},
+        {'nutrient': {'id': 1253}, 'amount': 0},
+      ],
+    });
+    expect(food.per100g[Nutrient.calcium], 99);
+    expect(food.per100g[Nutrient.vitaminC], 28.1);
+    expect(food.per100g[Nutrient.vitaminA], 469);
+    expect(food.per100g[Nutrient.folate], 194);
+    expect(food.per100g[Nutrient.cholesterol], 0);
+    expect(food.per100g.has(Nutrient.iron), isFalse);
+  });
+
   group('parser', () {
     test('SR Legacy milk: nutrients and text portions', () {
       final milk = parseUsdaFood(fixture('sr_milk.json'));

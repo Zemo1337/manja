@@ -9,6 +9,18 @@ const _nutrientIds = <Nutrient, List<int>>{
   Nutrient.sugars: [2000, 1063],
   Nutrient.fiber: [1079],
   Nutrient.sodium: [1093],
+  Nutrient.cholesterol: [1253],
+  Nutrient.calcium: [1087],
+  Nutrient.iron: [1089],
+  Nutrient.magnesium: [1090],
+  Nutrient.potassium: [1092],
+  Nutrient.zinc: [1095],
+  Nutrient.vitaminA: [1106],
+  Nutrient.vitaminC: [1162],
+  Nutrient.vitaminD: [1114],
+  Nutrient.vitaminE: [1109],
+  Nutrient.vitaminB12: [1178],
+  Nutrient.folate: [1190, 1177],
 };
 
 const _unitWords = <String, CookingUnit>{

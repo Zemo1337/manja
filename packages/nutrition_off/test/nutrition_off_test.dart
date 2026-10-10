@@ -55,6 +55,28 @@ void main() {
       expect(food.portions, isEmpty, reason: 'a package in ml has no weight');
     });
 
+    test('vitamins and minerals are converted from grams', () {
+      final food = parseOffProduct({
+        'status': 1,
+        'product': {
+          'code': '20528447',
+          'product_name': 'Juice',
+          'nutriments': {
+            'calcium_100g': 0.12,
+            'vitamin-c_100g': 0.03,
+            'vitamin-b9_100g': 0.0001,
+            'vitamin-d_100g': 0.000002,
+          },
+          'nutriments_estimated': {'iron_100g': 0.004},
+        },
+      })!;
+      expect(food.per100g[Nutrient.calcium], closeTo(120, 1e-9));
+      expect(food.per100g[Nutrient.vitaminC], closeTo(30, 1e-9));
+      expect(food.per100g[Nutrient.folate], closeTo(100, 1e-9));
+      expect(food.per100g[Nutrient.vitaminD], closeTo(2, 1e-9));
+      expect(food.per100g.has(Nutrient.iron), isFalse, reason: 'estimated values are not label values');
+    });
+
     test('unknown products give null', () {
       expect(parseOffProduct({'status': 0, 'status_verbose': 'product not found'}), isNull);
     });

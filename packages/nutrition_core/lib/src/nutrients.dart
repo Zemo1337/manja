@@ -6,12 +6,31 @@ enum Nutrient {
   carbohydrate('Carbohydrate', 'g'),
   sugars('Sugars', 'g'),
   fiber('Fiber', 'g'),
-  sodium('Sodium', 'mg');
+  sodium('Sodium', 'mg'),
+  cholesterol('Cholesterol', 'mg', detailed: true),
+  calcium('Calcium', 'mg', detailed: true, dailyReference: 800),
+  iron('Iron', 'mg', detailed: true, dailyReference: 14),
+  magnesium('Magnesium', 'mg', detailed: true, dailyReference: 375),
+  potassium('Potassium', 'mg', detailed: true, dailyReference: 2000),
+  zinc('Zinc', 'mg', detailed: true, dailyReference: 10),
+  vitaminA('Vitamin A', 'µg', detailed: true, dailyReference: 800),
+  vitaminC('Vitamin C', 'mg', detailed: true, dailyReference: 80),
+  vitaminD('Vitamin D', 'µg', detailed: true, dailyReference: 5),
+  vitaminE('Vitamin E', 'mg', detailed: true, dailyReference: 12),
+  vitaminB12('Vitamin B12', 'µg', detailed: true, dailyReference: 2.5),
+  folate('Folate', 'µg', detailed: true, dailyReference: 200);
 
-  const Nutrient(this.label, this.unit);
+  const Nutrient(this.label, this.unit, {this.detailed = false, this.dailyReference});
 
   final String label;
   final String unit;
+  final bool detailed;
+
+  /// EU nutrient reference value for adults (Regulation (EU) No 1169/2011, Annex XIII).
+  final double? dailyReference;
+
+  static final basic = [for (final n in values) if (!n.detailed) n];
+  static final vitaminsAndMinerals = [for (final n in values) if (n.detailed) n];
 }
 
 class Nutrients {

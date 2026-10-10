@@ -10,6 +10,16 @@ String formatNutrient(Nutrient n, double value) {
   return value < 10 ? value.toStringAsFixed(1) : value.round().toString();
 }
 
+String formatDetailedNutrient(double value) =>
+    value >= 10 ? value.round().toString() : (value >= 1 ? value.toStringAsFixed(1) : value.toStringAsFixed(2));
+
+String? dailyReferencePercent(Nutrient n, double value) {
+  final reference = n.dailyReference;
+  if (reference == null) return null;
+  final percent = value / reference * 100;
+  return percent > 0 && percent < 1 ? '<1%' : '${percent.round()}%';
+}
+
 String _grams(double g) => '${g.round()} g';
 
 class NutritionPanel extends StatefulWidget {
@@ -79,6 +89,8 @@ class _NutritionPanelState extends State<NutritionPanel> {
         ],
         const SizedBox(height: 12),
         if (values != null) _NutrientTable(values: values, partial: r.partial),
+        if (values != null && Nutrient.vitaminsAndMinerals.any(values.has))
+          VitaminsAndMinerals(values: values, partial: r.partial),
         const SizedBox(height: 8),
         Text(
           [
@@ -108,7 +120,7 @@ class _NutrientTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final rows = <(String, String, bool)>[
-      for (final n in Nutrient.values)
+      for (final n in Nutrient.basic)
         if (values[n] case final v?) (n.label, '${formatNutrient(n, v)} ${n.unit}', n == Nutrient.energy),
       if (values.saltG case final salt?) ('Salt', '${formatNutrient(Nutrient.fat, salt)} g', false),
     ];
@@ -151,6 +163,51 @@ class _NutrientTable extends StatelessWidget {
 
   bool _isPartial(String label) =>
       partial.any((n) => n.label == label) || (label == 'Salt' && partial.contains(Nutrient.sodium));
+}
+
+class VitaminsAndMinerals extends StatelessWidget {
+  const VitaminsAndMinerals({super.key, required this.values, this.partial = const {}});
+
+  final Nutrients values;
+  final Set<Nutrient> partial;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 8),
+        childrenPadding: const EdgeInsets.only(bottom: 8),
+        title: Text('Vitamins and minerals', style: theme.textTheme.titleSmall),
+        subtitle: Text('% of the EU daily reference intake for adults', style: muted),
+        children: [
+          for (final n in Nutrient.vitaminsAndMinerals)
+            if (values[n] case final v?)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(n.label, style: theme.textTheme.bodyMedium)),
+                    Text(
+                      '${formatDetailedNutrient(v)} ${n.unit}${partial.contains(n) ? ' *' : ''}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    SizedBox(
+                      width: 52,
+                      child: Text(dailyReferencePercent(n, v) ?? '', textAlign: TextAlign.end, style: muted),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MissingCard extends StatelessWidget {

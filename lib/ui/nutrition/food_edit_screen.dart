@@ -41,8 +41,8 @@ class FoodEditScreen extends StatefulWidget {
 
 class _PortionRow {
   _PortionRow({String amount = '1', this.unit = CookingUnit.piece, String grams = ''})
-      : amount = TextEditingController(text: amount),
-        grams = TextEditingController(text: grams);
+    : amount = TextEditingController(text: amount),
+      grams = TextEditingController(text: grams);
 
   final TextEditingController amount;
   final TextEditingController grams;
@@ -58,10 +58,12 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.existing?.name ?? widget.initialName);
   late final _values = {
-    for (final (n, _, _) in _fields)
-      n: TextEditingController(text: _format(widget.existing?.per100g[n])),
+    for (final (n, _, _) in _fields) n: TextEditingController(text: _format(widget.existing?.per100g[n])),
   };
   late final _salt = TextEditingController(text: _format(widget.existing?.per100g.saltG));
+  late final _detailed = {
+    for (final n in Nutrient.vitaminsAndMinerals) n: TextEditingController(text: _format(widget.existing?.per100g[n])),
+  };
   late final _portions = [
     for (final p in widget.existing?.portions ?? const <FoodPortion>[])
       if (p.unit != null && _portionUnits.contains(p.unit))
@@ -77,7 +79,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
   void dispose() {
     _name.dispose();
     _salt.dispose();
-    for (final c in _values.values) {
+    for (final c in [..._values.values, ..._detailed.values]) {
       c.dispose();
     }
     for (final p in _portions) {
@@ -104,6 +106,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
     final values = <Nutrient, double>{
       for (final e in _values.entries) e.key: ?_parse(e.value.text),
       if (salt != null) Nutrient.sodium: salt * 400,
+      for (final e in _detailed.entries) e.key: ?_parse(e.value.text),
     };
     final food = await AppScope.of(context).nutrition.saveUserFood(
       sourceId: widget.existing?.source == FoodSource.user ? widget.existing!.sourceId : null,
@@ -143,7 +146,10 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
             ),
             const SizedBox(height: 24),
             Text('Nutrition per 100 g', style: theme.textTheme.titleLarge),
-            Text('Copy the values from the package label. Leave unknown values empty.', style: theme.textTheme.bodySmall),
+            Text(
+              'Copy the values from the package label. Leave unknown values empty.',
+              style: theme.textTheme.bodySmall,
+            ),
             const SizedBox(height: 12),
             for (final (n, label, unit) in [..._fields, (Nutrient.sodium, 'Salt', 'g')])
               Padding(
@@ -162,6 +168,33 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                   validator: _optionalNumber,
                 ),
               ),
+            Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                initiallyExpanded: _detailed.values.any((c) => c.text.isNotEmpty),
+                title: const Text('More nutrients'),
+                subtitle: Text('Vitamins, minerals and cholesterol', style: theme.textTheme.bodySmall),
+                children: [
+                  for (final n in Nutrient.vitaminsAndMinerals)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: TextFormField(
+                        key: ValueKey('nutrient-${n.name}'),
+                        controller: _detailed[n],
+                        decoration: InputDecoration(
+                          labelText: n.label,
+                          suffixText: n.unit,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        validator: _optionalNumber,
+                      ),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             Text('Portions', style: theme.textTheme.titleLarge),
             Text(
@@ -191,9 +224,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                         initialValue: p.unit,
                         isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
-                        items: [
-                          for (final u in _portionUnits) DropdownMenuItem(value: u, child: Text(u.label)),
-                        ],
+                        items: [for (final u in _portionUnits) DropdownMenuItem(value: u, child: Text(u.label))],
                         onChanged: (u) => setState(() => p.unit = u ?? p.unit),
                       ),
                     ),
