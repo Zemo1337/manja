@@ -232,14 +232,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     final state = _state;
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppLogo(size: 34),
-            SizedBox(width: 10),
-            Flexible(child: Text('Manja', overflow: TextOverflow.ellipsis)),
-          ],
-        ),
+        toolbarHeight: 68,
+        title: const ManjaWordmark(fontSize: 32),
         actions: [
           IconButton(
             tooltip: 'What can I cook?',
