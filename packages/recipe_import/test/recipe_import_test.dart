@@ -90,6 +90,22 @@ void main() {
       expect(recipeFromJsonLd([block])!.name, 'Sarma');
     });
 
+    test('the page preview image is a fallback for recipes without an image', () {
+      const page = '<html><head><meta property="og:image" content="/img/sarma.jpg">'
+          '<script type="application/ld+json">{"@type":"Recipe","name":"Sarma"}</script></head></html>';
+      final url = Uri.parse('https://site.example/recepti/sarma');
+      final recipe = recipeFromJsonLd(jsonLdBlocksFromHtml(page), pageUrl: url)!;
+      expect(recipe.imageUrl, isNull);
+      final withImage = recipe.withImage(previewImageFromHtml(page, pageUrl: url));
+      expect(withImage.imageUrl, Uri.parse('https://site.example/img/sarma.jpg'));
+      expect(withImage.name, 'Sarma');
+      final own = recipeFromJsonLd([jsonEncode({'@type': 'Recipe', 'name': 'X', 'image': 'https://a.example/own.jpg'})])!;
+      expect(own.withImage(Uri.parse('https://a.example/og.jpg')).imageUrl, Uri.parse('https://a.example/own.jpg'));
+      expect(previewImageFromHtml('<html><meta name="twitter:image" content="https://t.example/x.png"></html>'),
+          Uri.parse('https://t.example/x.png'));
+      expect(previewImageFromHtml('<html></html>'), isNull);
+    });
+
     test('categories come from recipeCategory as text or list', () {
       String block(Object category) => jsonEncode({'@type': 'Recipe', 'name': 'X', 'recipeCategory': category});
       expect(recipeFromJsonLd([block('Kolači')])!.categories, ['Kolači']);

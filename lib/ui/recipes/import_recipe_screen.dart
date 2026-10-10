@@ -13,7 +13,8 @@ import 'recipe_edit_screen.dart';
 const _readPageScript = '''
 JSON.stringify({
   title: document.title,
-  blocks: Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map(s => s.textContent)
+  blocks: Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map(s => s.textContent),
+  image: (document.querySelector('meta[property="og:image"], meta[name="twitter:image"]') || {}).content || null
 })''';
 
 final _challengeTitles = RegExp(
@@ -111,7 +112,10 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
       return;
     }
     final blocks = [for (final b in page['blocks'] as List? ?? const []) '$b'];
-    final recipe = recipeFromJsonLd(blocks, pageUrl: url);
+    final recipe = recipeFromJsonLd(
+      blocks,
+      pageUrl: url,
+    )?.withImage(previewImageUrl(page['image'] as String?, pageUrl: url));
     if (recipe != null) {
       _poll?.cancel();
       await _finish(recipe);

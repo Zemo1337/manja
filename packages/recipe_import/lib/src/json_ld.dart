@@ -22,6 +22,27 @@ ImportedRecipe? recipeFromJsonLd(Iterable<String> blocks, {Uri? pageUrl}) {
   return null;
 }
 
+Uri? previewImageFromHtml(String page, {Uri? pageUrl}) {
+  final doc = html.parse(page);
+  for (final selector in const [
+    'meta[property="og:image"]',
+    'meta[property="og:image:url"]',
+    'meta[name="twitter:image"]',
+    'link[rel="image_src"]',
+  ]) {
+    final element = doc.querySelector(selector);
+    final value = (element?.attributes['content'] ?? element?.attributes['href'])?.trim();
+    if (value != null && value.isNotEmpty) return previewImageUrl(value, pageUrl: pageUrl);
+  }
+  return null;
+}
+
+Uri? previewImageUrl(String? value, {Uri? pageUrl}) {
+  final text = value?.trim();
+  if (text == null || text.isEmpty) return null;
+  return pageUrl?.resolve(text) ?? Uri.tryParse(text);
+}
+
 List<String> jsonLdBlocksFromHtml(String page) => [
       for (final script in html.parse(page).querySelectorAll('script[type="application/ld+json"]')) script.text,
     ];

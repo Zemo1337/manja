@@ -44,7 +44,7 @@ class RecipeImporter {
     if (response.statusCode != 200) throw RecipeImportException('The page answered with HTTP ${response.statusCode}.');
     final type = response.headers['content-type'] ?? '';
     final page = type.contains('charset=') ? response.body : utf8.decode(response.bodyBytes, allowMalformed: true);
-    return fromBlocks(jsonLdBlocksFromHtml(page), url);
+    return fromBlocks(jsonLdBlocksFromHtml(page), url).withImage(previewImageFromHtml(page, pageUrl: url));
   }
 
   ImportedRecipe fromBlocks(List<String> blocks, Uri url) {
@@ -60,7 +60,10 @@ class RecipeImporter {
   Future<String?> downloadImage(Uri url, Directory dir) async {
     try {
       final response = await _client
-          .get(url, headers: {'User-Agent': browserUserAgent})
+          .get(
+            url,
+            headers: {'User-Agent': browserUserAgent, 'Accept': 'image/webp,image/jpeg,image/png,image/*;q=0.8'},
+          )
           .timeout(const Duration(seconds: 30));
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) return null;
       final type = response.headers['content-type'] ?? '';

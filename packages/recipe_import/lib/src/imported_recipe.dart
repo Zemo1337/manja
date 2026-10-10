@@ -26,4 +26,20 @@ class ImportedRecipe {
   final List<String> steps;
   final Uri? sourceUrl;
   final List<String> categories;
+
+  ImportedRecipe withImage(Uri? image) => image == null || imageUrl != null
+      ? this
+      : ImportedRecipe(
+          name: name,
+          description: description,
+          imageUrl: image,
+          portions: portions,
+          prepMinutes: prepMinutes,
+          cookMinutes: cookMinutes,
+          totalMinutes: totalMinutes,
+          ingredients: ingredients,
+          steps: steps,
+          sourceUrl: sourceUrl,
+          categories: categories,
+        );
 }
