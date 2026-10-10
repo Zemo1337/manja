@@ -136,6 +136,19 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
                   onChanged: (v) => setState(() => _look = look.copyWith(spinSeconds: v.round())),
                   onChangeEnd: (v) => _change(look.copyWith(spinSeconds: v.round())),
                 ),
+                ListTile(
+                  title: Text('Winner reveal: ${(look.revealMillis / 1000).toStringAsFixed(1)} s'),
+                  subtitle: const Text('How long the chosen dish takes to grow on the wheel'),
+                ),
+                Slider(
+                  value: look.revealMillis.toDouble(),
+                  min: WheelAppearance.minRevealMillis.toDouble(),
+                  max: WheelAppearance.maxRevealMillis.toDouble(),
+                  divisions: (WheelAppearance.maxRevealMillis - WheelAppearance.minRevealMillis) ~/ 100,
+                  label: '${(look.revealMillis / 1000).toStringAsFixed(1)} s',
+                  onChanged: (v) => setState(() => _look = look.copyWith(revealMillis: (v / 100).round() * 100)),
+                  onChangeEnd: (v) => _change(look.copyWith(revealMillis: (v / 100).round() * 100)),
+                ),
                 const SettingsSectionTitle('Names'),
                 SwitchListTile(
                   title: const Text('Keep names upright'),

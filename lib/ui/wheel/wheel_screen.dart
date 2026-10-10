@@ -27,10 +27,14 @@ class WheelScreen extends StatefulWidget {
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 8),
+    duration: const Duration(seconds: 4),
     animationBehavior: AnimationBehavior.preserve,
   );
-  late final AnimationController _grow = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+  late final AnimationController _grow = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+    animationBehavior: AnimationBehavior.preserve,
+  );
   late final Animation<double> _growCurve = CurvedAnimation(parent: _grow, curve: Curves.easeInOutCubic);
   int? _winner;
   final _random = Random();
@@ -186,6 +190,9 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           _result = picked;
           _winner = index;
         });
+        _grow.duration = Duration(
+          milliseconds: _state?.appearance.revealMillis ?? const WheelAppearance().revealMillis,
+        );
         _grow.forward(from: 0);
       });
   }

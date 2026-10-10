@@ -46,7 +46,8 @@ class WheelAppearance {
     this.winnerPercent = 100,
     this.flipText = true,
     this.theme = WheelThemeKind.classic,
-    this.spinSeconds = 8,
+    this.spinSeconds = 4,
+    this.revealMillis = 1000,
   });
 
   static const minSlices = 4;
@@ -54,6 +55,8 @@ class WheelAppearance {
   static const minWinnerPercent = 30;
   static const minSpinSeconds = 2;
   static const maxSpinSeconds = 20;
+  static const minRevealMillis = 200;
+  static const maxRevealMillis = 3000;
 
   final WheelContent content;
   final int maxSlices;
@@ -61,6 +64,7 @@ class WheelAppearance {
   final bool flipText;
   final WheelThemeKind theme;
   final int spinSeconds;
+  final int revealMillis;
 
   WheelAppearance copyWith({
     WheelContent? content,
@@ -69,6 +73,7 @@ class WheelAppearance {
     bool? flipText,
     WheelThemeKind? theme,
     int? spinSeconds,
+    int? revealMillis,
   }) => WheelAppearance(
     content: content ?? this.content,
     maxSlices: maxSlices ?? this.maxSlices,
@@ -76,6 +81,7 @@ class WheelAppearance {
     flipText: flipText ?? this.flipText,
     theme: theme ?? this.theme,
     spinSeconds: spinSeconds ?? this.spinSeconds,
+    revealMillis: revealMillis ?? this.revealMillis,
   );
 }
 
@@ -160,6 +166,7 @@ class WheelService {
   static const _keyFlipText = 'wheel.flipText';
   static const _keyTheme = 'wheel.theme';
   static const _keySpinSeconds = 'wheel.spinSeconds';
+  static const _keyRevealMillis = 'wheel.revealMillis';
   static const _keyTag = 'wheel.tag';
   static const _keyMaxKcal = 'wheel.filter.maxKcal';
   static const _keyMaxMinutes = 'wheel.filter.maxMinutes';
@@ -190,6 +197,7 @@ class WheelService {
     final maxSlices = int.tryParse(await db.getSetting(_keyMaxSlices) ?? '') ?? d.maxSlices;
     final winner = int.tryParse(await db.getSetting(_keyWinnerPercent) ?? '') ?? d.winnerPercent;
     final spin = int.tryParse(await db.getSetting(_keySpinSeconds) ?? '') ?? d.spinSeconds;
+    final reveal = int.tryParse(await db.getSetting(_keyRevealMillis) ?? '') ?? d.revealMillis;
     return WheelAppearance(
       content: WheelContent.values.asNameMap()[await db.getSetting(_keyContent)] ?? d.content,
       maxSlices: maxSlices.clamp(WheelAppearance.minSlices, WheelAppearance.maxSlicesLimit),
@@ -197,6 +205,7 @@ class WheelService {
       flipText: (await db.getSetting(_keyFlipText) ?? '${d.flipText}') == 'true',
       theme: WheelThemeKind.values.asNameMap()[await db.getSetting(_keyTheme)] ?? d.theme,
       spinSeconds: spin.clamp(WheelAppearance.minSpinSeconds, WheelAppearance.maxSpinSeconds),
+      revealMillis: reveal.clamp(WheelAppearance.minRevealMillis, WheelAppearance.maxRevealMillis),
     );
   }
 
@@ -207,6 +216,7 @@ class WheelService {
     await db.setSetting(_keyFlipText, '${a.flipText}');
     await db.setSetting(_keyTheme, a.theme.name);
     await db.setSetting(_keySpinSeconds, '${a.spinSeconds}');
+    await db.setSetting(_keyRevealMillis, '${a.revealMillis}');
   }
 
   Future<DateTime> resetCycle([DateTime? at]) async {
@@ -310,7 +320,9 @@ class WheelService {
     for (final i in ingredients) {
       byRecipe
           .putIfAbsent(i.recipeId, () => [])
-          .add(IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]));
+          .add(
+            IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]),
+          );
     }
     return {
       for (final r in recipes)

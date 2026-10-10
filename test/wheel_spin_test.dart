@@ -10,6 +10,7 @@ import 'package:manja/data/nutrition_repository.dart';
 import 'package:manja/data/photo_store.dart';
 import 'package:manja/domain/wheel_service.dart';
 import 'package:manja/main.dart';
+import 'package:manja/ui/wheel/wheel_painter.dart';
 
 void main() {
   testWidgets('the spin takes the chosen time, even when the phone removes animations', (tester) async {
@@ -22,7 +23,7 @@ void main() {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     addTearDown(db.close);
     final wheel = WheelService(db);
-    await wheel.saveAppearance(const WheelAppearance(spinSeconds: 12));
+    await wheel.saveAppearance(const WheelAppearance(spinSeconds: 12, revealMillis: 2000));
     expect((await wheel.loadAppearance()).spinSeconds, 12);
     for (final name in ['Sarma', 'Grah', 'Burek']) {
       await db.saveRecipe(RecipeDraft(name: name, portions: 2));
@@ -42,8 +43,22 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 11));
     expect(find.text('Today you cook'), findsNothing, reason: 'still turning after 11 of 12 seconds');
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 1, milliseconds: 100));
+    double winnerSweep() {
+      final painter = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<WheelPainter>()
+          .single;
+      return painter.sweeps[painter.highlight!];
+    }
+
+    final early = winnerSweep();
+    await tester.pump(const Duration(milliseconds: 600));
+    final later = winnerSweep();
+    expect(later, greaterThan(early), reason: 'the winner is still growing 0.7 s into a 2 s reveal');
     await tester.pumpAndSettle();
+    expect(winnerSweep(), greaterThan(later));
     expect(find.text('Today you cook'), findsOneWidget);
   });
 
@@ -51,7 +66,8 @@ void main() {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     addTearDown(db.close);
     final wheel = WheelService(db);
-    expect((await wheel.loadAppearance()).spinSeconds, 8);
+    expect((await wheel.loadAppearance()).spinSeconds, 4);
+    expect((await wheel.loadAppearance()).revealMillis, 1000);
     await db.setSetting('wheel.spinSeconds', '999');
     expect((await wheel.loadAppearance()).spinSeconds, WheelAppearance.maxSpinSeconds);
   });
