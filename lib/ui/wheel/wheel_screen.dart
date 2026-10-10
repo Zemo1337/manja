@@ -323,6 +323,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = min(constraints.maxWidth - 32, constraints.maxHeight - 280).clamp(150.0, 560.0);
+        final pointer = WheelPointerPainter.sizeFor(size);
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
@@ -377,12 +378,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                 onTap: _result == null ? _spinWheel : null,
                 child: SizedBox(
                   width: size,
-                  height: size + 18,
+                  height: size + pointer.height * 0.56,
                   child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
                       Positioned(
-                        top: 18,
+                        top: pointer.height * 0.56,
                         child: AnimatedBuilder(
                           animation: Listenable.merge([_controller, _grow]),
                           builder: (context, _) {
@@ -404,7 +405,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                         ),
                       ),
                       CustomPaint(
-                        size: const Size(28, 34),
+                        size: pointer,
                         painter: WheelPointerPainter(wheelTheme.pointer, outline: theme.colorScheme.onSurface),
                       ),
                     ],

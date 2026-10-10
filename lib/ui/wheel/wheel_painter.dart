@@ -205,28 +205,66 @@ class WheelPainter extends CustomPainter {
 class WheelPointerPainter extends CustomPainter {
   WheelPointerPainter(this.color, {this.outline});
 
+  static Size sizeFor(double wheel) {
+    final width = (wheel * 0.11).clamp(24.0, 56.0);
+    return Size(width, width * 1.53);
+  }
+
   final Color color;
   final Color? outline;
 
+  static Path head(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(0, h * 0.34)
+      ..lineTo(w, h * 0.34)
+      ..quadraticBezierTo(w, h * 0.58, w * 0.66, h * 0.64)
+      ..lineTo(w * 0.5, h)
+      ..lineTo(w * 0.34, h * 0.64)
+      ..quadraticBezierTo(0, h * 0.58, 0, h * 0.34)
+      ..close();
+  }
+
+  static List<(Offset, Offset)> tines(Size size) => [
+    for (var i = 0; i < 4; i++)
+      (
+        Offset(size.width * (0.11 + i * 0.26), size.height * 0.05),
+        Offset(size.width * (0.11 + i * 0.26), size.height * 0.38),
+      ),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..close();
-    canvas.drawShadow(path, Colors.black, 3, false);
-    canvas.drawPath(path, Paint()..color = color);
-    if (outline != null && outline != color) {
+    final head = WheelPointerPainter.head(size);
+    final tineWidth = size.width * 0.15;
+    canvas.drawShadow(head, Colors.black, 3, false);
+    final edge = outline;
+    if (edge != null && edge != color) {
+      final stroke = Paint()
+        ..color = edge
+        ..strokeWidth = tineWidth + 3
+        ..strokeCap = StrokeCap.round;
+      for (final (a, b) in tines(size)) {
+        canvas.drawLine(a, b, stroke);
+      }
       canvas.drawPath(
-        path,
+        head,
         Paint()
-          ..color = outline!
+          ..color = edge
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
+          ..strokeWidth = 3
           ..strokeJoin = StrokeJoin.round,
       );
     }
+    final fill = Paint()
+      ..color = color
+      ..strokeWidth = tineWidth
+      ..strokeCap = StrokeCap.round;
+    for (final (a, b) in tines(size)) {
+      canvas.drawLine(a, b, fill);
+    }
+    canvas.drawPath(head, Paint()..color = color);
   }
 
   @override
