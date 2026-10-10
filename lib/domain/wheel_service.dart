@@ -2,7 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:nutrition_core/nutrition_core.dart';
+
 import '../data/database.dart';
+import '../data/nutrition_repository.dart';
 
 enum ResetMode {
   whenEmpty('When every dish was eaten'),
@@ -76,6 +79,42 @@ class WheelAppearance {
   );
 }
 
+class WheelFilters {
+  const WheelFilters({this.maxKcal, this.maxMinutes, this.includeUnknown = true});
+
+  static const kcalMin = 200;
+  static const kcalMax = 1500;
+  static const kcalStep = 50;
+  static const minutesMin = 10;
+  static const minutesMax = 180;
+  static const minutesStep = 5;
+
+  final int? maxKcal;
+  final int? maxMinutes;
+  final bool includeUnknown;
+
+  bool get active => maxKcal != null || maxMinutes != null;
+
+  WheelFilters copyWith({int? Function()? maxKcal, int? Function()? maxMinutes, bool? includeUnknown}) => WheelFilters(
+    maxKcal: maxKcal == null ? this.maxKcal : maxKcal(),
+    maxMinutes: maxMinutes == null ? this.maxMinutes : maxMinutes(),
+    includeUnknown: includeUnknown ?? this.includeUnknown,
+  );
+
+  bool allows({double? kcal, int? minutes}) {
+    if (maxKcal case final limit?) {
+      if (kcal == null ? !includeUnknown : kcal > limit) return false;
+    }
+    if (maxMinutes case final limit?) {
+      if (minutes == null ? !includeUnknown : minutes > limit) return false;
+    }
+    return true;
+  }
+}
+
+int? totalMinutes(Recipe r) =>
+    r.prepMinutes == null && r.cookMinutes == null ? null : (r.prepMinutes ?? 0) + (r.cookMinutes ?? 0);
+
 class WheelSettings {
   const WheelSettings({required this.mode, required this.resetDays, required this.cycleStartedAt});
 
@@ -92,6 +131,8 @@ class WheelState {
     required this.appearance,
     this.tags = const [],
     this.tag,
+    this.filters = const WheelFilters(),
+    this.filteredOut = 0,
   });
 
   final List<Recipe> available;
@@ -100,6 +141,8 @@ class WheelState {
   final WheelAppearance appearance;
   final List<Tag> tags;
   final Tag? tag;
+  final WheelFilters filters;
+  final int filteredOut;
 
   int get eaten => total - available.length;
   bool get exhausted => total > 0 && available.isEmpty;
@@ -118,6 +161,9 @@ class WheelService {
   static const _keyTheme = 'wheel.theme';
   static const _keySpinSeconds = 'wheel.spinSeconds';
   static const _keyTag = 'wheel.tag';
+  static const _keyMaxKcal = 'wheel.filter.maxKcal';
+  static const _keyMaxMinutes = 'wheel.filter.maxMinutes';
+  static const _keyIncludeUnknown = 'wheel.filter.includeUnknown';
 
   final AppDatabase db;
   final Random _random;
@@ -193,15 +239,31 @@ class WheelService {
     final tags = await db.allTags();
     final tagId = int.tryParse(await db.getSetting(_keyTag) ?? '');
     final tag = tags.where((t) => t.id == tagId).firstOrNull;
-    var total = recipes.length;
+    var pool = recipes;
     if (tag != null) {
       final ids = await db.recipeIdsWithTag(tag.id);
-      available = [
-        for (final r in available)
+      pool = [
+        for (final r in pool)
           if (ids.contains(r.id)) r,
       ];
-      total = recipes.where((r) => ids.contains(r.id)).length;
     }
+    final filters = await loadFilters();
+    var filteredOut = 0;
+    if (filters.active) {
+      final kcal = filters.maxKcal == null ? const <int, double?>{} : await kcalPerPortion(pool);
+      final before = pool.length;
+      pool = [
+        for (final r in pool)
+          if (filters.allows(kcal: kcal[r.id], minutes: totalMinutes(r))) r,
+      ];
+      filteredOut = before - pool.length;
+    }
+    final allowed = {for (final r in pool) r.id};
+    available = [
+      for (final r in available)
+        if (allowed.contains(r.id)) r,
+    ];
+    final total = pool.length;
     available.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return WheelState(
       available: available,
@@ -210,7 +272,55 @@ class WheelService {
       appearance: await loadAppearance(),
       tags: tags,
       tag: tag,
+      filters: filters,
+      filteredOut: filteredOut,
     );
+  }
+
+  Future<WheelFilters> loadFilters() async => WheelFilters(
+    maxKcal: int.tryParse(await db.getSetting(_keyMaxKcal) ?? ''),
+    maxMinutes: int.tryParse(await db.getSetting(_keyMaxMinutes) ?? ''),
+    includeUnknown: (await db.getSetting(_keyIncludeUnknown) ?? 'true') == 'true',
+  );
+
+  Future<void> saveFilters(WheelFilters f) async {
+    if (f.maxKcal == null) {
+      await db.deleteSetting(_keyMaxKcal);
+    } else {
+      await db.setSetting(_keyMaxKcal, '${f.maxKcal}');
+    }
+    if (f.maxMinutes == null) {
+      await db.deleteSetting(_keyMaxMinutes);
+    } else {
+      await db.setSetting(_keyMaxMinutes, '${f.maxMinutes}');
+    }
+    await db.setSetting(_keyIncludeUnknown, '${f.includeUnknown}');
+  }
+
+  Future<Map<int, double?>> kcalPerPortion(List<Recipe> recipes) async {
+    final ids = {for (final r in recipes) r.id};
+    final ingredients = [
+      for (final i in await db.allRecipeIngredients())
+        if (ids.contains(i.recipeId)) i,
+    ];
+    final foods = {
+      for (final row in await db.foodRows({for (final i in ingredients) ?i.foodKey})) row.key: foodFromRow(row),
+    };
+    final byRecipe = <int, List<IngredientLine>>{};
+    for (final i in ingredients) {
+      byRecipe
+          .putIfAbsent(i.recipeId, () => [])
+          .add(IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]));
+    }
+    return {
+      for (final r in recipes)
+        r.id: () {
+          final lines = byRecipe[r.id] ?? const [];
+          if (!lines.any((l) => l.food != null)) return null;
+          final n = RecipeNutrition.calculate(lines, portions: r.portions, finishedWeightG: r.finishedWeightG);
+          return n.lines.any((l) => l.counted) ? n.perPortion[Nutrient.energy] : null;
+        }(),
+    };
   }
 
   Future<void> selectTag(int? tagId) => tagId == null ? db.deleteSetting(_keyTag) : db.setSetting(_keyTag, '$tagId');

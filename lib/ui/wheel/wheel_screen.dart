@@ -195,6 +195,13 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enjoy your ${recipe.name}!')));
   }
 
+  Future<void> _openFilters(WheelFilters current) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (context) => _FilterSheet(initial: current, onChanged: _wheel.saveFilters),
+  );
+
   Future<void> _resetCycle() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -247,12 +254,13 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                if (state.tags.isNotEmpty)
-                  _TagBar(
-                    tags: state.tags,
-                    selected: state.tag?.id,
-                    onSelected: _spinning ? null : (id) => _wheel.selectTag(id),
-                  ),
+                _TagBar(
+                  tags: state.tags,
+                  selected: state.tag?.id,
+                  onSelected: _spinning ? null : (id) => _wheel.selectTag(id),
+                  filtersActive: state.filters.active,
+                  onFilters: _spinning ? null : () => _openFilters(state.filters),
+                ),
                 Expanded(child: _body(context, state)),
               ],
             ),
@@ -264,6 +272,17 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     final wheelTheme = WheelTheme.of(state.appearance.theme, theme.colorScheme);
     final tag = state.tag;
     final showAll = TextButton(onPressed: () => _wheel.selectTag(null), child: const Text('Show all dishes'));
+    if (state.total == 0 && state.filteredOut > 0) {
+      return _EmptyMessage(
+        icon: Icons.filter_alt_off_outlined,
+        title: 'No dishes match your filters',
+        message: '${state.filteredOut} ${state.filteredOut == 1 ? 'dish is' : 'dishes are'} hidden by the filters.',
+        action: TextButton(
+          onPressed: () => _wheel.saveFilters(WheelFilters(includeUnknown: state.filters.includeUnknown)),
+          child: const Text('Clear filters'),
+        ),
+      );
+    }
     if (state.total == 0 && tag != null) {
       return _EmptyMessage(
         icon: Icons.label_outline,
@@ -341,6 +360,17 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                   );
                 },
               ),
+              if (state.filters.active) ...[
+                const SizedBox(height: 6),
+                Text(
+                  [
+                    if (state.filters.maxKcal case final k?) 'Up to $k kcal',
+                    if (state.filters.maxMinutes case final m?) 'up to $m min',
+                    if (state.filteredOut > 0) '${state.filteredOut} hidden',
+                  ].join(' · '),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 16),
               GestureDetector(
                 key: const ValueKey('wheel'),
@@ -491,11 +521,19 @@ class _ResultCard extends StatelessWidget {
 }
 
 class _TagBar extends StatelessWidget {
-  const _TagBar({required this.tags, required this.selected, required this.onSelected});
+  const _TagBar({
+    required this.tags,
+    required this.selected,
+    required this.onSelected,
+    required this.filtersActive,
+    required this.onFilters,
+  });
 
   final List<Tag> tags;
   final int? selected;
   final ValueChanged<int?>? onSelected;
+  final bool filtersActive;
+  final VoidCallback? onFilters;
 
   @override
   Widget build(BuildContext context) {
@@ -505,6 +543,22 @@ class _TagBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: filtersActive
+                ? IconButton.filledTonal(
+                    tooltip: 'Filters',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onFilters,
+                    icon: const Icon(Icons.filter_alt),
+                  )
+                : IconButton(
+                    tooltip: 'Filters',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onFilters,
+                    icon: const Icon(Icons.filter_alt_outlined),
+                  ),
+          ),
           for (final (id, label) in [(null, 'All'), for (final t in tags) (t.id, t.name)])
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -515,6 +569,93 @@ class _TagBar extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterSheet extends StatefulWidget {
+  const _FilterSheet({required this.initial, required this.onChanged});
+
+  final WheelFilters initial;
+  final Future<void> Function(WheelFilters) onChanged;
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  late WheelFilters _filters = widget.initial;
+  late int _kcal = widget.initial.maxKcal ?? 700;
+  late int _minutes = widget.initial.maxMinutes ?? 30;
+
+  void _set(WheelFilters f) {
+    setState(() => _filters = f);
+    widget.onChanged(f);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final kcalOn = _filters.maxKcal != null;
+    final minutesOn = _filters.maxMinutes != null;
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Filters', style: theme.textTheme.titleLarge),
+            ),
+            SwitchListTile(
+              title: Text(kcalOn ? 'Up to $_kcal kcal per portion' : 'Calories per portion'),
+              subtitle: const Text('From the linked ingredients'),
+              value: kcalOn,
+              onChanged: (on) => _set(_filters.copyWith(maxKcal: () => on ? _kcal : null)),
+            ),
+            Slider(
+              value: _kcal.toDouble(),
+              min: WheelFilters.kcalMin.toDouble(),
+              max: WheelFilters.kcalMax.toDouble(),
+              divisions: (WheelFilters.kcalMax - WheelFilters.kcalMin) ~/ WheelFilters.kcalStep,
+              label: '$_kcal kcal',
+              onChanged: kcalOn ? (v) => setState(() => _kcal = v.round()) : null,
+              onChangeEnd: (v) => _set(_filters.copyWith(maxKcal: () => v.round())),
+            ),
+            SwitchListTile(
+              title: Text(minutesOn ? 'Ready in up to $_minutes min' : 'Total time'),
+              subtitle: const Text('Prep and cooking together'),
+              value: minutesOn,
+              onChanged: (on) => _set(_filters.copyWith(maxMinutes: () => on ? _minutes : null)),
+            ),
+            Slider(
+              value: _minutes.toDouble(),
+              min: WheelFilters.minutesMin.toDouble(),
+              max: WheelFilters.minutesMax.toDouble(),
+              divisions: (WheelFilters.minutesMax - WheelFilters.minutesMin) ~/ WheelFilters.minutesStep,
+              label: '$_minutes min',
+              onChanged: minutesOn ? (v) => setState(() => _minutes = v.round()) : null,
+              onChangeEnd: (v) => _set(_filters.copyWith(maxMinutes: () => v.round())),
+            ),
+            SwitchListTile(
+              title: const Text('Include dishes with unknown values'),
+              subtitle: const Text('Recipes without linked ingredients or times stay on the wheel'),
+              value: _filters.includeUnknown,
+              onChanged: (on) => _set(_filters.copyWith(includeUnknown: on)),
+            ),
+            if (_filters.active)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _set(WheelFilters(includeUnknown: _filters.includeUnknown)),
+                  child: const Text('Clear filters'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
