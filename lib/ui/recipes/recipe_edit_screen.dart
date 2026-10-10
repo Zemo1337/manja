@@ -12,6 +12,7 @@ import '../../domain/units.dart';
 import '../nutrition/food_picker_sheet.dart';
 import '../settings/tags_screen.dart';
 import 'recipe_photo.dart';
+import '../app_theme.dart';
 
 class RecipeEditScreen extends StatefulWidget {
   const RecipeEditScreen({super.key, this.existing, this.template});
@@ -381,7 +382,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isNew ? 'New recipe' : 'Edit recipe'),
-        actions: [TextButton(onPressed: _saving ? null : _save, child: const Text('Save'))],
+        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: 'Save')],
       ),
       body: Form(
         key: _formKey,

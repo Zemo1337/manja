@@ -246,3 +246,24 @@ final _dev = ColorScheme.fromSeed(
   outline: const Color(0xFF8A8A8A),
   outlineVariant: const Color(0xFF474747),
 );
+
+class HeaderTextButton extends StatelessWidget {
+  const HeaderTextButton({super.key, required this.onPressed, required this.label});
+
+  final VoidCallback? onPressed;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).appBarTheme.foregroundColor ?? Theme.of(context).colorScheme.onSurface;
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        disabledForegroundColor: color.withValues(alpha: 0.5),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+      ),
+      child: Text(label),
+    );
+  }
+}

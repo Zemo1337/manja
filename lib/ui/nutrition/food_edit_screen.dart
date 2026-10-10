@@ -3,6 +3,7 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../domain/units.dart';
+import '../app_theme.dart';
 
 const _portionUnits = [
   CookingUnit.piece,
@@ -127,7 +128,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.existing == null ? 'New ingredient' : 'Edit ingredient'),
-        actions: [TextButton(onPressed: _saving ? null : _save, child: const Text('Save'))],
+        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: 'Save')],
       ),
       body: Form(
         key: _formKey,

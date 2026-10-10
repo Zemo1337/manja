@@ -11,6 +11,7 @@ import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/cookbook_pdf.dart';
 import '../settings/option_card.dart';
+import '../app_theme.dart';
 
 Future<List<CookbookRecipe>> loadCookbookRecipes(AppScope scope, Iterable<int> ids, {required bool photos}) async {
   final result = <CookbookRecipe>[];
@@ -370,7 +371,7 @@ class _ChooseRecipesScreenState extends State<_ChooseRecipesScreen> {
       appBar: AppBar(
         title: Text('${_chosen.length} chosen'),
         actions: [
-          TextButton(
+          HeaderTextButton(
             onPressed: () => setState(() {
               if (all) {
                 _chosen.clear();
@@ -378,9 +379,9 @@ class _ChooseRecipesScreenState extends State<_ChooseRecipesScreen> {
                 _chosen.addAll([for (final r in widget.recipes) r.id]);
               }
             }),
-            child: Text(all ? 'None' : 'All'),
+            label: all ? 'None' : 'All',
           ),
-          TextButton(onPressed: () => Navigator.pop(context, _chosen), child: const Text('Done')),
+          HeaderTextButton(onPressed: () => Navigator.pop(context, _chosen), label: 'Done'),
         ],
       ),
       body: ListView(

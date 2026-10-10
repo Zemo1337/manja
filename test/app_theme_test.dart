@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja/app_scope.dart';
 import 'package:manja/data/database.dart';
@@ -12,6 +13,7 @@ import 'package:manja/data/photo_store.dart';
 import 'package:manja/domain/wheel_service.dart';
 import 'package:manja/main.dart';
 import 'package:manja/ui/app_theme.dart';
+import 'package:manja/ui/recipes/recipe_edit_screen.dart';
 
 double contrast(Color a, Color b) {
   final la = a.computeLuminance();
@@ -104,4 +106,26 @@ void main() {
     expect(reloaded.theme, AppThemeKind.dev);
     expect(reloaded.brightness, AppBrightness.dark);
   });
+
+  for (final kind in AppThemeKind.values) {
+    for (final brightness in Brightness.values) {
+      testWidgets('the Save button is readable in the ${kind.name} ${brightness.name} header', (tester) async {
+        final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+        addTearDown(db.close);
+        final theme = appTheme(kind, brightness);
+        await tester.pumpWidget(
+          AppScope(
+            db: db,
+            wheel: WheelService(db),
+            photos: PhotoStore(Directory.systemTemp),
+            nutrition: NutritionRepository(db),
+            child: MaterialApp(theme: theme, home: const RecipeEditScreen()),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final save = tester.renderObject<RenderParagraph>(find.text('Save')).text.style!.color!;
+        expect(contrast(save, theme.appBarTheme.backgroundColor!), greaterThanOrEqualTo(4.5));
+      });
+    }
+  }
 }
