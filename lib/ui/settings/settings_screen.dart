@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
+import 'about.dart';
 import 'appearance_screen.dart';
 import 'backup_screen.dart';
 import 'option_card.dart';
@@ -72,6 +73,14 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Own ingredients, built-in data, online lookup'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const IngredientsScreen()),
+          ),
+          const SettingsSectionTitle('About'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('About Manja'),
+            subtitle: const Text('License, source code and credits'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showManjaAbout(context),
           ),
         ],
       ),

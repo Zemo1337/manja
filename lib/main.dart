@@ -14,10 +14,12 @@ import 'data/nutrition_repository.dart';
 import 'data/photo_store.dart';
 import 'domain/wheel_service.dart';
 import 'ui/app_theme.dart';
+import 'ui/settings/about.dart';
 import 'ui/home_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerAppLicenses();
   final db = AppDatabase();
   final photos = PhotoStore(await getApplicationSupportDirectory());
   final nutrition = NutritionRepository(
