@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <title>Manja logo concept 5: wheel with a "Manja" rolling pin</title>
+  <!-- The lettering uses the Lobster font (assets/fonts/Lobster-Regular.ttf, SIL Open Font License).
+       Install it, or convert the text to outlines in a vector editor, for exact rendering elsewhere. -->
+  <rect width="100" height="100" rx="22" fill="#FFF4EC"/>
+  <path d="M50 50 L50 14 A36 36 0 0 1 75.46 24.54 Z" fill="#C2410C"/>
+  <path d="M50 50 L75.46 24.54 A36 36 0 0 1 86 50 Z" fill="#E9A000"/>
+  <path d="M50 50 L86 50 A36 36 0 0 1 75.46 75.46 Z" fill="#2E7D32"/>
+  <path d="M50 50 L75.46 75.46 A36 36 0 0 1 50 86 Z" fill="#C2410C"/>
+  <path d="M50 50 L50 86 A36 36 0 0 1 24.54 75.46 Z" fill="#E9A000"/>
+  <path d="M50 50 L24.54 75.46 A36 36 0 0 1 14 50 Z" fill="#2E7D32"/>
+  <path d="M50 50 L14 50 A36 36 0 0 1 24.54 24.54 Z" fill="#C2410C"/>
+  <path d="M50 50 L24.54 24.54 A36 36 0 0 1 50 14 Z" fill="#E9A000"/>
+  <g stroke="#FFF4EC" stroke-width="1.4">
+    <line x1="50" y1="14" x2="50" y2="86"/><line x1="14" y1="50" x2="86" y2="50"/>
+    <line x1="24.54" y1="24.54" x2="75.46" y2="75.46"/><line x1="75.46" y1="24.54" x2="24.54" y2="75.46"/>
+  </g>
+  <circle cx="50" cy="50" r="36" fill="none" stroke="#5C1F05" stroke-width="3"/>
+  <g transform="rotate(-38 50 50)">
+    <rect x="2" y="46" width="13" height="8" rx="4" fill="#C98F4A" stroke="#5C1F05" stroke-width="1.8"/>
+    <rect x="85" y="46" width="13" height="8" rx="4" fill="#C98F4A" stroke="#5C1F05" stroke-width="1.8"/>
+    <rect x="15" y="40.5" width="70" height="19" rx="2.5" fill="#E3B778" stroke="#5C1F05" stroke-width="2.4"/>
+    <line x1="19" y1="45" x2="81" y2="45" stroke="#F3D7A6" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="50" y="56.5" text-anchor="middle" font-family="Lobster" font-size="16" fill="#5C1F05">Manja</text>
+  </g>
+</svg>

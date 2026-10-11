@@ -11,7 +11,10 @@ const _basil = Color(0xFF2E7D32);
 const _ink = Color(0xFF5C1F05);
 const _wood = Color(0xFFE3B778);
 const _woodDark = Color(0xFFC98F4A);
-const _woodLight = Color(0xFFF3D7A6);
+const _woodLight = Color(0xFFF8E3BB);
+const _woodShade = Color(0xFFA9773A);
+const _woodBodyShade = Color(0xFFC99350);
+const _saffronLight = Color(0xFFF6D27A);
 
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 32, this.background = false});
@@ -26,14 +29,17 @@ class AppLogo extends StatelessWidget {
   );
 }
 
-/// The half wheel with a fork pointer resting on a rolling pin, drawn on a 100 × 100 grid.
+/// The half wheel with a fork pointer resting on a two-tone rolling pin, drawn on a 100 × 100 grid.
 class AppLogoPainter extends CustomPainter {
-  const AppLogoPainter({this.background = true, this.scale = 1});
+  const AppLogoPainter({this.background = true, this.scale = 1, this.centerY = 44});
 
-  static const cream = _cream;
+  static const saffron = _saffronLight;
 
   final bool background;
   final double scale;
+
+  /// The point of the drawing placed at the middle; larger values move the logo up, which lets round masks fit it bigger.
+  final double centerY;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -41,16 +47,16 @@ class AppLogoPainter extends CustomPainter {
     if (background) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(Offset.zero & Size.square(s), Radius.circular(s * 0.22)),
-        Paint()..color = _cream,
+        Paint()..color = _saffronLight,
       );
     }
     canvas.save();
     canvas.translate(s / 2, s / 2);
     canvas.scale(scale * s / 100);
-    canvas.translate(-50, -41.5);
+    canvas.translate(-51, -centerY);
 
-    const center = Offset(50, 66);
-    const radius = 34.0;
+    const center = Offset(50, 64);
+    const radius = 33.0;
     final rect = Rect.fromCircle(center: center, radius: radius);
     const colors = [_paprika, _saffron, _basil, _paprika];
     for (var i = 0; i < 4; i++) {
@@ -79,44 +85,64 @@ class AppLogoPainter extends CustomPainter {
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
     for (final x in const [44.0, 48.0, 52.0, 56.0]) {
-      canvas.drawLine(Offset(x, 6), Offset(x, 16), tine);
+      canvas.drawLine(Offset(x, 5), Offset(x, 15), tine);
     }
     canvas.drawPath(
       Path()
-        ..moveTo(42, 15)
-        ..lineTo(58, 15)
-        ..quadraticBezierTo(58, 22, 53.5, 24)
-        ..lineTo(50, 33)
-        ..lineTo(46.5, 24)
-        ..quadraticBezierTo(42, 22, 42, 15)
+        ..moveTo(42, 14)
+        ..lineTo(58, 14)
+        ..quadraticBezierTo(58, 21, 53.5, 23)
+        ..lineTo(50, 32)
+        ..lineTo(46.5, 23)
+        ..quadraticBezierTo(42, 21, 42, 14)
         ..close(),
       Paint()..color = _ink,
     );
 
+    final handles = [
+      for (final x in const [3.0, 84.0])
+        RRect.fromRectAndRadius(Rect.fromLTWH(x, 66, 13, 9), const Radius.circular(4.5)),
+    ];
+    final body = RRect.fromRectAndRadius(const Rect.fromLTWH(15, 61, 70, 19), const Radius.circular(2.5));
+    final shadow = Paint()..color = _ink.withValues(alpha: 0.22);
+    canvas.save();
+    canvas.translate(2.5, 3.5);
+    for (final h in [...handles, body]) {
+      canvas.drawRRect(h, shadow);
+    }
+    canvas.restore();
+
+    void twoTone(RRect shape, Color light, Color dark) {
+      canvas.save();
+      canvas.clipRRect(shape);
+      canvas.drawRect(shape.outerRect, Paint()..color = light);
+      canvas.drawRect(Rect.fromLTRB(shape.left, 70.5, shape.right, shape.bottom), Paint()..color = dark);
+      canvas.restore();
+    }
+
     final outline = Paint()
       ..color = _ink
       ..style = PaintingStyle.stroke;
-    for (final x in const [4.0, 84.0]) {
-      final handle = RRect.fromRectAndRadius(Rect.fromLTWH(x, 67.5, 12, 6), const Radius.circular(3));
-      canvas.drawRRect(handle, Paint()..color = _woodDark);
-      canvas.drawRRect(handle, outline..strokeWidth = 1.6);
+    for (final h in handles) {
+      twoTone(h, _woodDark, _woodShade);
+      canvas.drawRRect(h, outline..strokeWidth = 1.8);
     }
-    final body = RRect.fromRectAndRadius(const Rect.fromLTWH(14, 64, 72, 13), const Radius.circular(6));
-    canvas.drawRRect(body, Paint()..color = _wood);
-    canvas.drawRRect(body, outline..strokeWidth = 2.2);
+    twoTone(body, _wood, _woodBodyShade);
+    canvas.drawRRect(body, outline..strokeWidth = 2.4);
     canvas.drawLine(
-      const Offset(22, 68),
-      const Offset(78, 68),
+      const Offset(19, 65),
+      const Offset(81, 65),
       Paint()
         ..color = _woodLight
-        ..strokeWidth = 1.6
+        ..strokeWidth = 2.2
         ..strokeCap = StrokeCap.round,
     );
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(AppLogoPainter oldDelegate) => oldDelegate.background != background || oldDelegate.scale != scale;
+  bool shouldRepaint(AppLogoPainter oldDelegate) =>
+      oldDelegate.background != background || oldDelegate.scale != scale || oldDelegate.centerY != centerY;
 }
 
 /// "Manja" in the title font with the chef's hat sitting on the M.
