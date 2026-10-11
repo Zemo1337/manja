@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../data/database.dart';
+import 'ingredient_sections.dart';
 import 'text_fold.dart';
 import 'units.dart';
 
@@ -172,7 +173,6 @@ pw.Document buildCookbookDocument(
   if (!options.contents) return firstPass;
   return builder.document(recipePages(firstPass));
 }
-
 
 Map<String, String> recipePages(pw.Document doc) => {
   for (final o in doc.document.outline.outlines)
@@ -434,7 +434,20 @@ class _Builder {
           ),
         ),
       ],
-      if (entry.full.ingredients.isNotEmpty) ...[_heading('Ingredients'), _ingredients(entry.full.ingredients)],
+      if (entry.full.ingredients.isNotEmpty) ...[
+        _heading('Ingredients'),
+        for (final (index, group) in ingredientSections(entry.full.ingredients).indexed) ...[
+          if (group.section case final section?)
+            pw.Padding(
+              padding: pw.EdgeInsets.only(top: index == 0 ? 0 : style.body * 0.8, bottom: style.body * 0.2),
+              child: pw.Text(
+                section,
+                style: pw.TextStyle(font: fonts.bold, color: _paprika),
+              ),
+            ),
+          _ingredients(group.items),
+        ],
+      ],
       if (entry.full.steps.isNotEmpty) ...[
         _heading('Preparation'),
         for (final (index, step) in entry.full.steps.indexed)

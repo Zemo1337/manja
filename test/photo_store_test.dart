@@ -107,6 +107,7 @@ void main() {
       final full = await db.recipeFull(recipes.single.id);
       expect(full!.ingredients.single.name, 'Rice');
       expect(full.ingredients.single.foodKey, isNull);
+      expect(full.ingredients.single.section, isNull);
       expect(await db.searchFoodRows('anything'), isEmpty);
       expect([for (final t in await db.allTags()) t.name], defaultTags);
       expect([for (final t in full.tags) t.name], ['Main'], reason: 'existing recipes keep showing as mains');

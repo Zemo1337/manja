@@ -27,7 +27,16 @@ class RecipeEditScreen extends StatefulWidget {
 class _IngredientRow {
   _IngredientRow({String name = '', String amount = '', this.unit = CookingUnit.g, this.foodKey})
     : name = TextEditingController(text: name),
-      amount = TextEditingController(text: amount);
+      amount = TextEditingController(text: amount),
+      heading = false;
+
+  _IngredientRow.heading([String text = ''])
+    : name = TextEditingController(text: text),
+      amount = TextEditingController(),
+      unit = CookingUnit.g,
+      heading = true;
+
+  final bool heading;
 
   final TextEditingController name;
   final TextEditingController amount;
@@ -76,17 +85,25 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     _cook = TextEditingController(text: (r?.cookMinutes ?? t?.cookMinutes)?.toString() ?? '');
     _info = TextEditingController(text: r?.cookingInfo ?? t?.cookingInfo ?? '');
     _finishedWeight = TextEditingController(text: r?.finishedWeightG == null ? '' : formatAmount(r!.finishedWeightG!));
-    _ingredients = [
-      for (final i in widget.existing?.ingredients ?? const <RecipeIngredient>[])
+    _ingredients = [];
+    String? section;
+    for (final i in widget.existing?.ingredients ?? const <RecipeIngredient>[]) {
+      if (i.section != null && i.section != section) _ingredients.add(_IngredientRow.heading(i.section!));
+      section = i.section;
+      _ingredients.add(
         _IngredientRow(
           name: i.name,
           amount: i.amount > 0 ? formatAmount(i.amount) : '',
           unit: CookingUnit.fromName(i.unit),
           foodKey: i.foodKey,
         ),
-      for (final i in t?.ingredients ?? const <({String name, double? amount, CookingUnit unit})>[])
+      );
+    }
+    for (final i in t?.ingredients ?? const <({String name, double? amount, CookingUnit unit})>[]) {
+      _ingredients.add(
         _IngredientRow(name: i.name, amount: i.amount == null ? '' : formatAmount(i.amount!), unit: i.unit),
-    ];
+      );
+    }
     if (_ingredients.isEmpty) _ingredients.add(_IngredientRow());
     _steps = [
       for (final s in widget.existing?.steps ?? const <RecipeStep>[]) TextEditingController(text: s.body),
@@ -296,16 +313,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       sourceUrl: widget.existing?.recipe.sourceUrl ?? widget.template?.sourceUrl,
       isFavorite: widget.existing?.recipe.isFavorite ?? false,
       photoPath: photoPath,
-      ingredients: [
-        for (final row in _ingredients)
-          if (row.name.text.trim().isNotEmpty)
-            IngredientDraft(
-              name: row.name.text.trim(),
-              amount: _parseAmount(row.amount.text) ?? 0,
-              unit: row.unit.name,
-              foodKey: row.foodKey,
-            ),
-      ],
+      ingredients: _ingredientDrafts(),
       steps: [
         for (final s in _steps)
           if (s.text.trim().isNotEmpty) s.text.trim(),
@@ -316,6 +324,34 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     await scope.photos.delete(stalePhoto);
     if (mounted) Navigator.pop(context);
   }
+
+  List<IngredientDraft> _ingredientDrafts() {
+    final drafts = <IngredientDraft>[];
+    String? section;
+    for (final row in _ingredients) {
+      final name = row.name.text.trim();
+      if (name.isEmpty) continue;
+      if (row.heading) {
+        section = name;
+        continue;
+      }
+      drafts.add(
+        IngredientDraft(
+          name: name,
+          amount: _parseAmount(row.amount.text) ?? 0,
+          unit: row.unit.name,
+          foodKey: row.foodKey,
+          section: section,
+        ),
+      );
+    }
+    return drafts;
+  }
+
+  void _addHeading() => setState(() {
+    final first = !_ingredients.any((r) => r.heading);
+    _ingredients.insert(first ? 0 : _ingredients.length, _IngredientRow.heading());
+  });
 
   Widget _photoSection(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -438,13 +474,20 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
             ]),
             _reorderable(_ingredients, _ingredientTile),
             _section([
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _ingredients.add(_IngredientRow())),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add ingredient'),
-                ),
+              Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => setState(() => _ingredients.add(_IngredientRow())),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add ingredient'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _addHeading,
+                    icon: const Icon(Icons.title),
+                    label: const Text('Add heading'),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -525,57 +568,88 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     ),
   );
 
-  Widget _ingredientTile(int index, _IngredientRow row) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _dragHandle(index),
-            SizedBox(
-              width: 64,
-              child: TextFormField(
-                controller: row.amount,
-                decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
-              ),
-            ),
-            const SizedBox(width: 6),
-            SizedBox(
-              width: 96,
-              child: DropdownButtonFormField<CookingUnit>(
-                initialValue: row.unit,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
-                items: [
-                  for (final u in CookingUnit.values)
-                    DropdownMenuItem(
-                      value: u,
-                      child: Text(u.symbol, overflow: TextOverflow.ellipsis),
+  Widget _ingredientTile(int index, _IngredientRow row) => row.heading
+      ? _headingTile(index, row)
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _dragHandle(index),
+                  SizedBox(
+                    width: 64,
+                    child: TextFormField(
+                      controller: row.amount,
+                      decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
                     ),
+                  ),
+                  const SizedBox(width: 6),
+                  SizedBox(
+                    width: 96,
+                    child: DropdownButtonFormField<CookingUnit>(
+                      initialValue: row.unit,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
+                      items: [
+                        for (final u in CookingUnit.values)
+                          DropdownMenuItem(
+                            value: u,
+                            child: Text(u.symbol, overflow: TextOverflow.ellipsis),
+                          ),
+                      ],
+                      onChanged: (u) => setState(() => row.unit = u ?? row.unit),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: TextFormField(
+                      controller: row.name,
+                      decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Remove',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
+                  ),
                 ],
-                onChanged: (u) => setState(() => row.unit = u ?? row.unit),
               ),
+              Padding(padding: const EdgeInsets.only(left: 30), child: _foodLink(context, row)),
+            ],
+          ),
+        );
+
+  Widget _headingTile(int index, _IngredientRow row) => Padding(
+    padding: const EdgeInsets.only(top: 8, bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dragHandle(index),
+        Expanded(
+          child: TextFormField(
+            controller: row.name,
+            decoration: const InputDecoration(
+              labelText: 'Heading',
+              hintText: 'Dough, Topping, Sauce…',
+              prefixIcon: Icon(Icons.title),
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: TextFormField(
-                controller: row.name,
-                decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
-                textCapitalization: TextCapitalization.sentences,
-              ),
-            ),
-            IconButton(
-              tooltip: 'Remove',
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close),
-              onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
-            ),
-          ],
+            style: Theme.of(context).textTheme.titleMedium,
+            textCapitalization: TextCapitalization.sentences,
+          ),
         ),
-        Padding(padding: const EdgeInsets.only(left: 30), child: _foodLink(context, row)),
+        IconButton(
+          tooltip: 'Remove',
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.close),
+          onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
+        ),
       ],
     ),
   );

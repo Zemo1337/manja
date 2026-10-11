@@ -58,7 +58,7 @@ void main() {
     final sarma = await phone.recipe(
       'Sarma',
       photoBytes: 'cabbage photo',
-      ingredients: [IngredientDraft(name: 'ajvar', amount: 2, unit: 'tbsp', foodKey: ajvar.key)],
+      ingredients: [IngredientDraft(name: 'ajvar', amount: 2, unit: 'tbsp', foodKey: ajvar.key, section: 'Sauce')],
     );
     final grah = await phone.recipe('Grah');
     final mama = await phone.db.addTag('Mama');
@@ -101,6 +101,7 @@ void main() {
     expect(full.recipe.sourceUrl, 'https://example.com/Sarma');
     expect([for (final s in full.steps) s.body], ['Cook Sarma', 'Eat']);
     expect(full.ingredients.single.foodKey, ajvar.key);
+    expect(full.ingredients.single.section, 'Sauce');
     expect(utf8.decode(await pc.photos.file(full.recipe.photoPath!).readAsBytes()), 'cabbage photo');
     expect((await pc.nutrition.food(ajvar.key))?.name, 'Ajvar');
     final meals = await pc.db.select(pc.db.mealLogs).get();

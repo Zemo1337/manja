@@ -25,6 +25,9 @@ class RecipeIngredients extends Table {
   RealColumn get amount => real()();
   TextColumn get unit => text()();
   TextColumn get foodKey => text().nullable()();
+
+  /// The heading the ingredient is listed under, such as "Dough" or "Topping".
+  TextColumn get section => text().nullable()();
 }
 
 class PantryItems extends Table {
@@ -96,12 +99,13 @@ class RecipeFull {
 }
 
 class IngredientDraft {
-  IngredientDraft({required this.name, required this.amount, required this.unit, this.foodKey});
+  IngredientDraft({required this.name, required this.amount, required this.unit, this.foodKey, this.section});
 
   final String name;
   final double amount;
   final String unit;
   final String? foodKey;
+  final String? section;
 }
 
 class RecipeDraft {
@@ -148,7 +152,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -171,6 +175,7 @@ class AppDatabase extends _$AppDatabase {
             final main = await _seedTags();
             await customStatement('INSERT INTO recipe_tags (recipe_id, tag_id) SELECT id, ? FROM recipes', [main]);
           }
+          if (from < 7) await m.addColumn(recipeIngredients, recipeIngredients.section);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -227,6 +232,7 @@ class AppDatabase extends _$AppDatabase {
                 amount: ingredient.amount,
                 unit: ingredient.unit,
                 foodKey: Value(ingredient.foodKey),
+                section: Value(ingredient.section),
               ),
           ]);
           b.insertAll(recipeSteps, [

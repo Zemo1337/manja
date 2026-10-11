@@ -90,7 +90,14 @@ class ProfileBackup {
         'tags': [for (final id in tagsByRecipe[r.id] ?? const <int>{}) ?tagNames[id]],
         'ingredients': [
           for (final i in ingredients)
-            if (i.recipeId == r.id) {'name': i.name, 'amount': i.amount, 'unit': i.unit, 'foodKey': i.foodKey},
+            if (i.recipeId == r.id)
+              {
+                'name': i.name,
+                'amount': i.amount,
+                'unit': i.unit,
+                'foodKey': i.foodKey,
+                if (i.section != null) 'section': i.section,
+              },
         ],
         'steps': [
           for (final s in steps)
@@ -280,6 +287,7 @@ class ProfileBackup {
                 amount: (i['amount'] as num).toDouble(),
                 unit: i['unit'] as String,
                 foodKey: i['foodKey'] as String?,
+                section: i['section'] as String?,
               ),
           ],
           steps: [for (final s in r['steps'] as List? ?? const []) s as String],

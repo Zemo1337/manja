@@ -4,6 +4,7 @@ import 'package:nutrition_core/nutrition_core.dart' show IngredientLine, RecipeN
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../domain/ingredient_sections.dart';
 import '../../domain/units.dart';
 import '../app_theme.dart';
 import '../nutrition/nutrition_panel.dart';
@@ -145,24 +146,31 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           Text('Ingredients', style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
           if (full.ingredients.isEmpty) const Text('No ingredients added.'),
-          for (final ingredient in full.ingredients)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 110,
-                    child: Text(
-                      ingredient.amount > 0
-                          ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbol}'
-                          : '',
-                      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  Expanded(child: Text(ingredient.name, style: theme.textTheme.bodyLarge)),
-                ],
+          for (final (index, group) in ingredientSections(full.ingredients).indexed) ...[
+            if (group.section case final section?)
+              Padding(
+                padding: EdgeInsets.only(top: index == 0 ? 4 : 16, bottom: 4),
+                child: Text(section, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary)),
               ),
-            ),
+            for (final ingredient in group.items)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        ingredient.amount > 0
+                            ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbol}'
+                            : '',
+                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Expanded(child: Text(ingredient.name, style: theme.textTheme.bodyLarge)),
+                  ],
+                ),
+              ),
+          ],
           const Divider(),
           Text('Nutrition', style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),

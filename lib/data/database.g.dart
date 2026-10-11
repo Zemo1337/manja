@@ -756,6 +756,17 @@ class $RecipeIngredientsTable extends RecipeIngredients
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sectionMeta = const VerificationMeta(
+    'section',
+  );
+  @override
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
+    'section',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -765,6 +776,7 @@ class $RecipeIngredientsTable extends RecipeIngredients
     amount,
     unit,
     foodKey,
+    section,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -827,6 +839,12 @@ class $RecipeIngredientsTable extends RecipeIngredients
         foodKey.isAcceptableOrUnknown(data['food_key']!, _foodKeyMeta),
       );
     }
+    if (data.containsKey('section')) {
+      context.handle(
+        _sectionMeta,
+        section.isAcceptableOrUnknown(data['section']!, _sectionMeta),
+      );
+    }
     return context;
   }
 
@@ -864,6 +882,10 @@ class $RecipeIngredientsTable extends RecipeIngredients
         DriftSqlType.string,
         data['${effectivePrefix}food_key'],
       ),
+      section: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}section'],
+      ),
     );
   }
 
@@ -882,6 +904,9 @@ class RecipeIngredient extends DataClass
   final double amount;
   final String unit;
   final String? foodKey;
+
+  /// The heading the ingredient is listed under, such as "Dough" or "Topping".
+  final String? section;
   const RecipeIngredient({
     required this.id,
     required this.recipeId,
@@ -890,6 +915,7 @@ class RecipeIngredient extends DataClass
     required this.amount,
     required this.unit,
     this.foodKey,
+    this.section,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -902,6 +928,9 @@ class RecipeIngredient extends DataClass
     map['unit'] = Variable<String>(unit);
     if (!nullToAbsent || foodKey != null) {
       map['food_key'] = Variable<String>(foodKey);
+    }
+    if (!nullToAbsent || section != null) {
+      map['section'] = Variable<String>(section);
     }
     return map;
   }
@@ -917,6 +946,9 @@ class RecipeIngredient extends DataClass
       foodKey: foodKey == null && nullToAbsent
           ? const Value.absent()
           : Value(foodKey),
+      section: section == null && nullToAbsent
+          ? const Value.absent()
+          : Value(section),
     );
   }
 
@@ -933,6 +965,7 @@ class RecipeIngredient extends DataClass
       amount: serializer.fromJson<double>(json['amount']),
       unit: serializer.fromJson<String>(json['unit']),
       foodKey: serializer.fromJson<String?>(json['foodKey']),
+      section: serializer.fromJson<String?>(json['section']),
     );
   }
   @override
@@ -946,6 +979,7 @@ class RecipeIngredient extends DataClass
       'amount': serializer.toJson<double>(amount),
       'unit': serializer.toJson<String>(unit),
       'foodKey': serializer.toJson<String?>(foodKey),
+      'section': serializer.toJson<String?>(section),
     };
   }
 
@@ -957,6 +991,7 @@ class RecipeIngredient extends DataClass
     double? amount,
     String? unit,
     Value<String?> foodKey = const Value.absent(),
+    Value<String?> section = const Value.absent(),
   }) => RecipeIngredient(
     id: id ?? this.id,
     recipeId: recipeId ?? this.recipeId,
@@ -965,6 +1000,7 @@ class RecipeIngredient extends DataClass
     amount: amount ?? this.amount,
     unit: unit ?? this.unit,
     foodKey: foodKey.present ? foodKey.value : this.foodKey,
+    section: section.present ? section.value : this.section,
   );
   RecipeIngredient copyWithCompanion(RecipeIngredientsCompanion data) {
     return RecipeIngredient(
@@ -975,6 +1011,7 @@ class RecipeIngredient extends DataClass
       amount: data.amount.present ? data.amount.value : this.amount,
       unit: data.unit.present ? data.unit.value : this.unit,
       foodKey: data.foodKey.present ? data.foodKey.value : this.foodKey,
+      section: data.section.present ? data.section.value : this.section,
     );
   }
 
@@ -987,14 +1024,15 @@ class RecipeIngredient extends DataClass
           ..write('name: $name, ')
           ..write('amount: $amount, ')
           ..write('unit: $unit, ')
-          ..write('foodKey: $foodKey')
+          ..write('foodKey: $foodKey, ')
+          ..write('section: $section')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, recipeId, position, name, amount, unit, foodKey);
+      Object.hash(id, recipeId, position, name, amount, unit, foodKey, section);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1005,7 +1043,8 @@ class RecipeIngredient extends DataClass
           other.name == this.name &&
           other.amount == this.amount &&
           other.unit == this.unit &&
-          other.foodKey == this.foodKey);
+          other.foodKey == this.foodKey &&
+          other.section == this.section);
 }
 
 class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
@@ -1016,6 +1055,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
   final Value<double> amount;
   final Value<String> unit;
   final Value<String?> foodKey;
+  final Value<String?> section;
   const RecipeIngredientsCompanion({
     this.id = const Value.absent(),
     this.recipeId = const Value.absent(),
@@ -1024,6 +1064,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
     this.amount = const Value.absent(),
     this.unit = const Value.absent(),
     this.foodKey = const Value.absent(),
+    this.section = const Value.absent(),
   });
   RecipeIngredientsCompanion.insert({
     this.id = const Value.absent(),
@@ -1033,6 +1074,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
     required double amount,
     required String unit,
     this.foodKey = const Value.absent(),
+    this.section = const Value.absent(),
   }) : recipeId = Value(recipeId),
        position = Value(position),
        name = Value(name),
@@ -1046,6 +1088,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
     Expression<double>? amount,
     Expression<String>? unit,
     Expression<String>? foodKey,
+    Expression<String>? section,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1055,6 +1098,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
       if (amount != null) 'amount': amount,
       if (unit != null) 'unit': unit,
       if (foodKey != null) 'food_key': foodKey,
+      if (section != null) 'section': section,
     });
   }
 
@@ -1066,6 +1110,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
     Value<double>? amount,
     Value<String>? unit,
     Value<String?>? foodKey,
+    Value<String?>? section,
   }) {
     return RecipeIngredientsCompanion(
       id: id ?? this.id,
@@ -1075,6 +1120,7 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
       amount: amount ?? this.amount,
       unit: unit ?? this.unit,
       foodKey: foodKey ?? this.foodKey,
+      section: section ?? this.section,
     );
   }
 
@@ -1102,6 +1148,9 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
     if (foodKey.present) {
       map['food_key'] = Variable<String>(foodKey.value);
     }
+    if (section.present) {
+      map['section'] = Variable<String>(section.value);
+    }
     return map;
   }
 
@@ -1114,7 +1163,8 @@ class RecipeIngredientsCompanion extends UpdateCompanion<RecipeIngredient> {
           ..write('name: $name, ')
           ..write('amount: $amount, ')
           ..write('unit: $unit, ')
-          ..write('foodKey: $foodKey')
+          ..write('foodKey: $foodKey, ')
+          ..write('section: $section')
           ..write(')'))
         .toString();
   }
@@ -3944,6 +3994,7 @@ typedef $$RecipeIngredientsTableCreateCompanionBuilder =
       required double amount,
       required String unit,
       Value<String?> foodKey,
+      Value<String?> section,
     });
 typedef $$RecipeIngredientsTableUpdateCompanionBuilder =
     RecipeIngredientsCompanion Function({
@@ -3954,6 +4005,7 @@ typedef $$RecipeIngredientsTableUpdateCompanionBuilder =
       Value<double> amount,
       Value<String> unit,
       Value<String?> foodKey,
+      Value<String?> section,
     });
 
 final class $$RecipeIngredientsTableReferences
@@ -4026,6 +4078,11 @@ class $$RecipeIngredientsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get section => $composableBuilder(
+    column: $table.section,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$RecipesTableFilterComposer get recipeId {
     final $$RecipesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4089,6 +4146,11 @@ class $$RecipeIngredientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get section => $composableBuilder(
+    column: $table.section,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RecipesTableOrderingComposer get recipeId {
     final $$RecipesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4139,6 +4201,9 @@ class $$RecipeIngredientsTableAnnotationComposer
 
   GeneratedColumn<String> get foodKey =>
       $composableBuilder(column: $table.foodKey, builder: (column) => column);
+
+  GeneratedColumn<String> get section =>
+      $composableBuilder(column: $table.section, builder: (column) => column);
 
   $$RecipesTableAnnotationComposer get recipeId {
     final $$RecipesTableAnnotationComposer composer = $composerBuilder(
@@ -4204,6 +4269,7 @@ class $$RecipeIngredientsTableTableManager
                 Value<double> amount = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<String?> foodKey = const Value.absent(),
+                Value<String?> section = const Value.absent(),
               }) => RecipeIngredientsCompanion(
                 id: id,
                 recipeId: recipeId,
@@ -4212,6 +4278,7 @@ class $$RecipeIngredientsTableTableManager
                 amount: amount,
                 unit: unit,
                 foodKey: foodKey,
+                section: section,
               ),
           createCompanionCallback:
               ({
@@ -4222,6 +4289,7 @@ class $$RecipeIngredientsTableTableManager
                 required double amount,
                 required String unit,
                 Value<String?> foodKey = const Value.absent(),
+                Value<String?> section = const Value.absent(),
               }) => RecipeIngredientsCompanion.insert(
                 id: id,
                 recipeId: recipeId,
@@ -4230,6 +4298,7 @@ class $$RecipeIngredientsTableTableManager
                 amount: amount,
                 unit: unit,
                 foodKey: foodKey,
+                section: section,
               ),
           withReferenceMapper: (p0) => p0
               .map(
