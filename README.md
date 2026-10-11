@@ -1,15 +1,45 @@
 # Manja
 
-Meal Wheel & Recipe Book. Add your favourite dishes, spin the wheel to decide what to cook, and the dishes you ate leave the wheel until it refills.
+**Can't decide what to cook? Spin the wheel.**
 
-Built with Flutter for Android, iOS, Windows, Linux and macOS.
+Manja is a free meal wheel and recipe book. Add the dishes you like, spin the wheel, and whatever you ate leaves the
+wheel until the round is over. No account, no ads, no tracking: everything stays on your phone.
+
+<!-- Screenshots: add docs/screenshots/*.png here -->
 
 ## Features
 
-- Recipes with ingredients (metric and imperial units), cooking info, preparation steps and portions
-- Spin wheel with the dishes you have not eaten yet this round
-- Reset rules: when every dish was eaten, after a number of days, or manually
-- Meal history
+- **Meal wheel**: spin to pick a dish; eaten dishes leave the wheel until it refills (when everything was eaten,
+  after a number of days, or by hand). Themes: Classic, Pizza, Burek, Sachertorte and Baklava.
+- **Tags and filters**: spin only mains, desserts or your own groups, limit calories per portion or total cooking time.
+- **Recipes**: ingredients in metric or imperial units, steps, portions, photos and favourites.
+- **Import from a link**: paste a recipe page and Manja reads it (sites that publish schema.org recipe data).
+- **Nutrition**: per portion or per 100 g, including vitamins and minerals with the EU daily reference intake.
+  Built-in USDA data works offline; USDA and Open Food Facts can be searched online.
+- **Barcode scanner**: scan a package and get its nutrition values from Open Food Facts.
+- **What can I cook?**: tell Manja what you have at home and it shows the dishes you can make.
+- **History**: what you ate and when, with search and dates.
+- **Cookbook PDF**: print or share your recipes in three layouts.
+- **Backup & move**: export everything to one `.manja` file and import it on another device.
+- Light and dark mode, unit converter, and more.
+
+## Install
+
+Manja is in development. Android test builds (APK) are published under
+[Releases](https://github.com/Zemo1337/manja/releases).
+
+- Download `manja-x.y.z.apk` on your phone and open it. Android asks once to allow installing apps from your
+  browser or file manager ("Install unknown apps"). Play Protect may say it does not know the developer; choose
+  *Install anyway*.
+- For automatic updates, add this repository to [Obtainium](https://github.com/ImranR98/Obtainium).
+
+Android 7.0 or newer. iOS, Windows, Linux and macOS builds work from source but are not published yet.
+
+## Privacy
+
+Manja collects nothing. Recipes, photos and history are stored only on your device and in backup files you create.
+The app uses the internet only when you ask it to: looking up ingredients at USDA or Open Food Facts, and importing
+a recipe from a link. The camera is used only to scan barcodes and take recipe photos.
 
 ## Development
 
@@ -20,58 +50,74 @@ flutter test
 flutter run
 ```
 
-### Built-in ingredient data
-
-`assets/food/usda.json.gz` holds the USDA Foundation and SR Legacy foods (about 8,000 foods, 330 KB). The app imports
-it on first start and again whenever the file's version changes, so corrected values reach users with app updates.
-To rebuild it from the bulk downloads at [fdc.nal.usda.gov/download-datasets](https://fdc.nal.usda.gov/download-datasets):
-
-```bash
-cd packages/nutrition_usda && dart run tool/build_bundle.dart "FDC Foundation <date> + SR Legacy 2018-04" ../../assets/food/usda.json.gz <foundation.json> <sr_legacy.json>
-```
-
 ### USDA API key
 
-Ingredient nutrition comes from [USDA FoodData Central](https://fdc.nal.usda.gov/). Get a free key at
+Online ingredient search uses [USDA FoodData Central](https://fdc.nal.usda.gov/). Without a key the app uses USDA's
+shared `DEMO_KEY`, which is limited to a few requests per hour. For development, get a free key at
 [api.data.gov/signup](https://api.data.gov/signup/), then:
 
 ```bash
 cp config/local.example.json config/local.json
 ```
 
-Put the key into `config/local.json` (ignored by git) and run with:
+Put the key into `config/local.json` (ignored by git, never commit it) and run with:
 
 ```bash
 flutter run --dart-define-from-file=config/local.json
 ```
 
-The VS Code launch configuration "Manja" does this automatically. Without a key the app uses USDA's
-`DEMO_KEY`, which is limited to a few requests per hour.
+The VS Code launch configuration "Manja" does this automatically. Users can enter their own key in the app under
+Settings → Ingredients & USDA key.
 
-The database layer uses [drift](https://drift.simonbinder.eu/). After changing tables in `lib/data/database.dart`, rerun `build_runner`.
+### Built-in ingredient data
 
-## Project layout
+`assets/food/usda.json.gz` holds the USDA Foundation and SR Legacy foods (about 8,000 foods, 514 KB) with energy,
+macronutrients, vitamins and minerals. The app imports it on first start and again whenever the file's version
+changes. To rebuild it from the bulk downloads at
+[fdc.nal.usda.gov/download-datasets](https://fdc.nal.usda.gov/download-datasets):
+
+```bash
+cd packages/nutrition_usda && dart run tool/build_bundle.dart "FDC Foundation <date> + SR Legacy 2018-04, with vitamins and minerals" ../../assets/food/usda.json.gz <foundation.json> <sr_legacy.json>
+```
+
+The database layer uses [drift](https://drift.simonbinder.eu/). After changing tables in `lib/data/database.dart`,
+rerun `build_runner`.
+
+### Project layout
 
 ```
 lib/
-  data/       drift database, tables and queries
-  domain/     units and wheel logic
-  ui/         screens (wheel, recipes, history)
+  data/       database, backups, recipe import, nutrition repository
+  domain/     wheel, filters, pantry matching, cookbook PDF, units
+  ui/         screens and widgets
 test/         unit and widget tests
 packages/
-  nutrition_core/   nutrient model, food sources interface, unit conversion,
-                    recipe nutrition calculation (plain Dart)
-  nutrition_usda/   USDA FoodData Central adapter (search, food details,
-                    portion parsing)
+  nutrition_core/   nutrients, food sources, unit conversion, recipe nutrition (plain Dart)
+  nutrition_usda/   USDA FoodData Central adapter and built-in data builder
+  nutrition_off/    Open Food Facts adapter (barcodes and product search)
   recipe_import/    reads schema.org recipe data from web pages
 ```
 
-Packages are tested on their own:
+Each package has its own tests: `cd packages/<name> && dart test`.
 
-```bash
-cd packages/nutrition_core && dart test
-```
+## Contributing
 
-```bash
-cd packages/nutrition_usda && dart test
-```
+Bug reports and ideas are welcome as [issues](https://github.com/Zemo1337/manja/issues). For larger changes, please
+open an issue first so we can talk about it.
+
+## License
+
+Manja is free software: you can redistribute it and/or modify it under the terms of the
+[GNU Affero General Public License v3.0](LICENSE).
+
+The name "Manja" and the Manja logo and wordmark are not covered by this license. If you publish a modified version,
+please give it a different name and logo.
+
+## Credits
+
+- Nutrition data: [USDA FoodData Central](https://fdc.nal.usda.gov/) (public domain) and
+  [Open Food Facts](https://world.openfoodfacts.org/) (Open Database License, © Open Food Facts contributors)
+- Fonts: [Lobster](https://github.com/impallari/The-Lobster-Font) by Pablo Impallari (SIL Open Font License) and
+  [Roboto](https://github.com/googlefonts/roboto) by Google (Apache License 2.0)
+- Logo and wordmark drawn by the Manja family
+- Built with [Flutter](https://flutter.dev) and many open-source packages; their licenses are listed in the app
