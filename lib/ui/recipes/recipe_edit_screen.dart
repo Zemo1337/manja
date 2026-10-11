@@ -386,189 +386,226 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _photoSection(context),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
-              textCapitalization: TextCapitalization.sentences,
-              validator: _required,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _portions,
-                    decoration: const InputDecoration(labelText: 'Portions', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    validator: (v) => (int.tryParse(v?.trim() ?? '') ?? 0) < 1 ? 'At least 1' : null,
+        child: CustomScrollView(
+          slivers: [
+            _section(top: 16, [
+              _photoSection(context),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _name,
+                decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+                textCapitalization: TextCapitalization.sentences,
+                validator: _required,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _portions,
+                      decoration: const InputDecoration(labelText: 'Portions', border: OutlineInputBorder()),
+                      keyboardType: TextInputType.number,
+                      validator: (v) => (int.tryParse(v?.trim() ?? '') ?? 0) < 1 ? 'At least 1' : null,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _prep,
-                    decoration: const InputDecoration(labelText: 'Prep (min)', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    validator: _optionalMinutes,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _prep,
+                      decoration: const InputDecoration(labelText: 'Prep (min)', border: OutlineInputBorder()),
+                      keyboardType: TextInputType.number,
+                      validator: _optionalMinutes,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _cook,
-                    decoration: const InputDecoration(labelText: 'Cook (min)', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    validator: _optionalMinutes,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _cook,
+                      decoration: const InputDecoration(labelText: 'Cook (min)', border: OutlineInputBorder()),
+                      keyboardType: TextInputType.number,
+                      validator: _optionalMinutes,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text('Tags', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            _tagSection(context),
-            const SizedBox(height: 24),
-            Text('Ingredients', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            for (final (index, row) in _ingredients.indexed)
-              Padding(
-                key: ObjectKey(row),
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 72,
-                          child: TextFormField(
-                            controller: row.amount,
-                            decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        SizedBox(
-                          width: 104,
-                          child: DropdownButtonFormField<CookingUnit>(
-                            initialValue: row.unit,
-                            isExpanded: true,
-                            decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
-                            items: [
-                              for (final u in CookingUnit.values)
-                                DropdownMenuItem(
-                                  value: u,
-                                  child: Text(u.symbol, overflow: TextOverflow.ellipsis),
-                                ),
-                            ],
-                            onChanged: (u) => setState(() => row.unit = u ?? row.unit),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: TextFormField(
-                            controller: row.name,
-                            decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
-                            textCapitalization: TextCapitalization.sentences,
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: 'Remove',
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
-                        ),
-                      ],
-                    ),
-                    _foodLink(context, row),
-                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Tags', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              _tagSection(context),
+              const SizedBox(height: 24),
+              Text('Ingredients', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 8),
+            ]),
+            _reorderable(_ingredients, _ingredientTile),
+            _section([
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _ingredients.add(_IngredientRow())),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add ingredient'),
                 ),
               ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _ingredients.add(_IngredientRow())),
-                icon: const Icon(Icons.add),
-                label: const Text('Add ingredient'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _finishedWeight,
+                decoration: const InputDecoration(
+                  labelText: 'Weight of the finished dish (optional)',
+                  helperText: 'Cooking changes the weight. Weigh the dish for accurate per 100 g values.',
+                  helperMaxLines: 2,
+                  suffixText: 'g',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  final g = _parseAmount(v);
+                  return g == null || g <= 0 ? 'Grams, e.g. 850' : null;
+                },
               ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _finishedWeight,
-              decoration: const InputDecoration(
-                labelText: 'Weight of the finished dish (optional)',
-                helperText: 'Cooking changes the weight. Weigh the dish for accurate per 100 g values.',
-                helperMaxLines: 2,
-                suffixText: 'g',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _info,
+                decoration: const InputDecoration(
+                  labelText: 'Cooking info',
+                  hintText: 'Oven temperature, pan size, tips…',
+                  border: OutlineInputBorder(),
+                ),
+                minLines: 2,
+                maxLines: 5,
+                textCapitalization: TextCapitalization.sentences,
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return null;
-                final g = _parseAmount(v);
-                return g == null || g <= 0 ? 'Grams, e.g. 850' : null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _info,
-              decoration: const InputDecoration(
-                labelText: 'Cooking info',
-                hintText: 'Oven temperature, pan size, tips…',
-                border: OutlineInputBorder(),
-              ),
-              minLines: 2,
-              maxLines: 5,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 24),
-            Text('Preparation steps', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            for (final (index, step) in _steps.indexed)
-              Padding(
-                key: ObjectKey(step),
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12, right: 8),
-                      child: CircleAvatar(radius: 14, child: Text('${index + 1}')),
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: step,
-                        decoration: const InputDecoration(border: OutlineInputBorder()),
-                        minLines: 1,
-                        maxLines: 6,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Remove',
-                      icon: const Icon(Icons.close),
-                      onPressed: () => setState(() => _steps.removeAt(index).dispose()),
-                    ),
-                  ],
+              const SizedBox(height: 24),
+              Text('Preparation steps', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 8),
+            ]),
+            _reorderable(_steps, _stepTile),
+            _section([
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _steps.add(TextEditingController())),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add step'),
                 ),
               ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _steps.add(TextEditingController())),
-                icon: const Icon(Icons.add),
-                label: const Text('Add step'),
-              ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
+            ]),
           ],
         ),
       ),
     );
   }
+
+  Widget _section(List<Widget> children, {double top = 0}) => SliverPadding(
+    padding: EdgeInsets.fromLTRB(16, top, 16, 0),
+    sliver: SliverList.list(children: children),
+  );
+
+  Widget _reorderable<T extends Object>(List<T> items, Widget Function(int index, T item) tile) => SliverPadding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    sliver: SliverReorderableList(
+      itemCount: items.length,
+      itemBuilder: (context, index) => KeyedSubtree(key: ObjectKey(items[index]), child: tile(index, items[index])),
+      onReorderItem: (from, to) => setState(() => items.insert(to, items.removeAt(from))),
+      proxyDecorator: (child, index, animation) => Material(
+        elevation: 6,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
+        child: child,
+      ),
+    ),
+  );
+
+  Widget _dragHandle(int index) => ReorderableDragStartListener(
+    index: index,
+    child: const Padding(
+      padding: EdgeInsets.fromLTRB(0, 16, 6, 16),
+      child: Icon(Icons.drag_indicator, semanticLabel: 'Drag to reorder'),
+    ),
+  );
+
+  Widget _ingredientTile(int index, _IngredientRow row) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _dragHandle(index),
+            SizedBox(
+              width: 64,
+              child: TextFormField(
+                controller: row.amount,
+                decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
+              ),
+            ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 96,
+              child: DropdownButtonFormField<CookingUnit>(
+                initialValue: row.unit,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
+                items: [
+                  for (final u in CookingUnit.values)
+                    DropdownMenuItem(
+                      value: u,
+                      child: Text(u.symbol, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: (u) => setState(() => row.unit = u ?? row.unit),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: TextFormField(
+                controller: row.name,
+                decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+            ),
+            IconButton(
+              tooltip: 'Remove',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.close),
+              onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
+            ),
+          ],
+        ),
+        Padding(padding: const EdgeInsets.only(left: 30), child: _foodLink(context, row)),
+      ],
+    ),
+  );
+
+  Widget _stepTile(int index, TextEditingController step) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dragHandle(index),
+        Padding(
+          padding: const EdgeInsets.only(top: 12, right: 8),
+          child: CircleAvatar(radius: 14, child: Text('${index + 1}')),
+        ),
+        Expanded(
+          child: TextFormField(
+            controller: step,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            minLines: 1,
+            maxLines: 6,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+        ),
+        IconButton(
+          tooltip: 'Remove',
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.close),
+          onPressed: () => setState(() => _steps.removeAt(index).dispose()),
+        ),
+      ],
+    ),
+  );
 }
