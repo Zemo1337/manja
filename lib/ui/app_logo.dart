@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'wheel/wheel_painter.dart';
 
 const _cream = Color(0xFFFFF4EC);
 const _paprika = Color(0xFFC2410C);
@@ -80,24 +81,10 @@ class AppLogoPainter extends CustomPainter {
         ..strokeWidth = 3,
     );
 
-    final tine = Paint()
-      ..color = _ink
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    for (final x in const [44.0, 48.0, 52.0, 56.0]) {
-      canvas.drawLine(Offset(x, 5), Offset(x, 15), tine);
-    }
-    canvas.drawPath(
-      Path()
-        ..moveTo(42, 14)
-        ..lineTo(58, 14)
-        ..quadraticBezierTo(58, 21, 53.5, 23)
-        ..lineTo(50, 32)
-        ..lineTo(46.5, 23)
-        ..quadraticBezierTo(42, 21, 42, 14)
-        ..close(),
-      Paint()..color = _ink,
-    );
+    canvas.save();
+    canvas.translate(42, 3.5);
+    canvas.drawPath(WheelPointerPainter.shape(const Size(16, 28.5)), Paint()..color = _ink);
+    canvas.restore();
 
     final handles = [
       for (final x in const [3.0, 84.0])
