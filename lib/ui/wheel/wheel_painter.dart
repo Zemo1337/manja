@@ -204,13 +204,12 @@ class WheelPainter extends CustomPainter {
 
 /// The finish of the fork that points at the winner.
 enum ForkMetal {
-  silver([Color(0xFFF7F9FA), Color(0xFFC9CFD4), Color(0xFF8D969E), Color(0xFFDCE1E5)], Color(0xFF4F575E)),
-  gold([Color(0xFFFFF3C4), Color(0xFFEBC35B), Color(0xFFB07F22), Color(0xFFF3D47E)], Color(0xFF6B4610));
+  silver(Color(0xFFC5CCD2), Color(0xFF4F575E)),
+  gold(Color(0xFFE3B54A), Color(0xFF6B4610));
 
-  const ForkMetal(this.sheen, this.edge);
+  const ForkMetal(this.fill, this.edge);
 
-  /// Colours across the fork from left to right, like light falling on a curved spoon.
-  final List<Color> sheen;
+  final Color fill;
   final Color edge;
 }
 
@@ -268,11 +267,7 @@ class WheelPointerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final fork = shape(size);
     canvas.drawShadow(fork, Colors.black, 3, false);
-    canvas.drawPath(
-      fork,
-      Paint()
-        ..shader = LinearGradient(colors: metal.sheen, stops: const [0, 0.35, 0.7, 1]).createShader(Offset.zero & size),
-    );
+    canvas.drawPath(fork, Paint()..color = metal.fill);
     canvas.drawPath(
       fork,
       Paint()
