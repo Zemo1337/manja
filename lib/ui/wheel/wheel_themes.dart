@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../domain/wheel_service.dart';
+import 'wheel_painter.dart';
 
 abstract class WheelTheme {
   const WheelTheme();
@@ -18,7 +19,7 @@ abstract class WheelTheme {
   List<Color> get palette;
   double get rimFraction;
   Color get divider;
-  Color get pointer;
+  ForkMetal get fork => ForkMetal.silver;
   Color get overflow;
 
   Color labelColor(Color slice) => slice.computeLuminance() > 0.45 ? Colors.black87 : Colors.white;
@@ -74,9 +75,6 @@ class ClassicWheelTheme extends WheelTheme {
   Color get divider => Colors.white.withValues(alpha: 0.6);
 
   @override
-  Color get pointer => ink;
-
-  @override
   Color get overflow => const Color(0xFF4A3F3B);
 
   @override
@@ -115,9 +113,6 @@ class PizzaWheelTheme extends WheelTheme {
 
   @override
   Color get divider => const Color(0xB3FFF4DC);
-
-  @override
-  Color get pointer => const Color(0xFF4E2A12);
 
   @override
   Color get overflow => const Color(0xFF5B3A1E);
@@ -197,9 +192,6 @@ class BurekWheelTheme extends WheelTheme {
   Color get divider => const Color(0x80FFF3D0);
 
   @override
-  Color get pointer => const Color(0xFF5A3010);
-
-  @override
   Color get overflow => const Color(0xFF7A4A1C);
 
   @override
@@ -266,7 +258,6 @@ class SacherWheelTheme extends WheelTheme {
   const SacherWheelTheme();
 
   static const _glaze = Color(0xFF2E160C);
-  static const _apricot = Color(0xFFE59A3A);
 
   @override
   List<Color> get palette => const [
@@ -288,7 +279,7 @@ class SacherWheelTheme extends WheelTheme {
   Color get divider => const Color(0xD9E59A3A);
 
   @override
-  Color get pointer => _apricot;
+  ForkMetal get fork => ForkMetal.gold;
 
   @override
   Color get overflow => const Color(0xFFF3E3C6);
@@ -381,7 +372,7 @@ class BaklavaWheelTheme extends WheelTheme {
   Color get divider => const Color(0xB37A4A12);
 
   @override
-  Color get pointer => const Color(0xFF7A5418);
+  ForkMetal get fork => ForkMetal.gold;
 
   @override
   Color get overflow => _pistachioDark;

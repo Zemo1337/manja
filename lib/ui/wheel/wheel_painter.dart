@@ -202,71 +202,87 @@ class WheelPainter extends CustomPainter {
   bool shouldRepaint(WheelPainter oldDelegate) => true;
 }
 
+/// The finish of the fork that points at the winner.
+enum ForkMetal {
+  silver([Color(0xFFF7F9FA), Color(0xFFC9CFD4), Color(0xFF8D969E), Color(0xFFDCE1E5)], Color(0xFF4F575E)),
+  gold([Color(0xFFFFF3C4), Color(0xFFEBC35B), Color(0xFFB07F22), Color(0xFFF3D47E)], Color(0xFF6B4610));
+
+  const ForkMetal(this.sheen, this.edge);
+
+  /// Colours across the fork from left to right, like light falling on a curved spoon.
+  final List<Color> sheen;
+  final Color edge;
+}
+
 class WheelPointerPainter extends CustomPainter {
-  WheelPointerPainter(this.color, {this.outline});
+  WheelPointerPainter(this.metal);
 
   static Size sizeFor(double wheel) {
     final width = (wheel * 0.11).clamp(24.0, 56.0);
     return Size(width, width * 1.53);
   }
 
-  final Color color;
-  final Color? outline;
+  final ForkMetal metal;
 
-  static Path head(Size size) {
+  /// Four pointed prongs on a rounded head that narrows into the tip touching the wheel.
+  static Path shape(Size size) {
     final w = size.width;
     final h = size.height;
-    return Path()
-      ..moveTo(0, h * 0.34)
-      ..lineTo(w, h * 0.34)
-      ..quadraticBezierTo(w, h * 0.58, w * 0.66, h * 0.64)
+    var fork = Path()
+      ..moveTo(w * 0.05, h * 0.34)
+      ..lineTo(w * 0.95, h * 0.34)
+      ..cubicTo(w * 0.95, h * 0.56, w * 0.64, h * 0.6, w * 0.59, h * 0.68)
       ..lineTo(w * 0.5, h)
-      ..lineTo(w * 0.34, h * 0.64)
-      ..quadraticBezierTo(0, h * 0.58, 0, h * 0.34)
+      ..lineTo(w * 0.41, h * 0.68)
+      ..cubicTo(w * 0.36, h * 0.6, w * 0.05, h * 0.56, w * 0.05, h * 0.34)
       ..close();
+    const prong = 0.15;
+    const gap = (0.9 - 4 * prong) / 3;
+    for (var i = 0; i < 4; i++) {
+      final left = w * (0.05 + i * (prong + gap));
+      final right = left + w * prong;
+      final mid = (left + right) / 2;
+      final tine = Path()
+        ..moveTo(left, h * 0.4)
+        ..lineTo(left, h * 0.16)
+        ..quadraticBezierTo(left, h * 0.07, mid, 0)
+        ..quadraticBezierTo(right, h * 0.07, right, h * 0.16)
+        ..lineTo(right, h * 0.4)
+        ..close();
+      fork = Path.combine(PathOperation.union, fork, tine);
+      if (i < 3) {
+        final radius = w * gap / 2;
+        final slot = Rect.fromLTRB(right, h * 0.34 - radius * 2, right + radius * 2, h * 0.35);
+        final fillet = Path.combine(
+          PathOperation.difference,
+          Path()..addRect(slot),
+          Path()..addOval(Rect.fromCircle(center: Offset(right + radius, slot.top), radius: radius)),
+        );
+        fork = Path.combine(PathOperation.union, fork, fillet);
+      }
+    }
+    return fork;
   }
-
-  static List<(Offset, Offset)> tines(Size size) => [
-    for (var i = 0; i < 4; i++)
-      (
-        Offset(size.width * (0.11 + i * 0.26), size.height * 0.05),
-        Offset(size.width * (0.11 + i * 0.26), size.height * 0.38),
-      ),
-  ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final head = WheelPointerPainter.head(size);
-    final tineWidth = size.width * 0.15;
-    canvas.drawShadow(head, Colors.black, 3, false);
-    final edge = outline;
-    if (edge != null && edge != color) {
-      final stroke = Paint()
-        ..color = edge
-        ..strokeWidth = tineWidth + 3
-        ..strokeCap = StrokeCap.round;
-      for (final (a, b) in tines(size)) {
-        canvas.drawLine(a, b, stroke);
-      }
-      canvas.drawPath(
-        head,
-        Paint()
-          ..color = edge
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..strokeJoin = StrokeJoin.round,
-      );
-    }
-    final fill = Paint()
-      ..color = color
-      ..strokeWidth = tineWidth
-      ..strokeCap = StrokeCap.round;
-    for (final (a, b) in tines(size)) {
-      canvas.drawLine(a, b, fill);
-    }
-    canvas.drawPath(head, Paint()..color = color);
+    final fork = shape(size);
+    canvas.drawShadow(fork, Colors.black, 3, false);
+    canvas.drawPath(
+      fork,
+      Paint()
+        ..shader = LinearGradient(colors: metal.sheen, stops: const [0, 0.35, 0.7, 1]).createShader(Offset.zero & size),
+    );
+    canvas.drawPath(
+      fork,
+      Paint()
+        ..color = metal.edge
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = max(1.2, size.width * 0.035)
+        ..strokeJoin = StrokeJoin.round,
+    );
   }
 
   @override
-  bool shouldRepaint(WheelPointerPainter oldDelegate) => oldDelegate.color != color || oldDelegate.outline != outline;
+  bool shouldRepaint(WheelPointerPainter oldDelegate) => oldDelegate.metal != metal;
 }
