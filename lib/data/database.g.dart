@@ -2782,8 +2782,17 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
-  List<GeneratedColumn> get $columns => [id, name, position];
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, position, kind];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2813,6 +2822,12 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
         position.isAcceptableOrUnknown(data['position']!, _positionMeta),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
     return context;
   }
 
@@ -2834,6 +2849,10 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
         DriftSqlType.int,
         data['${effectivePrefix}position'],
       )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      ),
     );
   }
 
@@ -2847,13 +2866,24 @@ class Tag extends DataClass implements Insertable<Tag> {
   final int id;
   final String name;
   final int position;
-  const Tag({required this.id, required this.name, required this.position});
+
+  /// Set for tags the app gives a meaning, see [TagKind]; these can be renamed but not deleted.
+  final String? kind;
+  const Tag({
+    required this.id,
+    required this.name,
+    required this.position,
+    this.kind,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['position'] = Variable<int>(position);
+    if (!nullToAbsent || kind != null) {
+      map['kind'] = Variable<String>(kind);
+    }
     return map;
   }
 
@@ -2862,6 +2892,7 @@ class Tag extends DataClass implements Insertable<Tag> {
       id: Value(id),
       name: Value(name),
       position: Value(position),
+      kind: kind == null && nullToAbsent ? const Value.absent() : Value(kind),
     );
   }
 
@@ -2874,6 +2905,7 @@ class Tag extends DataClass implements Insertable<Tag> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       position: serializer.fromJson<int>(json['position']),
+      kind: serializer.fromJson<String?>(json['kind']),
     );
   }
   @override
@@ -2883,19 +2915,27 @@ class Tag extends DataClass implements Insertable<Tag> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'position': serializer.toJson<int>(position),
+      'kind': serializer.toJson<String?>(kind),
     };
   }
 
-  Tag copyWith({int? id, String? name, int? position}) => Tag(
+  Tag copyWith({
+    int? id,
+    String? name,
+    int? position,
+    Value<String?> kind = const Value.absent(),
+  }) => Tag(
     id: id ?? this.id,
     name: name ?? this.name,
     position: position ?? this.position,
+    kind: kind.present ? kind.value : this.kind,
   );
   Tag copyWithCompanion(TagsCompanion data) {
     return Tag(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       position: data.position.present ? data.position.value : this.position,
+      kind: data.kind.present ? data.kind.value : this.kind,
     );
   }
 
@@ -2904,45 +2944,52 @@ class Tag extends DataClass implements Insertable<Tag> {
     return (StringBuffer('Tag(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, position);
+  int get hashCode => Object.hash(id, name, position, kind);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Tag &&
           other.id == this.id &&
           other.name == this.name &&
-          other.position == this.position);
+          other.position == this.position &&
+          other.kind == this.kind);
 }
 
 class TagsCompanion extends UpdateCompanion<Tag> {
   final Value<int> id;
   final Value<String> name;
   final Value<int> position;
+  final Value<String?> kind;
   const TagsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.position = const Value.absent(),
+    this.kind = const Value.absent(),
   });
   TagsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.position = const Value.absent(),
+    this.kind = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Tag> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? position,
+    Expression<String>? kind,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (position != null) 'position': position,
+      if (kind != null) 'kind': kind,
     });
   }
 
@@ -2950,11 +2997,13 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     Value<int>? id,
     Value<String>? name,
     Value<int>? position,
+    Value<String?>? kind,
   }) {
     return TagsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       position: position ?? this.position,
+      kind: kind ?? this.kind,
     );
   }
 
@@ -2970,6 +3019,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     if (position.present) {
       map['position'] = Variable<int>(position.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
     return map;
   }
 
@@ -2978,7 +3030,8 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     return (StringBuffer('TagsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
@@ -5508,11 +5561,13 @@ typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
   Value<int> id,
   required String name,
   Value<int> position,
+  Value<String?> kind,
 });
 typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
   Value<int> id,
   Value<String> name,
   Value<int> position,
+  Value<String?> kind,
 });
 
 final class $$TagsTableReferences
@@ -5558,6 +5613,11 @@ class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
 
   ColumnFilters<int> get position => $composableBuilder(
     column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5609,6 +5669,11 @@ class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
     column: $table.position,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TagsTableAnnotationComposer
@@ -5628,6 +5693,9 @@ class $$TagsTableAnnotationComposer
 
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   Expression<T> recipeTagsRefs<T extends Object>(
     Expression<T> Function($$RecipeTagsTableAnnotationComposer a) f,
@@ -5681,16 +5749,30 @@ class $$TagsTableTableManager
               $$TagsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TagsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<int> position = const Value.absent(),
-          }) => TagsCompanion(id: id, name: name, position: position),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String name,
-            Value<int> position = const Value.absent(),
-          }) => TagsCompanion.insert(id: id, name: name, position: position),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String?> kind = const Value.absent(),
+              }) => TagsCompanion(
+                id: id,
+                name: name,
+                position: position,
+                kind: kind,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<int> position = const Value.absent(),
+                Value<String?> kind = const Value.absent(),
+              }) => TagsCompanion.insert(
+                id: id,
+                name: name,
+                position: position,
+                kind: kind,
+              ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (

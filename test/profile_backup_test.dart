@@ -90,7 +90,7 @@ void main() {
     expect(await pc.nutrition.userApiKey(), 'PC-KEY', reason: 'the own key stays on the device');
     expect(await pc.db.getSetting('app.theme'), 'dev');
     expect([for (final p in await pc.db.pantry()) p.name], ['Salt']);
-    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags.take(5), 'Bites', 'Mama']);
+    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags.take(5), 'Bites', 'Ingredient', 'Mama']);
     final pcGrah = (await pc.db.allRecipes()).singleWhere((r) => r.name == 'Grah');
     expect([for (final t in (await pc.db.recipeFull(pcGrah.id))!.tags) t.name], ['Soup', 'Mama']);
     expect(await pc.db.getSetting('wheel.tag'), isNull, reason: 'the chosen wheel tag stays on its device');
@@ -131,7 +131,7 @@ void main() {
     expect(await pc.names(), ['Burek', 'sarma']);
     final pcBurek = (await pc.db.allRecipes()).singleWhere((r) => r.name == 'Burek');
     expect([for (final t in (await pc.db.recipeFull(pcBurek.id))!.tags) t.name], ['Pita']);
-    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags, 'Pita'], reason: 'no duplicate tags');
+    expect([for (final t in await pc.db.allTags()) t.name], [...defaultTags, 'Ingredient', 'Pita'], reason: 'no duplicate tags');
     expect((await pc.db.select(pc.db.mealLogs).get()).single.recipeId, own);
     expect(await pc.db.pantry(), hasLength(1));
     expect(await pc.db.getSetting('app.theme'), 'neutral', reason: 'adding keeps own settings');

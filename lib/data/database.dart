@@ -40,6 +40,9 @@ class Tags extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 60)();
   IntColumn get position => integer().withDefault(const Constant(0))();
+
+  /// Set for tags the app gives a meaning, see [TagKind]; these can be renamed but not deleted.
+  TextColumn get kind => text().nullable()();
 }
 
 class RecipeTags extends Table {
@@ -51,6 +54,11 @@ class RecipeTags extends Table {
 }
 
 const defaultTags = ['Main', 'Soup', 'Side or salad', 'Breakfast', 'Dessert', 'Snack'];
+
+abstract final class TagKind {
+  /// Recipes such as a dough or a bun that other recipes use as an ingredient; left off the wheel unless chosen.
+  static const ingredient = 'ingredient';
+}
 
 @DataClassName('FoodRow')
 class Foods extends Table {
@@ -152,13 +160,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await _seedTags();
+          await _seedIngredientTag();
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.addColumn(recipes, recipes.photoPath);
@@ -176,6 +185,10 @@ class AppDatabase extends _$AppDatabase {
             await customStatement('INSERT INTO recipe_tags (recipe_id, tag_id) SELECT id, ? FROM recipes', [main]);
           }
           if (from < 7) await m.addColumn(recipeIngredients, recipeIngredients.section);
+          if (from < 8) {
+            if (from >= 6) await m.addColumn(tags, tags.kind);
+            await _seedIngredientTag();
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -375,6 +388,19 @@ class AppDatabase extends _$AppDatabase {
     }
     return main!;
   }
+
+  /// Turns an existing tag named "Ingredient" into the built-in one, or adds it.
+  Future<void> _seedIngredientTag() async {
+    final existing = await tagByName('Ingredient');
+    if (existing != null) {
+      await (update(tags)..where((t) => t.id.equals(existing.id))).write(const TagsCompanion(kind: Value(TagKind.ingredient)));
+    } else {
+      final id = await addTag('Ingredient');
+      await (update(tags)..where((t) => t.id.equals(id))).write(const TagsCompanion(kind: Value(TagKind.ingredient)));
+    }
+  }
+
+  Future<Tag?> tagOfKind(String kind) => (select(tags)..where((t) => t.kind.equals(kind))).getSingleOrNull();
 
   Stream<List<Tag>> watchTags() => (select(tags)..orderBy([(t) => OrderingTerm.asc(t.position)])).watch();
 

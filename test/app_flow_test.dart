@@ -131,6 +131,8 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Palačinke');
     await tester.enterText(find.widgetWithText(TextFormField, 'Qty'), '2');
     await tester.enterText(find.widgetWithText(TextFormField, 'Ingredient'), 'flour');
+    await tester.ensureVisible(find.text('Link nutrition'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Link nutrition'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Wheat flour, white'));

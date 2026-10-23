@@ -256,6 +256,12 @@ class WheelService {
         for (final r in pool)
           if (ids.contains(r.id)) r,
       ];
+    } else if (tags.where((t) => t.kind == TagKind.ingredient).firstOrNull case final ingredient?) {
+      final ids = await db.recipeIdsWithTag(ingredient.id);
+      pool = [
+        for (final r in pool)
+          if (!ids.contains(r.id)) r,
+      ];
     }
     final filters = await loadFilters();
     var filteredOut = 0;

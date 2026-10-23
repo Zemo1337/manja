@@ -42,7 +42,7 @@ void main() {
   group('tags', () {
     test('a new database starts with the course tags in order', () async {
       final db = _memory();
-      expect([for (final t in await db.allTags()) t.name], defaultTags);
+      expect([for (final t in await db.allTags()) t.name], [...defaultTags, 'Ingredient']);
     });
 
     test('tags can be added once, renamed, reordered and deleted without touching recipes', () async {

@@ -111,18 +111,26 @@ class _TagsScreenState extends State<TagsScreen> {
                 for (final t in tags)
                   ListTile(
                     key: ValueKey(t.id),
-                    leading: const Icon(Icons.label_outline),
+                    leading: Icon(t.kind == TagKind.ingredient ? Icons.blender_outlined : Icons.label_outline),
                     title: Text(t.name),
-                    subtitle: Text('${_counts[t.id] ?? 0} ${(_counts[t.id] ?? 0) == 1 ? 'recipe' : 'recipes'}'),
+                    subtitle: Text(
+                      [
+                        '${_counts[t.id] ?? 0} ${(_counts[t.id] ?? 0) == 1 ? 'recipe' : 'recipes'}',
+                        if (t.kind == TagKind.ingredient) 'usable as ingredients, not on the wheel unless chosen',
+                      ].join(' · '),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(tooltip: 'Rename', icon: const Icon(Icons.edit_outlined), onPressed: () => _rename(t)),
-                        IconButton(
-                          tooltip: 'Delete',
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => _delete(t),
-                        ),
+                        if (t.kind == null)
+                          IconButton(
+                            tooltip: 'Delete',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _delete(t),
+                          )
+                        else
+                          const SizedBox(width: 48),
                         const SizedBox(width: 24),
                       ],
                     ),

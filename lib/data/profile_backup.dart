@@ -115,6 +115,10 @@ class ProfileBackup {
         for (final m in meals) {'recipeId': m.recipeId, 'eatenAt': _date(m.eatenAt)},
       ],
       'tags': [for (final t in tags) t.name],
+      'tagKinds': {
+        for (final t in tags)
+          if (t.kind != null) t.name: t.kind,
+      },
       'pantry': [
         for (final i in pantry) {'name': i.name, 'foodKey': i.foodKey},
       ],
@@ -221,7 +225,7 @@ class ProfileBackup {
     if (replace) {
       await db.delete(db.recipes).go();
       await db.delete(db.pantryItems).go();
-      if (data['tags'] is List) await db.delete(db.tags).go();
+      if (data['tags'] is List) await (db.delete(db.tags)..where((t) => t.kind.isNull())).go();
       await (db.delete(db.foods)..where((f) => f.source.equals('user'))).go();
       await (db.delete(db.appSettings)..where((s) => s.key.isNotIn(_localOnlySettings))).go();
     }
@@ -249,8 +253,23 @@ class ProfileBackup {
     });
 
     final tagIds = <String, int>{};
-    for (final name in [for (final t in data['tags'] as List? ?? const []) t as String]) {
-      tagIds[_nameKey(name)] = await db.addTag(name);
+    for (final MapEntry(key: name, value: kind) in (data['tagKinds'] as Map? ?? const {}).entries) {
+      final builtIn = await db.tagOfKind(kind as String);
+      if (builtIn == null) continue;
+      tagIds[_nameKey(name as String)] = builtIn.id;
+      if (replace) await db.renameTag(builtIn.id, name);
+    }
+    final tagNames = [for (final t in data['tags'] as List? ?? const []) t as String];
+    for (final name in tagNames) {
+      tagIds[_nameKey(name)] ??= await db.addTag(name);
+    }
+    if (replace && tagNames.isNotEmpty) {
+      final ordered = [for (final name in tagNames) tagIds[_nameKey(name)]!];
+      final rest = [
+        for (final t in await db.allTags())
+          if (!ordered.contains(t.id)) t.id,
+      ];
+      await db.reorderTags({...ordered, ...rest}.toList());
     }
     Future<List<int>> tagsFor(Map<String, Object?> recipe) async => [
       for (final name in [for (final t in recipe['tags'] as List? ?? const []) t as String])
