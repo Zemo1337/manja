@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../data/database.dart';
+import '../data/recipe_foods.dart';
 import 'ingredient_sections.dart';
 import 'text_fold.dart';
 import 'units.dart';
@@ -193,7 +194,13 @@ class _Builder {
 
   String _anchor(Recipe r) => 'recipe-${r.id}';
 
+  late final _inBook = {for (final r in recipes) r.full.recipe.id};
+
+  /// Page numbers from the first pass; used for the contents and for recipes used as ingredients.
+  Map<String, String> _pages = const {};
+
   pw.Document document(Map<String, String> pages) {
+    _pages = pages;
     final doc = pw.Document(
       title: options.title,
       creator: 'Manja',
@@ -493,23 +500,36 @@ class _Builder {
   pw.Widget _ingredients(List<RecipeIngredient> ingredients) {
     final columns = style.ingredientColumns;
     final rows = (ingredients.length / columns).ceil();
-    pw.Widget cell(RecipeIngredient? i) => i == null
-        ? pw.SizedBox()
-        : pw.Padding(
-            padding: pw.EdgeInsets.symmetric(vertical: style.body * 0.25),
-            child: pw.RichText(
-              text: pw.TextSpan(
-                children: [
-                  if (_amount(i).isNotEmpty)
-                    pw.TextSpan(
-                      text: '${_amount(i)}  ',
-                      style: pw.TextStyle(font: fonts.bold),
-                    ),
-                  pw.TextSpan(text: i.name),
-                ],
-              ),
-            ),
-          );
+    pw.Widget cell(RecipeIngredient? i) {
+      if (i == null) return pw.SizedBox();
+      // The first pass has no page numbers yet; "00" keeps the line as long so the pages do not shift.
+      final used = switch (recipeIdOfFoodKey(i.foodKey)) {
+        final id? when _inBook.contains(id) => 'recipe-$id',
+        _ => null,
+      };
+      final text = pw.Padding(
+        padding: pw.EdgeInsets.symmetric(vertical: style.body * 0.25),
+        child: pw.RichText(
+          text: pw.TextSpan(
+            children: [
+              if (_amount(i).isNotEmpty)
+                pw.TextSpan(
+                  text: '${_amount(i)}  ',
+                  style: pw.TextStyle(font: fonts.bold),
+                ),
+              pw.TextSpan(text: i.name),
+              if (used != null)
+                pw.TextSpan(
+                  text: '  p. ${_pages[used] ?? '00'}',
+                  style: pw.TextStyle(color: _basil, fontSize: style.body * 0.85),
+                ),
+            ],
+          ),
+        ),
+      );
+      return used == null ? text : pw.Link(destination: used, child: text);
+    }
+
     return pw.Table(
       columnWidths: {for (var c = 0; c < columns; c++) c: const pw.FlexColumnWidth()},
       border: const pw.TableBorder(horizontalInside: pw.BorderSide(color: _line, width: 0.4)),

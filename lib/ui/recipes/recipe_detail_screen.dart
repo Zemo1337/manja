@@ -1,6 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:nutrition_core/nutrition_core.dart' show LineNutrition, RecipeNutrition, gramsPerCount;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:nutrition_core/nutrition_core.dart' show RecipeNutrition;
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
@@ -13,9 +15,12 @@ import 'recipe_edit_screen.dart';
 import 'recipe_photo.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
-  const RecipeDetailScreen({super.key, required this.recipeId});
+  const RecipeDetailScreen({super.key, required this.recipeId, this.portions});
 
   final int recipeId;
+
+  /// The portions to show first, e.g. as many buns as the burger opened from needs.
+  final int? portions;
 
   @override
   State<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
@@ -45,8 +50,31 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     setState(() {
       _full = full;
       _nutrition = nutrition;
-      _portions = full?.recipe.portions;
+      _portions = _portions == null ? widget.portions ?? full?.recipe.portions : full?.recipe.portions;
     });
+  }
+
+  Widget _ingredientRow(BuildContext context, RecipeIngredient ingredient, double scale, Widget row) {
+    final padded = Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: row);
+    final used = recipeIdOfFoodKey(ingredient.foodKey);
+    if (used == null) return padded;
+    final index = _full!.ingredients.indexOf(ingredient);
+    final lines = _nutrition?.lines;
+    final line = lines != null && index >= 0 && index < lines.length ? lines[index] : null;
+    return InkWell(borderRadius: BorderRadius.circular(8), onTap: () => _openUsed(used, line, scale), child: padded);
+  }
+
+  /// Opens a recipe used as an ingredient, set to the portions this recipe needs of it.
+  void _openUsed(int recipeId, LineNutrition? line, double scale) {
+    final food = line?.line.food;
+    final each = food == null ? null : gramsPerCount(food, CookingUnit.portion);
+    final needed = line?.grams == null || each == null || each <= 0 ? null : line!.grams! * scale / each;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecipeDetailScreen(recipeId: recipeId, portions: needed == null ? null : max(1, needed.ceil())),
+      ),
+    );
   }
 
   Future<void> _edit() async {
@@ -146,9 +174,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 child: Text(section, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary)),
               ),
             for (final ingredient in group.items)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
+              _ingredientRow(
+                context,
+                ingredient,
+                scale,
+                Row(
                   children: [
                     SizedBox(
                       width: 110,
@@ -159,7 +189,20 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
-                    Expanded(child: Text(ingredient.name, style: theme.textTheme.bodyLarge)),
+                    Expanded(
+                      child: Text(
+                        ingredient.name,
+                        style: recipeIdOfFoodKey(ingredient.foodKey) == null
+                            ? theme.textTheme.bodyLarge
+                            : theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.primary,
+                                decoration: TextDecoration.underline,
+                                decorationColor: theme.colorScheme.primary,
+                              ),
+                      ),
+                    ),
+                    if (recipeIdOfFoodKey(ingredient.foodKey) != null)
+                      Icon(Icons.chevron_right, color: theme.colorScheme.primary),
                   ],
                 ),
               ),

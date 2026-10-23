@@ -217,4 +217,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1.5 portions'), findsOneWidget);
   });
+
+  testWidgets('tapping a recipe used as an ingredient opens it with the portions needed', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1080, 4000)
+      ..devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    final db = _memory();
+    final burger = await _burger(db, await _bun(db), amount: 240, unit: 'g');
+    await tester.pumpWidget(_scope(db, MaterialApp(home: RecipeDetailScreen(recipeId: burger))));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget, reason: 'only the linked recipe opens');
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byIcon(Icons.add_circle_outline));
+      await tester.pump();
+    }
+    expect(find.text('360 g'), findsOneWidget);
+    await tester.tap(find.text('Brioche bun'));
+    await tester.pumpAndSettle();
+    expect(find.text('6'), findsOneWidget, reason: '360 g are six 60 g buns');
+    expect(find.text('375 g'), findsOneWidget, reason: 'flour for six of eight buns');
+  });
 }
