@@ -5,25 +5,34 @@ import 'package:nutrition_core/nutrition_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app_scope.dart';
+import '../../data/database.dart';
 import '../../data/nutrition_repository.dart';
+import '../../data/recipe_foods.dart';
+import '../../domain/text_fold.dart';
 import 'api_key_dialogs.dart';
 import 'barcode_scanner_screen.dart';
 import 'food_edit_screen.dart';
 
-Future<Food?> showFoodPicker(BuildContext context, {String initialQuery = ''}) {
+/// With [recipes], recipes tagged as ingredients are offered too, except [forRecipe] and the recipes using it.
+Future<Food?> showFoodPicker(BuildContext context, {String initialQuery = '', bool recipes = false, int? forRecipe}) {
   return showModalBottomSheet<Food>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,
-    builder: (_) => FractionallySizedBox(heightFactor: 0.9, child: _FoodPicker(initialQuery: initialQuery)),
+    builder: (_) => FractionallySizedBox(
+      heightFactor: 0.9,
+      child: _FoodPicker(initialQuery: initialQuery, recipes: recipes, forRecipe: forRecipe),
+    ),
   );
 }
 
 class _FoodPicker extends StatefulWidget {
-  const _FoodPicker({required this.initialQuery});
+  const _FoodPicker({required this.initialQuery, required this.recipes, this.forRecipe});
 
   final String initialQuery;
+  final bool recipes;
+  final int? forRecipe;
 
   @override
   State<_FoodPicker> createState() => _FoodPickerState();
@@ -43,6 +52,8 @@ class _FoodPickerState extends State<_FoodPicker> {
   String? _remoteError;
   String? _opening;
   Map<String, int>? _uses;
+  List<Recipe>? _ingredientRecipes;
+  List<FoodSummary> _recipes = const [];
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
 
@@ -70,14 +81,33 @@ class _FoodPickerState extends State<_FoodPicker> {
     final generation = ++_generation;
     final uses = _uses ??= await _repo.db.foodUseCounts();
     final local = await _repo.searchLocal(_text, limit: 40, uses: uses);
+    final candidates = _ingredientRecipes ??= widget.recipes ? await _loadIngredientRecipes() : const [];
     if (!mounted || generation != _generation) return;
+    final query = foldText(_text);
     setState(() {
       _local = local;
+      _recipes = [
+        for (final r in candidates)
+          if (foldText(r.name).contains(query))
+            FoodSummary(source: FoodSource.recipe, sourceId: '${r.id}', name: r.name, detail: 'Recipe'),
+      ]..sort((a, b) => (uses[b.key] ?? 0).compareTo(uses[a.key] ?? 0));
       if (_remoteQuery != _text) {
         _remote = null;
         _remoteError = null;
       }
     });
+  }
+
+  Future<List<Recipe>> _loadIngredientRecipes() async {
+    final db = _repo.db;
+    final tag = await db.tagOfKind(TagKind.ingredient);
+    if (tag == null) return const [];
+    final ids = await db.recipeIdsWithTag(tag.id);
+    final blocked = widget.forRecipe == null ? const <int>{} : await recipesUsing(db, widget.forRecipe!);
+    return [
+      for (final r in await db.allRecipes())
+        if (ids.contains(r.id) && !blocked.contains(r.id)) r,
+    ]..sort((a, b) => compareNames(a.name, b.name));
   }
 
   Future<void> _searchRemote([FoodSource? source]) async {
@@ -228,7 +258,8 @@ class _FoodPickerState extends State<_FoodPicker> {
                   subtitle: Text('Barcode $_scannedCode'),
                   trailing: TextButton(onPressed: () => _scan(_scannedCode), child: const Text('Retry')),
                 ),
-              if (_local.isEmpty && _text.isNotEmpty)
+              for (final f in _recipes) _tile(f),
+              if (_local.isEmpty && _recipes.isEmpty && _text.isNotEmpty)
                 ListTile(dense: true, title: Text('Nothing found on this device', style: theme.textTheme.bodySmall)),
               for (final f in _local) _tile(f),
               if (_repo.hasRemote) ...[
@@ -313,6 +344,7 @@ class _FoodPickerState extends State<_FoodPicker> {
         FoodSource.user => Icons.person_outline,
         FoodSource.openFoodFacts => Icons.shopping_basket_outlined,
         FoodSource.usda => Icons.eco_outlined,
+        FoodSource.recipe => Icons.menu_book_outlined,
       }),
       title: Text(f.name),
       subtitle: subtitle.isEmpty ? null : Text(subtitle),

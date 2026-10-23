@@ -7,6 +7,7 @@ import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
 
 import 'database.dart';
+import 'recipe_foods.dart';
 
 enum ApiKeyOrigin { demo, developer, user }
 
@@ -98,6 +99,7 @@ class NutritionRepository {
   Future<Food?> productByBarcode(String barcode) => food('${FoodSource.openFoodFacts.id}:$barcode');
 
   Future<Food?> food(String key) async {
+    if (recipeIdOfFoodKey(key) case final id?) return recipeFood(db, id);
     final local = await db.foodRow(key);
     if (local != null) return foodFromRow(local);
     final remote = _remotes[FoodSource.fromId(key.substring(0, key.indexOf(':')))];
@@ -106,10 +108,7 @@ class NutritionRepository {
     return fetched;
   }
 
-  Future<Map<String, Food>> foodsByKey(Iterable<String> keys) async {
-    final rows = await db.foodRows(keys.toSet());
-    return {for (final row in rows) row.key: foodFromRow(row)};
-  }
+  Future<Map<String, Food>> foodsByKey(Iterable<String> keys) => resolveFoods(db, keys.toSet());
 
   Future<void> store(Food food, {DateTime? at}) => db.upsertFoodRow(_row(food, at ?? DateTime.now()));
 

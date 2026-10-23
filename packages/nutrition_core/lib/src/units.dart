@@ -21,7 +21,10 @@ enum CookingUnit {
   pinch('pinch', 'pinch', UnitKind.count, 1),
   clove('clove', 'clove', UnitKind.count, 1),
   slice('slice', 'slice', UnitKind.count, 1),
-  can('can', 'can', UnitKind.count, 1);
+  can('can', 'can', UnitKind.count, 1),
+
+  /// One portion of a recipe used as an ingredient.
+  portion('portion', 'portion', UnitKind.count, 1);
 
   const CookingUnit(this.symbol, this.label, this.kind, this.toBase);
 

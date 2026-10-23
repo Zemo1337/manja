@@ -141,7 +141,7 @@ String recipeInfo(Recipe r) => [
 String _minutes(int m) => m < 60 ? '$m min' : '${m ~/ 60} h${m % 60 == 0 ? '' : ' ${m % 60} min'}';
 
 String _amount(RecipeIngredient i) =>
-    i.amount > 0 ? '${formatAmount(i.amount)} ${CookingUnit.fromName(i.unit).symbol}' : '';
+    i.amount > 0 ? '${formatAmount(i.amount)} ${unitText(CookingUnit.fromName(i.unit), i.amount)}' : '';
 
 Future<Uint8List> buildCookbook(
   List<CookbookRecipe> recipes,

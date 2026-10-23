@@ -257,7 +257,15 @@ class AppDatabase extends _$AppDatabase {
         return id;
       });
 
-  Future<void> deleteRecipe(int id) => (delete(recipes)..where((r) => r.id.equals(id))).go();
+  /// Recipes that used this one as an ingredient keep it as plain text.
+  Future<void> deleteRecipe(int id) => transaction(() async {
+        final uses = recipeIngredients.foodKey.equals('recipe:$id');
+        await (update(recipeIngredients)..where((i) => uses & i.unit.equals('portion')))
+            .write(const RecipeIngredientsCompanion(unit: Value('piece')));
+        await (update(recipeIngredients)..where((i) => uses))
+            .write(const RecipeIngredientsCompanion(foodKey: Value(null)));
+        await (delete(recipes)..where((r) => r.id.equals(id))).go();
+      });
 
   Future<void> setFavorite(int id, bool value) =>
       (update(recipes)..where((r) => r.id.equals(id))).write(RecipesCompanion(isFavorite: Value(value)));

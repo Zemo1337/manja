@@ -3,12 +3,12 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nutrition_core/nutrition_core.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../data/recipe_foods.dart';
 import '../../domain/cookbook_pdf.dart';
 import '../../domain/text_fold.dart';
 import '../settings/option_card.dart';
@@ -24,15 +24,7 @@ Future<List<CookbookRecipe>> loadCookbookRecipes(AppScope scope, Iterable<int> i
       final file = scope.photos.file(full.recipe.photoPath!);
       if (await file.exists()) photo = await file.readAsBytes();
     }
-    final foods = await scope.nutrition.foodsByKey({for (final i in full.ingredients) ?i.foodKey});
-    final nutrition = RecipeNutrition.calculate(
-      [
-        for (final i in full.ingredients)
-          IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]),
-      ],
-      portions: full.recipe.portions,
-      finishedWeightG: full.recipe.finishedWeightG,
-    );
+    final nutrition = await recipeNutrition(scope.db, full);
     final counted = nutrition.lines.any((l) => l.counted);
     result.add(
       CookbookRecipe(

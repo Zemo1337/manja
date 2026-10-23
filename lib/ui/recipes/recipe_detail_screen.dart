@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:nutrition_core/nutrition_core.dart' show IngredientLine, RecipeNutrition;
+import 'package:nutrition_core/nutrition_core.dart' show RecipeNutrition;
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../data/recipe_foods.dart';
 import '../../domain/ingredient_sections.dart';
 import '../../domain/units.dart';
 import '../app_theme.dart';
@@ -38,15 +39,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final full = await scope.db.recipeFull(widget.recipeId);
     RecipeNutrition? nutrition;
     if (full != null) {
-      final foods = await scope.nutrition.foodsByKey({for (final i in full.ingredients) ?i.foodKey});
-      nutrition = RecipeNutrition.calculate(
-        [
-          for (final i in full.ingredients)
-            IngredientLine(name: i.name, amount: i.amount, unit: CookingUnit.fromName(i.unit), food: foods[i.foodKey]),
-        ],
-        portions: full.recipe.portions,
-        finishedWeightG: full.recipe.finishedWeightG,
-      );
+      nutrition = await recipeNutrition(scope.db, full);
     }
     if (!mounted) return;
     setState(() {
@@ -161,7 +154,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       width: 110,
                       child: Text(
                         ingredient.amount > 0
-                            ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbol}'
+                            ? '${formatAmount(ingredient.amount * scale)} ${unitText(CookingUnit.fromName(ingredient.unit), ingredient.amount * scale)}'
                             : '',
                         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                       ),

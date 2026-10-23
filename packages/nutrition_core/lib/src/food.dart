@@ -4,7 +4,10 @@ import 'units.dart';
 enum FoodSource {
   usda('usda', 'USDA FoodData Central'),
   openFoodFacts('off', 'Open Food Facts'),
-  user('user', 'My ingredients');
+  user('user', 'My ingredients'),
+
+  /// A recipe used as an ingredient of another; worked out from its own ingredients, never stored.
+  recipe('recipe', 'My recipes');
 
   const FoodSource(this.id, this.label);
 

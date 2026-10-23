@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nutrition_core/nutrition_core.dart' show Food, gramsFor;
+import 'package:nutrition_core/nutrition_core.dart' show CookingUnit, Food, FoodSource, gramsFor;
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../data/recipe_foods.dart';
 import '../../data/recipe_importer.dart';
 import '../../domain/ingredient_suggestions.dart';
 import '../../domain/tag_matching.dart';
@@ -138,11 +139,24 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     if (row.foodKey != null || key == null) return;
     final food = (await AppScope.of(context).nutrition.foodsByKey({key}))[key];
     if (!mounted || row.foodKey != null) return;
-    setState(() {
-      row.foodKey = key;
-      row.food = food;
-    });
+    setState(() => _setLink(row, key, food));
   }
+
+  /// Recipes are measured in portions or by weight, other ingredients in anything but portions.
+  void _setLink(_IngredientRow row, String? key, Food? food) {
+    final wasRecipe = recipeIdOfFoodKey(row.foodKey) != null;
+    row.foodKey = key;
+    row.food = food;
+    final units = _unitsFor(row);
+    if (!units.contains(row.unit) || (!wasRecipe && recipeIdOfFoodKey(key) != null)) row.unit = units.first;
+  }
+
+  static List<CookingUnit> _unitsFor(_IngredientRow row) => recipeIdOfFoodKey(row.foodKey) != null
+      ? recipeUnits
+      : [
+          for (final u in CookingUnit.values)
+            if (u != CookingUnit.portion) u,
+        ];
 
   /// Quantity, unit and name; the name suggestions open below all three so long names fit.
   Widget _ingredientFields(_IngredientRow row) => RawAutocomplete<IngredientSuggestion>(
@@ -167,11 +181,12 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
         SizedBox(
           width: 96,
           child: DropdownButtonFormField<CookingUnit>(
+            key: ValueKey((row.unit, recipeIdOfFoodKey(row.foodKey) != null)),
             initialValue: row.unit,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
             items: [
-              for (final u in CookingUnit.values)
+              for (final u in _unitsFor(row))
                 DropdownMenuItem(
                   value: u,
                   child: Text(u.symbol, overflow: TextOverflow.ellipsis),
@@ -286,19 +301,20 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   }
 
   Future<void> _linkFood(_IngredientRow row) async {
-    final food = await showFoodPicker(context, initialQuery: row.name.text.trim());
+    final food = await showFoodPicker(
+      context,
+      initialQuery: row.name.text.trim(),
+      recipes: true,
+      forRecipe: widget.existing?.recipe.id,
+    );
     if (food == null || !mounted) return;
     setState(() {
-      row.food = food;
-      row.foodKey = food.key;
+      _setLink(row, food.key, food);
       if (row.name.text.trim().isEmpty) row.name.text = food.name;
     });
   }
 
-  void _unlinkFood(_IngredientRow row) => setState(() {
-    row.food = null;
-    row.foodKey = null;
-  });
+  void _unlinkFood(_IngredientRow row) => setState(() => _setLink(row, null, null));
 
   Widget _foodLink(BuildContext context, _IngredientRow row) {
     final theme = Theme.of(context);
@@ -326,14 +342,19 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  food?.name ?? 'Linked ingredient (not on this device)',
+                  food?.name ??
+                      (recipeIdOfFoodKey(row.foodKey) != null
+                          ? 'Linked recipe (deleted)'
+                          : 'Linked ingredient (not on this device)'),
                   style: theme.textTheme.bodySmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (food != null && !convertible)
                   Text(
-                    'No gram weight for "${row.unit.symbol}". Use g or ml, or add a portion to the ingredient.',
+                    food.source == FoodSource.recipe
+                        ? 'The weight of a portion is unknown. Link the ingredients of "${food.name}" or enter its finished weight.'
+                        : 'No gram weight for "${row.unit.symbol}". Use g or ml, or add a portion to the ingredient.',
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
                   ),
               ],

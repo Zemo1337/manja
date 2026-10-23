@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
 import '../data/database.dart';
-import '../data/nutrition_repository.dart';
+import '../data/recipe_foods.dart';
 
 enum ResetMode {
   whenEmpty('When every dish was eaten'),
@@ -319,9 +319,7 @@ class WheelService {
       for (final i in await db.allRecipeIngredients())
         if (ids.contains(i.recipeId)) i,
     ];
-    final foods = {
-      for (final row in await db.foodRows({for (final i in ingredients) ?i.foodKey})) row.key: foodFromRow(row),
-    };
+    final foods = await resolveFoods(db, {for (final i in ingredients) ?i.foodKey});
     final byRecipe = <int, List<IngredientLine>>{};
     for (final i in ingredients) {
       byRecipe

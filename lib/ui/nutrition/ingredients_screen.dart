@@ -48,7 +48,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final builtIn = await scope.nutrition.countBySource(FoodSource.usda);
     final version = await scope.nutrition.bundleVersion();
     final keyOrigin = scope.nutrition.hasRemote ? await scope.nutrition.loadApiKey() : null;
-    final used = (await scope.nutrition.foodsByKey(linked)).values.where((f) => f.source != FoodSource.user).toList()
+    final used = (await scope.nutrition.foodsByKey(linked)).values.where((f) => f.source != FoodSource.user && f.source != FoodSource.recipe).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     if (mounted) {
       setState(() {
