@@ -42,6 +42,7 @@ class _FoodPickerState extends State<_FoodPicker> {
   bool _remoteLoading = false;
   String? _remoteError;
   String? _opening;
+  Map<String, int>? _uses;
 
   NutritionRepository get _repo => AppScope.of(context).nutrition;
 
@@ -67,7 +68,8 @@ class _FoodPickerState extends State<_FoodPicker> {
 
   Future<void> _searchLocal() async {
     final generation = ++_generation;
-    final local = await _repo.searchLocal(_text, limit: 40);
+    final uses = _uses ??= await _repo.db.foodUseCounts();
+    final local = await _repo.searchLocal(_text, limit: 40, uses: uses);
     if (!mounted || generation != _generation) return;
     setState(() {
       _local = local;
@@ -300,20 +302,27 @@ class _FoodPickerState extends State<_FoodPicker> {
     );
   }
 
-  Widget _tile(FoodSummary f) => ListTile(
-    leading: Icon(switch (f.source) {
-      FoodSource.user => Icons.person_outline,
-      FoodSource.openFoodFacts => Icons.shopping_basket_outlined,
-      FoodSource.usda => Icons.eco_outlined,
-    }),
-    title: Text(f.name),
-    subtitle: f.detail == null || f.detail!.isEmpty ? null : Text(f.detail!),
-    trailing: _opening == f.key
-        ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-        : null,
-    enabled: _opening == null,
-    onTap: () => _open(f),
-  );
+  Widget _tile(FoodSummary f) {
+    final uses = _uses?[f.key] ?? 0;
+    final subtitle = [
+      if (uses > 0) uses == 1 ? 'In 1 recipe' : 'In $uses recipes',
+      if (f.detail case final detail? when detail.isNotEmpty) detail,
+    ].join(' · ');
+    return ListTile(
+      leading: Icon(switch (f.source) {
+        FoodSource.user => Icons.person_outline,
+        FoodSource.openFoodFacts => Icons.shopping_basket_outlined,
+        FoodSource.usda => Icons.eco_outlined,
+      }),
+      title: Text(f.name),
+      subtitle: subtitle.isEmpty ? null : Text(subtitle),
+      trailing: _opening == f.key
+          ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          : null,
+      enabled: _opening == null,
+      onTap: () => _open(f),
+    );
+  }
 }
 
 class _OffAttribution extends StatelessWidget {

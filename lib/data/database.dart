@@ -271,9 +271,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<FoodRow>> foodRows(Iterable<String> keys) => (select(foods)..where((f) => f.key.isIn(keys))).get();
 
-  Future<List<FoodRow>> searchFoodRows(String query, {int limit = 25}) {
+  Future<List<FoodRow>> searchFoodRows(String query, {int limit = 25, Set<String>? keys}) {
     final words = query.trim().toLowerCase().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     final q = select(foods);
+    if (keys != null) q.where((f) => f.key.isIn(keys));
     for (final w in words) {
       final escaped = w.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
       q.where((f) => f.name.lower().like('%$escaped%', escapeChar: r'\'));
@@ -307,6 +308,30 @@ class AppDatabase extends _$AppDatabase {
       batch((b) => b.insertAllOnConflictUpdate(foods, rows));
 
   Future<void> deleteFoodRow(String key) => (delete(foods)..where((f) => f.key.equals(key))).go();
+
+  /// How many recipes link each food.
+  Future<Map<String, int>> foodUseCounts() async {
+    final key = recipeIngredients.foodKey;
+    final recipes = recipeIngredients.recipeId.count(distinct: true);
+    final rows = await (selectOnly(recipeIngredients)
+          ..addColumns([key, recipes])
+          ..where(key.isNotNull())
+          ..groupBy([key]))
+        .get();
+    return {for (final r in rows) r.read(key)!: r.read(recipes)!};
+  }
+
+  /// Every ingredient name typed into a recipe, with the food it was linked to and in how many recipes.
+  Future<List<({String name, String? foodKey, int recipes})>> ingredientNameUses() async {
+    final name = recipeIngredients.name;
+    final key = recipeIngredients.foodKey;
+    final recipes = recipeIngredients.recipeId.count(distinct: true);
+    final rows = await (selectOnly(recipeIngredients)
+          ..addColumns([name, key, recipes])
+          ..groupBy([name, key]))
+        .get();
+    return [for (final r in rows) (name: r.read(name)!, foodKey: r.read(key), recipes: r.read(recipes)!)];
+  }
 
   Future<Set<String>> linkedFoodKeys() async {
     final key = recipeIngredients.foodKey;

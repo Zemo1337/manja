@@ -7,6 +7,7 @@ import 'package:nutrition_core/nutrition_core.dart' show Food, gramsFor;
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../data/recipe_importer.dart';
+import '../../domain/ingredient_suggestions.dart';
 import '../../domain/tag_matching.dart';
 import '../../domain/units.dart';
 import '../nutrition/food_picker_sheet.dart';
@@ -40,6 +41,7 @@ class _IngredientRow {
 
   final TextEditingController name;
   final TextEditingController amount;
+  final focus = FocusNode();
   CookingUnit unit;
   String? foodKey;
   Food? food;
@@ -47,6 +49,7 @@ class _IngredientRow {
   void dispose() {
     name.dispose();
     amount.dispose();
+    focus.dispose();
   }
 }
 
@@ -66,6 +69,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   bool _saving = false;
   bool _foodsLoaded = false;
   List<Tag> _tags = const [];
+  List<IngredientSuggestion> _suggestions = const [];
   Set<int>? _tagIds;
 
   String? get _existingPhoto => widget.existing?.recipe.photoPath;
@@ -120,8 +124,100 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       _foodsLoaded = true;
       _loadFoods();
       _loadTags();
+      _loadSuggestions();
     }
   }
+
+  Future<void> _loadSuggestions() async {
+    final uses = await AppScope.of(context).db.ingredientNameUses();
+    if (mounted) _suggestions = ingredientSuggestions(uses);
+  }
+
+  Future<void> _useSuggestion(_IngredientRow row, IngredientSuggestion suggestion) async {
+    final key = suggestion.foodKey;
+    if (row.foodKey != null || key == null) return;
+    final food = (await AppScope.of(context).nutrition.foodsByKey({key}))[key];
+    if (!mounted || row.foodKey != null) return;
+    setState(() {
+      row.foodKey = key;
+      row.food = food;
+    });
+  }
+
+  /// Quantity, unit and name; the name suggestions open below all three so long names fit.
+  Widget _ingredientFields(_IngredientRow row) => RawAutocomplete<IngredientSuggestion>(
+    textEditingController: row.name,
+    focusNode: row.focus,
+    optionsBuilder: (value) => matchIngredientSuggestions(_suggestions, value.text),
+    displayStringForOption: (s) => s.name,
+    onSelected: (s) => _useSuggestion(row, s),
+    fieldViewBuilder: (context, controller, focusNode, onSubmitted) => Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 64,
+          child: TextFormField(
+            controller: row.amount,
+            decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
+          ),
+        ),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: 96,
+          child: DropdownButtonFormField<CookingUnit>(
+            initialValue: row.unit,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
+            items: [
+              for (final u in CookingUnit.values)
+                DropdownMenuItem(
+                  value: u,
+                  child: Text(u.symbol, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: (u) => setState(() => row.unit = u ?? row.unit),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+        ),
+      ],
+    ),
+    optionsViewBuilder: (context, onSelected, options) => Material(
+      elevation: 3,
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 264),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          children: [
+            for (final s in options)
+              ListTile(
+                dense: true,
+                leading: Icon(s.foodKey == null ? Icons.history : Icons.link, size: 20),
+                title: Text(s.name),
+                trailing: Text(s.recipes == 1 ? '1 recipe' : '${s.recipes} recipes'),
+                onTap: () => onSelected(s),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Future<void> _loadFoods() async {
     final keys = {for (final r in _ingredients) ?r.foodKey};
@@ -578,40 +674,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _dragHandle(index),
-                  SizedBox(
-                    width: 64,
-                    child: TextFormField(
-                      controller: row.amount,
-                      decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  SizedBox(
-                    width: 96,
-                    child: DropdownButtonFormField<CookingUnit>(
-                      initialValue: row.unit,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
-                      items: [
-                        for (final u in CookingUnit.values)
-                          DropdownMenuItem(
-                            value: u,
-                            child: Text(u.symbol, overflow: TextOverflow.ellipsis),
-                          ),
-                      ],
-                      onChanged: (u) => setState(() => row.unit = u ?? row.unit),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: TextFormField(
-                      controller: row.name,
-                      decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                  ),
+                  Expanded(child: _ingredientFields(row)),
                   IconButton(
                     tooltip: 'Remove',
                     visualDensity: VisualDensity.compact,

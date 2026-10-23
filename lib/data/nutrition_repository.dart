@@ -53,16 +53,24 @@ class NutritionRepository {
     return loadApiKey();
   }
 
-  Future<List<FoodSummary>> searchLocal(String query, {int limit = 25}) async {
-    final rows = await db.searchFoodRows(query, limit: 300);
-    final scored = [
-      for (final row in rows)
-        (
-          row,
-          searchScore(query, row.name, hasPortions: row.portions != '[]') + (row.source == FoodSource.user.id ? 30 : 0),
-        ),
-    ]..sort((a, b) => b.$2.compareTo(a.$2));
-    return [for (final (row, _) in scored.take(limit)) foodFromRow(row).summary];
+  /// Foods on this device matching [query]; the ones already used in recipes come first, the most used on top.
+  Future<List<FoodSummary>> searchLocal(String query, {int limit = 25, Map<String, int>? uses}) async {
+    final used = uses ?? await db.foodUseCounts();
+    final rows = {
+      for (final row in [
+        if (used.isNotEmpty) ...await db.searchFoodRows(query, limit: 300, keys: used.keys.toSet()),
+        ...await db.searchFoodRows(query, limit: 300),
+      ])
+        row.key: row,
+    }.values;
+    double score(FoodRow row) =>
+        searchScore(query, row.name, hasPortions: row.portions != '[]') + (row.source == FoodSource.user.id ? 30 : 0);
+    final scored = [for (final row in rows) (row, used[row.key] ?? 0, score(row))]
+      ..sort((a, b) {
+        final byUse = b.$2.compareTo(a.$2);
+        return byUse != 0 ? byUse : b.$3.compareTo(a.$3);
+      });
+    return [for (final (row, _, _) in scored.take(limit)) foodFromRow(row).summary];
   }
 
   final updating = ValueNotifier<Set<String>>(const {});
