@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import 'database.dart';
 import 'photo_store.dart';
+import 'recipe_foods.dart';
 
 class ProfileSummary {
   const ProfileSummary({
@@ -278,6 +279,7 @@ class ProfileBackup {
 
     final existing = {for (final r in await db.allRecipes()) _nameKey(r.name): r.id};
     final ids = <int, int>{};
+    final addedIds = <int>{};
     var added = 0;
     var skipped = 0;
     for (final r in recipes) {
@@ -320,7 +322,24 @@ class ProfileBackup {
       }
       existing[_nameKey(r['name'] as String)] = id;
       ids[oldId] = id;
+      addedIds.add(id);
       added++;
+    }
+
+    // Recipes used as ingredients got new ids; point the links at them, or keep the name only.
+    String? relink(String? key) => switch (recipeIdOfFoodKey(key)) {
+      null => key,
+      final old => ids[old] == null ? null : recipeFoodKey(ids[old]!),
+    };
+    for (final i in await db.allRecipeIngredients()) {
+      if (!addedIds.contains(i.recipeId) || recipeIdOfFoodKey(i.foodKey) == null) continue;
+      final key = relink(i.foodKey);
+      await (db.update(db.recipeIngredients)..where((x) => x.id.equals(i.id))).write(
+        RecipeIngredientsCompanion(
+          foodKey: Value(key),
+          unit: key == null && i.unit == 'portion' ? const Value('piece') : const Value.absent(),
+        ),
+      );
     }
 
     final known = {for (final m in await db.select(db.mealLogs).get()) (m.recipeId, _second(m.eatenAt))};
@@ -338,7 +357,7 @@ class ProfileBackup {
     for (final i in _list(data['pantry'])) {
       final name = i['name'] as String;
       if (!pantry.add(_nameKey(name))) continue;
-      await db.addPantryItem(name, foodKey: i['foodKey'] as String?);
+      await db.addPantryItem(name, foodKey: relink(i['foodKey'] as String?));
     }
 
     if (replace) {

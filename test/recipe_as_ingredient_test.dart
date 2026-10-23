@@ -8,6 +8,7 @@ import 'package:manja/app_scope.dart';
 import 'package:manja/data/database.dart';
 import 'package:manja/data/nutrition_repository.dart';
 import 'package:manja/data/photo_store.dart';
+import 'package:manja/data/profile_backup.dart';
 import 'package:manja/data/recipe_foods.dart';
 import 'package:manja/domain/wheel_service.dart';
 import 'package:manja/ui/recipes/recipe_detail_screen.dart';
@@ -126,6 +127,44 @@ void main() {
     await db.deleteRecipe(bun);
     final line = (await db.recipeFull(burger))!.ingredients.first;
     expect((line.name, line.amount, line.unit, line.foodKey), ('Brioche bun', 4, 'piece', null));
+  });
+
+  test('backups keep the links between recipes, whatever ids they get', () async {
+    PhotoStore photos() {
+      final dir = Directory.systemTemp.createTempSync('manja_link_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      return PhotoStore(dir);
+    }
+
+    final phone = _memory();
+    await phone.saveRecipe(RecipeDraft(name: 'Sarma', portions: 4));
+    await _burger(phone, await _bun(phone));
+    final bytes = await ProfileBackup(phone, photos()).export();
+
+    Future<void> expectLinked(AppDatabase pc, String reason) async {
+      final recipes = await pc.allRecipes();
+      final bun = recipes.singleWhere((r) => r.name == 'Brioche bun');
+      final burger = recipes.singleWhere((r) => r.name == 'Burger');
+      expect((await pc.recipeFull(burger.id))!.ingredients.first.foodKey, recipeFoodKey(bun.id), reason: reason);
+    }
+
+    final fresh = _memory();
+    await ProfileBackup(fresh, photos()).import(bytes, replace: true);
+    await expectLinked(fresh, 'fresh phone');
+
+    final busy = _memory();
+    for (final n in ['Grah', 'Burek', 'Ćevapi', 'Pita']) {
+      await busy.saveRecipe(RecipeDraft(name: n, portions: 2));
+    }
+    await ProfileBackup(busy, photos()).import(bytes, replace: false);
+    await expectLinked(busy, 'other recipes took the old ids');
+
+    final ownBun = _memory();
+    await ownBun.saveRecipe(RecipeDraft(name: 'Pita', portions: 2));
+    final existingBun = await ownBun.saveRecipe(RecipeDraft(name: 'Brioche bun', portions: 6));
+    await ProfileBackup(ownBun, photos()).import(bytes, replace: false);
+    await expectLinked(ownBun, 'the bun already there is used');
+    expect((await ownBun.allRecipes()).where((r) => r.name == 'Brioche bun').single.id, existingBun);
   });
 
   testWidgets('a recipe tagged Ingredient can be linked, in portions, and shows on the recipe page', (tester) async {
