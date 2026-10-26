@@ -352,7 +352,6 @@
   "pickerUses": "{count, plural, one{U {count} receptu} few{U {count} recepta} other{U {count} recepata}}",
   "pickerOffAttribution": "Podaci o proizvodima s Open Food Facts, koje su napravili saradnici pod licencom Open Database License (ODbL).",
   "scannerTitle": "Skeniraj barkod",
-  "scannerTorch": "Svjetiljka",
   "scannerHint": "Usmjeri kameru na barkod na pakovanju",
   "scannerTypeNumber": "Ukucaj broj",
   "scannerPermissionDenied": "Manja nema dozvolu za kameru. Dozvoli je u postavkama telefona ili ukucaj broj.",

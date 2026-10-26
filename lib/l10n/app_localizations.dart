@@ -2212,12 +2212,6 @@ abstract class AppLocalizations {
   /// **'Scan barcode'**
   String get scannerTitle;
 
-  /// Tooltip of the flashlight button.
-  ///
-  /// In en, this message translates to:
-  /// **'Torch'**
-  String get scannerTorch;
-
   /// Hint over the camera view.
   ///
   /// In en, this message translates to:

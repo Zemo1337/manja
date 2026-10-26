@@ -352,7 +352,6 @@
   "pickerUses": "{count, plural, =1{In 1 Rezept} other{In {count} Rezepten}}",
   "pickerOffAttribution": "Produktdaten von Open Food Facts, erstellt von den Mitwirkenden unter der Open Database License (ODbL).",
   "scannerTitle": "Barcode scannen",
-  "scannerTorch": "Taschenlampe",
   "scannerHint": "Richte die Kamera auf den Barcode der Verpackung",
   "scannerTypeNumber": "Nummer eintippen",
   "scannerPermissionDenied": "Manja darf die Kamera nicht verwenden. Erlaube es in den Handy-Einstellungen oder tippe die Nummer ein.",

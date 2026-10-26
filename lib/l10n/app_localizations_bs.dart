@@ -1446,9 +1446,6 @@ class AppLocalizationsBs extends AppLocalizations {
   String get scannerTitle => 'Skeniraj barkod';
 
   @override
-  String get scannerTorch => 'Svjetiljka';
-
-  @override
   String get scannerHint => 'Usmjeri kameru na barkod na pakovanju';
 
   @override

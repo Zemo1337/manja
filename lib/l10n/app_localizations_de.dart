@@ -1426,9 +1426,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scannerTitle => 'Barcode scannen';
 
   @override
-  String get scannerTorch => 'Taschenlampe';
-
-  @override
   String get scannerHint => 'Richte die Kamera auf den Barcode der Verpackung';
 
   @override

@@ -1,5 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- The camera plugin asks for the microphone for video; the barcode scanner never records sound. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
     <application
         android:label="Manja"
         android:name="${applicationName}"

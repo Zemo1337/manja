@@ -1716,10 +1716,6 @@
   "@scannerTitle": {
     "description": "Screen title."
   },
-  "scannerTorch": "Torch",
-  "@scannerTorch": {
-    "description": "Tooltip of the flashlight button."
-  },
   "scannerHint": "Point the camera at the barcode on the package",
   "@scannerHint": {
     "description": "Hint over the camera view."

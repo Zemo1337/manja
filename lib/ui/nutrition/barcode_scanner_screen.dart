@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:nutrition_off/nutrition_off.dart';
 
 import '../../l10n/l10n.dart';
@@ -23,28 +23,15 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
-  final _controller = MobileScannerController(
-    formats: const [BarcodeFormat.ean13, BarcodeFormat.ean8, BarcodeFormat.upcA, BarcodeFormat.upcE],
-    detectionSpeed: DetectionSpeed.noDuplicates,
-  );
   bool _done = false;
+  Exception? _error;
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onDetect(BarcodeCapture capture) {
-    if (_done) return;
-    for (final barcode in capture.barcodes) {
-      final code = normalizeBarcode(barcode.rawValue ?? '');
-      if (code != null) {
-        _done = true;
-        Navigator.pop(context, code);
-        return;
-      }
-    }
+  void _onScan(Code code) {
+    if (_done || !code.isValid) return;
+    final barcode = normalizeBarcode(code.text ?? '');
+    if (barcode == null) return;
+    _done = true;
+    Navigator.pop(context, barcode);
   }
 
   Future<void> _type() async {
@@ -58,90 +45,67 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final error = _error;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.scannerTitle),
-        actions: [
-          ValueListenableBuilder(
-            valueListenable: _controller,
-            builder: (context, state, _) => state.error != null
-                ? const SizedBox.shrink()
-                : IconButton(
-                    tooltip: l.scannerTorch,
-                    icon: const Icon(Icons.flashlight_on_outlined),
-                    onPressed: () => _controller.toggleTorch(),
-                  ),
-          ),
-        ],
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-            errorBuilder: (context, error) => _ScannerError(error: error, onType: _type),
-          ),
-          ValueListenableBuilder(
-            valueListenable: _controller,
-            builder: (context, state, _) => state.error != null
-                ? const SizedBox.shrink()
-                : Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      IgnorePointer(
-                        child: Center(
-                          child: Container(
-                            width: 280,
-                            height: 160,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white, width: 3),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
+      appBar: AppBar(title: Text(l.scannerTitle)),
+      body: error != null
+          ? _ScannerError(denied: error.toString().contains('AccessDenied'), onType: _type)
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                ReaderWidget(
+                  onScan: _onScan,
+                  onControllerCreated: (_, error) {
+                    if (error != null && mounted) setState(() => _error = error);
+                  },
+                  codeFormat: Format.ean13 | Format.ean8 | Format.upca | Format.upce,
+                  tryHarder: true,
+                  tryInverted: true,
+                  showToggleCamera: false,
+                  scanDelay: const Duration(milliseconds: 300),
+                  scanDelaySuccess: Duration.zero,
+                  cropPercent: 0.7,
+                  actionButtonsAlignment: Alignment.topRight,
+                  actionButtonsBackgroundColor: Colors.black54,
+                  actionButtonsBackgroundBorderRadius: BorderRadius.circular(24),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l.scannerHint,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
                         ),
-                      ),
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 24,
-                        child: SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                l.scannerHint,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
-                              ),
-                              const SizedBox(height: 12),
-                              FilledButton.tonalIcon(
-                                onPressed: _type,
-                                icon: const Icon(Icons.keyboard_outlined),
-                                label: Text(l.scannerTypeNumber),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 12),
+                        FilledButton.tonalIcon(
+                          onPressed: _type,
+                          icon: const Icon(Icons.keyboard_outlined),
+                          label: Text(l.scannerTypeNumber),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            ),
     );
   }
 }
 
 class _ScannerError extends StatelessWidget {
-  const _ScannerError({required this.error, required this.onType});
+  const _ScannerError({required this.denied, required this.onType});
 
-  final MobileScannerException error;
+  final bool denied;
   final VoidCallback onType;
 
   @override
   Widget build(BuildContext context) {
-    final denied = error.errorCode == MobileScannerErrorCode.permissionDenied;
     final l = context.l10n;
     return ColoredBox(
       color: Colors.black,
