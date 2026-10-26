@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_off/nutrition_off.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
     buildApiKey: usdaApiKey,
   );
   await nutrition.loadApiKey();
+  await nutrition.loadSearchNames(rootBundle);
   final appearance = AppearanceController(db);
   await appearance.load();
   runApp(

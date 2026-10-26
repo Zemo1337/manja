@@ -83,7 +83,7 @@ flutter:
   generate: true
 
   assets:
-    - assets/food/usda.json.gz
+    - assets/food/
     - assets/fonts/
 
   fonts:

@@ -3,9 +3,11 @@ import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
 
+import '../domain/text_fold.dart';
 import 'database.dart';
 import 'recipe_foods.dart';
 
@@ -54,18 +56,49 @@ class NutritionRepository {
     return loadApiKey();
   }
 
+  /// Local names of common foods, folded, with the English words that find them in the built-in data.
+  final searchNames = <String, String>{};
+
+  /// Reads every `assets/food/search_<language>.json`, so searching "Mehl" or "brašno" finds the USDA flour.
+  Future<void> loadSearchNames(AssetBundle bundle) async {
+    final manifest = await AssetManifest.loadFromAssetBundle(bundle);
+    for (final asset in manifest.listAssets().where((a) => RegExp(r'assets/food/search_\w+\.json$').hasMatch(a))) {
+      for (final entry in jsonDecode(await bundle.loadString(asset)) as List) {
+        final search = entry['search'] as String;
+        for (final name in entry['names'] as List) {
+          searchNames[foldText((name as String).trim())] = search;
+        }
+      }
+    }
+  }
+
+  /// The English words for local names matching [query], exact matches first.
+  List<String> _translatedQueries(String query) {
+    final folded = foldText(query.trim());
+    if (folded.length < 2) return const [];
+    return <String>{
+      ?searchNames[folded],
+      if (folded.length >= 3)
+        for (final MapEntry(:key, :value) in searchNames.entries)
+          if (key.startsWith(folded)) value,
+    }.take(4).toList();
+  }
+
   /// Foods on this device matching [query]; the ones already used in recipes come first, the most used on top.
   Future<List<FoodSummary>> searchLocal(String query, {int limit = 25, Map<String, int>? uses}) async {
     final used = uses ?? await db.foodUseCounts();
+    final queries = [query, ..._translatedQueries(query)];
     final rows = {
-      for (final row in [
-        if (used.isNotEmpty) ...await db.searchFoodRows(query, limit: 300, keys: used.keys.toSet()),
-        ...await db.searchFoodRows(query, limit: 300),
-      ])
-        row.key: row,
+      for (final q in queries)
+        for (final row in [
+          if (used.isNotEmpty) ...await db.searchFoodRows(q, limit: 300, keys: used.keys.toSet()),
+          ...await db.searchFoodRows(q, limit: q == query ? 300 : 20),
+        ])
+          row.key: row,
     }.values;
     double score(FoodRow row) =>
-        searchScore(query, row.name, hasPortions: row.portions != '[]') + (row.source == FoodSource.user.id ? 30 : 0);
+        queries.map((q) => searchScore(q, row.name, hasPortions: row.portions != '[]')).reduce(max) +
+        (row.source == FoodSource.user.id ? 30 : 0);
     final scored = [for (final row in rows) (row, used[row.key] ?? 0, score(row))]
       ..sort((a, b) {
         final byUse = b.$2.compareTo(a.$2);
