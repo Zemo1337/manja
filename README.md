@@ -21,6 +21,7 @@ wheel until the round is over. No account, no ads, no tracking: everything stays
 - **History**: what you ate and when, with search and dates.
 - **Cookbook PDF**: print or share your recipes in three layouts.
 - **Backup & move**: export everything to one `.manja` file and import it on another device.
+- **Languages**: English, German and Bosnian; the app follows the phone or a language chosen in Settings.
 - Light and dark mode, unit converter, and more.
 
 ## Install
@@ -99,6 +100,21 @@ packages/
 ```
 
 Each package has its own tests: `cd packages/<name> && dart test`.
+
+## Translations
+
+The app's texts live in `lib/l10n/app_<language>.arb` (Flutter's [ARB format](https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization)).
+To add a language:
+
+1. Copy `lib/l10n/app_en.arb` to `app_<code>.arb` (e.g. `app_fr.arb`), set `"@@locale"` and translate the texts.
+   The `@` entries in the English file describe where each text appears. Keep `{placeholders}` as they are, and
+   fill the plural forms your language needs (`one`, `few`, `many`, `other`).
+2. Optionally add `assets/food/search_<code>.json` with local names of common foods and the English words that find
+   them in the built-in USDA data, so searching "farine" finds the wheat flour. See `search_de.json` for the format.
+3. Run `flutter gen-l10n` and `flutter test`. The new language appears in Settings → Appearance by itself.
+
+The VS Code extension [i18n Ally](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally) shows all
+languages side by side and points out missing texts.
 
 ## Contributing
 
