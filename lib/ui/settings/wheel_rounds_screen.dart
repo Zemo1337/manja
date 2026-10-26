@@ -60,7 +60,7 @@ class _WheelRoundsScreenState extends State<WheelRoundsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Text(l.roundsResetEvery),
+                        Text(l.roundsResetEvery(s.resetDays)),
                         IconButton(
                           tooltip: l.roundsFewerDays,
                           onPressed: s.resetDays > 1 ? () => _change(s.mode, s.resetDays - 1) : null,

@@ -2830,11 +2830,11 @@ abstract class AppLocalizations {
   /// **'Put eaten dishes back on the wheel'**
   String get roundsPutBack;
 
-  /// Text before the number of days: "Reset every [3] days".
+  /// Text before the number of days in "Reset every [7] days"; may change with the number.
   ///
   /// In en, this message translates to:
-  /// **'Reset every'**
-  String get roundsResetEvery;
+  /// **'{count, plural, =1{Reset every} other{Reset every}}'**
+  String roundsResetEvery(int count);
 
   /// Tooltip.
   ///

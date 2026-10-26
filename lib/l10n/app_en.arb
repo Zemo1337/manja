@@ -2234,9 +2234,14 @@
   "@roundsPutBack": {
     "description": "Section title."
   },
-  "roundsResetEvery": "Reset every",
+  "roundsResetEvery": "{count, plural, =1{Reset every} other{Reset every}}",
   "@roundsResetEvery": {
-    "description": "Text before the number of days: \"Reset every [3] days\"."
+    "description": "Text before the number of days in \"Reset every [7] days\"; may change with the number.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "roundsFewerDays": "Fewer days",
   "@roundsFewerDays": {

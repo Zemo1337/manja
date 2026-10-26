@@ -603,7 +603,7 @@ class AppLocalizationsBs extends AppLocalizations {
 
   @override
   String get recipeImportHint =>
-      'Radi s većinom stranica s receptima. Prije čuvanja možeš sve provjeriti i promijeniti.';
+      'Radi s većinom stranica s receptima. Prije spremanja možeš sve provjeriti i promijeniti.';
 
   @override
   String get recipeImportTimeout => 'Stranica se nije učitala na vrijeme.';
@@ -756,7 +756,7 @@ class AppLocalizationsBs extends AppLocalizations {
   String get wheelSpinAgain => 'Zavrti ponovo';
 
   @override
-  String get wheelLetsCook => 'Idemo kuhati';
+  String get wheelLetsCook => 'Kuhajmo to';
 
   @override
   String get wheelFilters => 'Filteri';
@@ -938,7 +938,7 @@ class AppLocalizationsBs extends AppLocalizations {
 
   @override
   String get pantryStaples =>
-      'So,Biber,Ulje,Brašno,Šećer,Jaja,Mlijeko,Puter,Luk,Bijeli luk,Riža';
+      'So,Biber,Ulje,Brašno,Šećer,Jaja,Mlijeko,Maslac,Luk,Bijeli luk,Riža';
 
   @override
   String get pantryInTheMood => 'Danas mi se jede';
@@ -994,7 +994,7 @@ class AppLocalizationsBs extends AppLocalizations {
   }
 
   @override
-  String get nutrientEnergy => 'Energetska vrijednost';
+  String get nutrientEnergy => 'Energ. vrijednost';
 
   @override
   String get nutrientProtein => 'Bjelančevine';
@@ -1082,7 +1082,7 @@ class AppLocalizationsBs extends AppLocalizations {
   String get nutritionBasisPortion => 'Porcija';
 
   @override
-  String get nutritionBasisCustom => 'Vlastito';
+  String get nutritionBasisCustom => 'Prilagođeno';
 
   @override
   String get nutritionAmount => 'Količina';
@@ -1536,7 +1536,7 @@ class AppLocalizationsBs extends AppLocalizations {
   String get converterPowderedSugar => 'Šećer u prahu';
 
   @override
-  String get converterButter => 'Puter';
+  String get converterButter => 'Maslac';
 
   @override
   String get converterWater => 'Voda';
@@ -1863,7 +1863,16 @@ class AppLocalizationsBs extends AppLocalizations {
   String get roundsPutBack => 'Vrati pojedena jela na kolo';
 
   @override
-  String get roundsResetEvery => 'Novi krug svakih';
+  String roundsResetEvery(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Novi krug nakon',
+      few: 'Novi krug nakon',
+      one: 'Novi krug nakon',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get roundsFewerDays => 'Manje dana';
@@ -1878,7 +1887,7 @@ class AppLocalizationsBs extends AppLocalizations {
       locale: localeName,
       other: 'dana',
       few: 'dana',
-      one: 'dan',
+      one: 'dana',
     );
     return '$_temp0';
   }

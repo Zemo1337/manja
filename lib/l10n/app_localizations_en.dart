@@ -1826,7 +1826,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roundsPutBack => 'Put eaten dishes back on the wheel';
 
   @override
-  String get roundsResetEvery => 'Reset every';
+  String roundsResetEvery(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reset every',
+      one: 'Reset every',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get roundsFewerDays => 'Fewer days';

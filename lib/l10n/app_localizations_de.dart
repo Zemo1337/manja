@@ -740,7 +740,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get wheelSpinAgain => 'Nochmal drehen';
 
   @override
-  String get wheelLetsCook => 'Wird gekocht';
+  String get wheelLetsCook => 'Kochen wir es';
 
   @override
   String get wheelFilters => 'Filter';
@@ -1064,7 +1064,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nutritionBasisPortion => 'Portion';
 
   @override
-  String get nutritionBasisCustom => 'Eigene';
+  String get nutritionBasisCustom => 'Eigene Menge';
 
   @override
   String get nutritionAmount => 'Menge';
@@ -1838,7 +1838,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roundsPutBack => 'Gegessene Gerichte zurück aufs Rad';
 
   @override
-  String get roundsResetEvery => 'Neue Runde alle';
+  String roundsResetEvery(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Neue Runde nach',
+      one: 'Neue Runde nach',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get roundsFewerDays => 'Weniger Tage';
@@ -1851,7 +1859,7 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Tage',
+      other: 'Tagen',
       one: 'Tag',
     );
     return '$_temp0';
