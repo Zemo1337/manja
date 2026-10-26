@@ -10,6 +10,7 @@ import 'package:manja/data/nutrition_repository.dart';
 import 'package:manja/data/photo_store.dart';
 import 'package:manja/data/profile_backup.dart';
 import 'package:manja/domain/wheel_service.dart';
+import 'package:manja/l10n/l10n.dart';
 import 'package:manja/ui/settings/tags_screen.dart';
 
 AppDatabase _memory() {
@@ -56,7 +57,7 @@ void main() {
     addTearDown(() => dir.deleteSync(recursive: true));
     final file = File('${dir.path}/manja.sqlite');
     final v8 = AppDatabase(NativeDatabase(file));
-    await v8.customStatement('DELETE FROM tags WHERE kind IS NOT NULL');
+    await v8.customStatement("DELETE FROM tags WHERE kind = 'ingredient'");
     await v8.customStatement('ALTER TABLE tags DROP COLUMN kind');
     await v8.customStatement("INSERT INTO tags (name, position) VALUES ('ingredient', 9)");
     await v8.customStatement('PRAGMA user_version = 7');
@@ -67,7 +68,7 @@ void main() {
     final tags = await upgraded.allTags();
     expect(
       [for (final t in tags) (t.name, t.kind)],
-      [for (final name in defaultTags) (name, null), ('ingredient', TagKind.ingredient)],
+      [for (final kind in TagKind.courses) (englishTagNames[kind], kind), ('ingredient', TagKind.ingredient)],
     );
   });
 
@@ -105,5 +106,22 @@ void main() {
       expect(builtIn.name, replace ? 'Basics' : 'Ingredient');
       expect((await pc.allTags()).where((t) => t.name == 'Basics'), hasLength(replace ? 1 : 0));
     }
+  });
+
+  test('a backup from a phone in another language uses the built-in tags already there', () async {
+    final phone = _memory();
+    final main = (await phone.tagOfKind(TagKind.main))!;
+    await phone.saveRecipe(RecipeDraft(name: 'Sarma', portions: 4, tagIds: [main.id]));
+    final bytes = await ProfileBackup(phone, _photos()).export();
+
+    final german = AppDatabase(
+      DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
+      builtInTagNames(lookupAppLocalizations(const Locale('de'))),
+    );
+    addTearDown(german.close);
+    await ProfileBackup(german, _photos()).import(bytes, replace: false);
+    final sarma = (await german.allRecipes()).single;
+    expect([for (final t in await german.tagsOf(sarma.id)) t.name], ['Hauptgericht']);
+    expect(await german.tagByName('Main'), isNull, reason: 'no English duplicate');
   });
 }

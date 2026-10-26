@@ -126,7 +126,7 @@ class _TagsScreenState extends State<TagsScreen> {
                           icon: const Icon(Icons.edit_outlined),
                           onPressed: () => _rename(t),
                         ),
-                        if (t.kind == null)
+                        if (t.kind != TagKind.ingredient)
                           IconButton(
                             tooltip: l.tagsDelete,
                             icon: const Icon(Icons.delete_outline),

@@ -2145,4 +2145,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get aboutTrademark =>
       'Der Name „Manja“ und das Logo fallen nicht unter die Lizenz.';
+
+  @override
+  String get tagNameMain => 'Hauptgericht';
+
+  @override
+  String get tagNameSoup => 'Suppe';
+
+  @override
+  String get tagNameSide => 'Beilage & Salat';
+
+  @override
+  String get tagNameBreakfast => 'Frühstück';
+
+  @override
+  String get tagNameDessert => 'Dessert';
+
+  @override
+  String get tagNameSnack => 'Snack';
+
+  @override
+  String get tagNameIngredient => 'Zutat';
 }

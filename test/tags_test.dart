@@ -11,6 +11,7 @@ import 'package:manja/data/photo_store.dart';
 import 'package:manja/data/recipe_importer.dart';
 import 'package:manja/domain/tag_matching.dart';
 import 'package:manja/domain/wheel_service.dart';
+import 'package:manja/l10n/l10n.dart';
 import 'package:manja/main.dart';
 import 'package:manja/ui/recipes/recipe_edit_screen.dart';
 import 'package:manja/ui/settings/tags_screen.dart';
@@ -55,7 +56,11 @@ void main() {
 
       await db.renameTag(quick, 'Fast');
       final tags = await db.allTags();
-      await db.reorderTags([quick, for (final t in tags) if (t.id != quick) t.id]);
+      await db.reorderTags([
+        quick,
+        for (final t in tags)
+          if (t.id != quick) t.id,
+      ]);
       expect((await db.allTags()).first.name, 'Fast');
 
       await db.deleteTag(quick);
@@ -72,13 +77,46 @@ void main() {
     });
 
     test('site categories map to the built-in tags in English, Croatian and German', () {
-      expect(matchTagNames(['Kolači'], defaultTags), ['Dessert']);
-      expect(matchTagNames(['Juhe i variva'], defaultTags), isEmpty, reason: 'only whole category names count');
-      expect(matchTagNames(['Juhe', 'Glavna jela'], defaultTags), containsAll(['Soup', 'Main']));
-      expect(matchTagNames(['Main Course, Dinner'], defaultTags), ['Main']);
-      expect(matchTagNames(['Nachspeise'], defaultTags), ['Dessert']);
-      expect(matchTagNames(['Grill season'], [...defaultTags, 'Grill season']), ['Grill season']);
-      expect(matchTagNames(['Dessert'], ['Main']), isEmpty, reason: 'a deleted tag is not brought back');
+      final german = [
+        for (final (i, kind) in TagKind.courses.indexed)
+          Tag(
+            id: i,
+            name: ['Hauptgericht', 'Suppe', 'Beilage', 'Frühstück', 'Süßes', 'Snack'][i],
+            position: i,
+            kind: kind,
+          ),
+        const Tag(id: 9, name: 'Grill season', position: 9),
+      ];
+      List<String> match(List<String> categories, [List<Tag>? tags]) => [
+        for (final t in matchTags(categories, tags ?? german)) t.name,
+      ];
+      expect(match(['Kolači']), ['Süßes'], reason: 'by kind, whatever the tag is called');
+      expect(match(['Juhe i variva']), isEmpty, reason: 'only whole category names count');
+      expect(match(['Juhe', 'Glavna jela']), containsAll(['Suppe', 'Hauptgericht']));
+      expect(match(['Main Course, Dinner']), ['Hauptgericht']);
+      expect(match(['Nachspeise']), ['Süßes']);
+      expect(match(['grill season']), ['Grill season']);
+      expect(match(['Dessert'], [german.first]), isEmpty, reason: 'a deleted tag is not brought back');
+    });
+
+    test('a new database names the built-in tags in the given language', () async {
+      final db = AppDatabase(
+        DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
+        builtInTagNames(lookupAppLocalizations(const Locale('bs'))),
+      );
+      addTearDown(db.close);
+      expect(
+        [for (final t in await db.allTags()) (t.name, t.kind)],
+        [
+          ('Glavno jelo', TagKind.main),
+          ('Supa', TagKind.soup),
+          ('Prilog i salata', TagKind.side),
+          ('Doručak', TagKind.breakfast),
+          ('Desert', TagKind.dessert),
+          ('Užina', TagKind.snack),
+          ('Sastojak', TagKind.ingredient),
+        ],
+      );
     });
   });
 

@@ -529,5 +529,12 @@
   "pdfFiber": "vlakna",
   "aboutLicense": "Slobodan softver pod licencom GNU Affero General Public License v3.0.",
   "aboutSource": "Izvorni kod: {url}",
-  "aboutTrademark": "Naziv „Manja“ i logo nisu obuhvaćeni licencom."
+  "aboutTrademark": "Naziv „Manja“ i logo nisu obuhvaćeni licencom.",
+  "tagNameMain": "Glavno jelo",
+  "tagNameSoup": "Supa",
+  "tagNameSide": "Prilog i salata",
+  "tagNameBreakfast": "Doručak",
+  "tagNameDessert": "Desert",
+  "tagNameSnack": "Užina",
+  "tagNameIngredient": "Sastojak"
 }

@@ -2631,5 +2631,33 @@
   "aboutTrademark": "The name \"Manja\" and its logo are not covered by the license.",
   "@aboutTrademark": {
     "description": "About page."
+  },
+  "tagNameMain": "Main",
+  "@tagNameMain": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameSoup": "Soup",
+  "@tagNameSoup": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameSide": "Side or salad",
+  "@tagNameSide": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameBreakfast": "Breakfast",
+  "@tagNameBreakfast": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameDessert": "Dessert",
+  "@tagNameDessert": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameSnack": "Snack",
+  "@tagNameSnack": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
+  },
+  "tagNameIngredient": "Ingredient",
+  "@tagNameIngredient": {
+    "description": "Name of a built-in tag on a new install; users can rename it."
   }
 }

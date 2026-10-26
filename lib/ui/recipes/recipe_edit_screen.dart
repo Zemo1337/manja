@@ -254,12 +254,13 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     if (widget.existing case final existing?) {
       selected = {for (final t in existing.tags) t.id};
     } else {
-      final names = matchTagNames(widget.template?.categories ?? const [], [for (final t in tags) t.name]);
-      final wanted = names.isEmpty ? {defaultTags.first.toLowerCase()} : {for (final n in names) n.toLowerCase()};
-      selected = {
-        for (final t in tags)
-          if (wanted.contains(t.name.toLowerCase())) t.id,
-      };
+      final matched = matchTags(widget.template?.categories ?? const [], tags);
+      selected = matched.isEmpty
+          ? {
+              for (final t in tags)
+                if (t.kind == TagKind.main) t.id,
+            }
+          : {for (final t in matched) t.id};
     }
     setState(() {
       _tags = tags;

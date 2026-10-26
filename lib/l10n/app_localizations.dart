@@ -3279,6 +3279,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The name \"Manja\" and its logo are not covered by the license.'**
   String get aboutTrademark;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get tagNameMain;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Soup'**
+  String get tagNameSoup;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Side or salad'**
+  String get tagNameSide;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get tagNameBreakfast;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Dessert'**
+  String get tagNameDessert;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Snack'**
+  String get tagNameSnack;
+
+  /// Name of a built-in tag on a new install; users can rename it.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient'**
+  String get tagNameIngredient;
 }
 
 class _AppLocalizationsDelegate

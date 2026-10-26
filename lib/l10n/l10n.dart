@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:nutrition_core/nutrition_core.dart' show CookingUnit;
 
+import '../data/database.dart' show TagKind;
 import 'app_localizations.dart';
 
 export 'app_localizations.dart';
@@ -18,6 +19,17 @@ AppLocalizations appLocalizationsNow() {
   final supported = AppLocalizations.supportedLocales.any((l) => l.languageCode == code);
   return lookupAppLocalizations(Locale(supported ? code! : 'en'));
 }
+
+/// The built-in tag names in a language, by tag kind, for a new database.
+Map<String, String> builtInTagNames(AppLocalizations l) => {
+  TagKind.main: l.tagNameMain,
+  TagKind.soup: l.tagNameSoup,
+  TagKind.side: l.tagNameSide,
+  TagKind.breakfast: l.tagNameBreakfast,
+  TagKind.dessert: l.tagNameDessert,
+  TagKind.snack: l.tagNameSnack,
+  TagKind.ingredient: l.tagNameIngredient,
+};
 
 extension CookingUnitL10n on CookingUnit {
   /// The short unit written after [amount], e.g. "2 tbsp" or "2 EL".

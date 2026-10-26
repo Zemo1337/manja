@@ -53,12 +53,34 @@ class RecipeTags extends Table {
   Set<Column> get primaryKey => {recipeId, tagId};
 }
 
-const defaultTags = ['Main', 'Soup', 'Side or salad', 'Breakfast', 'Dessert', 'Snack'];
-
 abstract final class TagKind {
+  static const main = 'main';
+  static const soup = 'soup';
+  static const side = 'side';
+  static const breakfast = 'breakfast';
+  static const dessert = 'dessert';
+  static const snack = 'snack';
+
+  /// The course tags a new install starts with, in order; they can be renamed and deleted.
+  static const courses = [main, soup, side, breakfast, dessert, snack];
+
   /// Recipes such as a dough or a bun that other recipes use as an ingredient; left off the wheel unless chosen.
+  /// It can be renamed but not deleted.
   static const ingredient = 'ingredient';
 }
+
+/// The names of the built-in tags by kind; a new install gets them in the phone's language.
+const englishTagNames = {
+  TagKind.main: 'Main',
+  TagKind.soup: 'Soup',
+  TagKind.side: 'Side or salad',
+  TagKind.breakfast: 'Breakfast',
+  TagKind.dessert: 'Dessert',
+  TagKind.snack: 'Snack',
+  TagKind.ingredient: 'Ingredient',
+};
+
+final defaultTags = [for (final kind in TagKind.courses) englishTagNames[kind]!];
 
 @DataClassName('FoodRow')
 class Foods extends Table {
@@ -157,10 +179,14 @@ class MealLogEntry {
 
 @DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeSteps, MealLogs, AppSettings, Foods, PantryItems, Tags, RecipeTags])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'manja'));
+  AppDatabase([QueryExecutor? executor, this.tagNames = englishTagNames])
+    : super(executor ?? driftDatabase(name: 'manja'));
+
+  /// Names for the built-in tags of a new database, by [TagKind].
+  final Map<String, String> tagNames;
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -188,6 +214,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 8) {
             if (from >= 6) await m.addColumn(tags, tags.kind);
             await _seedIngredientTag();
+          }
+          if (from < 9 && from >= 6) {
+            for (final kind in TagKind.courses) {
+              await (update(tags)..where((t) => t.kind.isNull() & t.name.lower().equals(englishTagNames[kind]!.toLowerCase())))
+                  .write(TagsCompanion(kind: Value(kind)));
+            }
           }
         },
         beforeOpen: (details) async {
@@ -390,8 +422,9 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> _seedTags() async {
     int? main;
-    for (final (i, name) in defaultTags.indexed) {
-      final id = await into(tags).insert(TagsCompanion.insert(name: name, position: Value(i)));
+    for (final (i, kind) in TagKind.courses.indexed) {
+      final name = tagNames[kind] ?? englishTagNames[kind]!;
+      final id = await into(tags).insert(TagsCompanion.insert(name: name, position: Value(i), kind: Value(kind)));
       main ??= id;
     }
     return main!;
@@ -399,11 +432,12 @@ class AppDatabase extends _$AppDatabase {
 
   /// Turns an existing tag named "Ingredient" into the built-in one, or adds it.
   Future<void> _seedIngredientTag() async {
-    final existing = await tagByName('Ingredient');
+    final name = tagNames[TagKind.ingredient] ?? englishTagNames[TagKind.ingredient]!;
+    final existing = await tagByName(name) ?? await tagByName(englishTagNames[TagKind.ingredient]!);
     if (existing != null) {
       await (update(tags)..where((t) => t.id.equals(existing.id))).write(const TagsCompanion(kind: Value(TagKind.ingredient)));
     } else {
-      final id = await addTag('Ingredient');
+      final id = await addTag(name);
       await (update(tags)..where((t) => t.id.equals(id))).write(const TagsCompanion(kind: Value(TagKind.ingredient)));
     }
   }

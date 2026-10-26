@@ -529,5 +529,12 @@
   "pdfFiber": "Ballaststoffe",
   "aboutLicense": "Freie Software unter der GNU Affero General Public License v3.0.",
   "aboutSource": "Quellcode: {url}",
-  "aboutTrademark": "Der Name „Manja“ und das Logo fallen nicht unter die Lizenz."
+  "aboutTrademark": "Der Name „Manja“ und das Logo fallen nicht unter die Lizenz.",
+  "tagNameMain": "Hauptgericht",
+  "tagNameSoup": "Suppe",
+  "tagNameSide": "Beilage & Salat",
+  "tagNameBreakfast": "Frühstück",
+  "tagNameDessert": "Dessert",
+  "tagNameSnack": "Snack",
+  "tagNameIngredient": "Zutat"
 }

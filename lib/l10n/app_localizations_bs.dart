@@ -2174,4 +2174,25 @@ class AppLocalizationsBs extends AppLocalizations {
 
   @override
   String get aboutTrademark => 'Naziv „Manja“ i logo nisu obuhvaćeni licencom.';
+
+  @override
+  String get tagNameMain => 'Glavno jelo';
+
+  @override
+  String get tagNameSoup => 'Supa';
+
+  @override
+  String get tagNameSide => 'Prilog i salata';
+
+  @override
+  String get tagNameBreakfast => 'Doručak';
+
+  @override
+  String get tagNameDessert => 'Desert';
+
+  @override
+  String get tagNameSnack => 'Užina';
+
+  @override
+  String get tagNameIngredient => 'Sastojak';
 }

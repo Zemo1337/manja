@@ -15,7 +15,7 @@ import 'data/food_bundle.dart';
 import 'data/nutrition_repository.dart';
 import 'data/photo_store.dart';
 import 'domain/wheel_service.dart';
-import 'l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
 import 'ui/app_theme.dart';
 import 'ui/settings/about.dart';
 import 'ui/home_shell.dart';
@@ -23,11 +23,18 @@ import 'ui/home_shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerAppLicenses();
-  final db = AppDatabase();
+  final phone = basicLocaleListResolution(
+    WidgetsBinding.instance.platformDispatcher.locales,
+    AppLocalizations.supportedLocales,
+  );
+  final db = AppDatabase(null, builtInTagNames(lookupAppLocalizations(phone)));
   final photos = PhotoStore(await getApplicationSupportDirectory());
   final nutrition = NutritionRepository(
     db,
-    remotes: {FoodSource.usda: UsdaSource(apiKey: usdaApiKey), FoodSource.openFoodFacts: OffSource()},
+    remotes: {
+      FoodSource.usda: UsdaSource(apiKey: usdaApiKey),
+      FoodSource.openFoodFacts: OffSource(),
+    },
     buildApiKey: usdaApiKey,
   );
   await nutrition.loadApiKey();

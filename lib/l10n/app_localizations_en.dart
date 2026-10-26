@@ -2133,4 +2133,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aboutTrademark =>
       'The name \"Manja\" and its logo are not covered by the license.';
+
+  @override
+  String get tagNameMain => 'Main';
+
+  @override
+  String get tagNameSoup => 'Soup';
+
+  @override
+  String get tagNameSide => 'Side or salad';
+
+  @override
+  String get tagNameBreakfast => 'Breakfast';
+
+  @override
+  String get tagNameDessert => 'Dessert';
+
+  @override
+  String get tagNameSnack => 'Snack';
+
+  @override
+  String get tagNameIngredient => 'Ingredient';
 }
