@@ -30,10 +30,13 @@ Future<bool> _saveProfile(String fileName, Uint8List bytes) async =>
     await FilePicker.saveFile(fileName: fileName, bytes: bytes, dialogTitle: _l10n.backupSaveTitle) != null;
 
 class BackupScreen extends StatefulWidget {
-  const BackupScreen({super.key, this.pick = _pickProfile, this.save = _saveProfile});
+  const BackupScreen({super.key, this.pick = _pickProfile, this.save = _saveProfile, this.opened});
 
   final PickProfile pick;
   final SaveProfile save;
+
+  /// A profile opened with Manja from another app; the screen asks right away how to import it.
+  final List<int>? opened;
 
   @override
   State<BackupScreen> createState() => _BackupScreenState();
@@ -43,6 +46,14 @@ enum _ImportMode { merge, replace }
 
 class _BackupScreenState extends State<BackupScreen> {
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.opened case final bytes?) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _importBytes(bytes));
+    }
+  }
 
   bool get _canShare => Platform.isAndroid || Platform.isIOS;
 
@@ -92,13 +103,15 @@ class _BackupScreenState extends State<BackupScreen> {
   });
 
   Future<void> _import() async {
+    final picked = await widget.pick();
+    if (picked != null) await _importBytes(picked);
+  }
+
+  Future<void> _importBytes(List<int> bytes) async {
+    if (!mounted) return;
     final backup = _backup;
-    final List<int> bytes;
     final ProfileSummary summary;
     try {
-      final picked = await widget.pick();
-      if (picked == null) return;
-      bytes = picked;
       summary = backup.read(bytes);
     } on FormatException catch (e) {
       _show((l) => _message(l, e));

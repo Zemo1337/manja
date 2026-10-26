@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 
 import 'history/history_screen.dart';
+import 'opened_files.dart';
 import 'recipes/recipe_list_screen.dart';
+import 'settings/backup_screen.dart';
 import 'settings/settings_screen.dart';
 import 'wheel/wheel_screen.dart';
 
@@ -16,6 +20,26 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    OpenedFiles.listen(_openFile);
+  }
+
+  Future<void> _openFile(String path) async {
+    final file = File(path);
+    final List<int> bytes;
+    try {
+      bytes = await file.readAsBytes();
+      await file.delete();
+    } on FileSystemException {
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _index = 3);
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => BackupScreen(opened: bytes)));
+  }
 
   @override
   Widget build(BuildContext context) {
