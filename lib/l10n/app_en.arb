@@ -225,5 +225,2411 @@
     }
   },
   "languageTitle": "Language",
-  "languagePhone": "Same as the phone"
+  "languagePhone": "Same as the phone",
+  "recipeFoodPortion": "1 portion = {grams} g",
+  "@recipeFoodPortion": {
+    "description": "Under a recipe used as an ingredient: weight of one portion, from the finished weight.",
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeFoodPortionEstimate": "1 portion ≈ {grams} g",
+  "@recipeFoodPortionEstimate": {
+    "description": "Same, estimated from the raw ingredients.",
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeFoodWeightUnknown": "Weight of a portion unknown",
+  "@recipeFoodWeightUnknown": {
+    "description": "A recipe used as an ingredient whose portion weight is unknown."
+  },
+  "recipeEditTitleNew": "New recipe",
+  "@recipeEditTitleNew": {
+    "description": "App bar title when creating a recipe."
+  },
+  "recipeEditTitleEdit": "Edit recipe",
+  "@recipeEditTitleEdit": {
+    "description": "App bar title when editing a recipe."
+  },
+  "recipeSave": "Save",
+  "@recipeSave": {
+    "description": "Button saving the recipe."
+  },
+  "recipeQty": "Qty",
+  "@recipeQty": {
+    "description": "Short label of the narrow ingredient amount field."
+  },
+  "recipeUnit": "Unit",
+  "@recipeUnit": {
+    "description": "Label of the ingredient unit dropdown (narrow)."
+  },
+  "recipeIngredient": "Ingredient",
+  "@recipeIngredient": {
+    "description": "Label of the ingredient name field."
+  },
+  "recipeSuggestionRecipes": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@recipeSuggestionRecipes": {
+    "description": "How many recipes use a suggested ingredient name.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeNewTag": "New tag",
+  "@recipeNewTag": {
+    "description": "Chip that creates a new tag (category)."
+  },
+  "recipeLinkNutrition": "Link nutrition",
+  "@recipeLinkNutrition": {
+    "description": "Button linking an ingredient to a nutrition database entry."
+  },
+  "recipeLinkedRecipeDeleted": "Linked recipe (deleted)",
+  "@recipeLinkedRecipeDeleted": {
+    "description": "Shown when the recipe linked as an ingredient was deleted."
+  },
+  "recipeLinkedIngredientMissing": "Linked ingredient (not on this device)",
+  "@recipeLinkedIngredientMissing": {
+    "description": "Shown when the linked food is not in the local database."
+  },
+  "recipePortionWeightUnknown": "The weight of a portion is unknown. Link the ingredients of \"{name}\" or enter its finished weight.",
+  "@recipePortionWeightUnknown": {
+    "description": "Warning when a recipe used as ingredient has no known portion weight.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeNoGramWeight": "No gram weight for \"{unit}\". Use g or ml, or add a portion to the ingredient.",
+  "@recipeNoGramWeight": {
+    "description": "Warning when the chosen unit cannot be converted to grams for the linked food.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeChangeLink": "Change",
+  "@recipeChangeLink": {
+    "description": "Tooltip: pick a different linked food."
+  },
+  "recipeUnlink": "Unlink",
+  "@recipeUnlink": {
+    "description": "Tooltip: remove the nutrition link of an ingredient."
+  },
+  "recipePhotoLoadError": "Could not load the photo: {error}",
+  "@recipePhotoLoadError": {
+    "description": "Snackbar when picking a photo failed.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeCamera": "Camera",
+  "@recipeCamera": {
+    "description": "Button taking a recipe photo with the camera."
+  },
+  "recipeGallery": "Gallery",
+  "@recipeGallery": {
+    "description": "Button picking a recipe photo from the gallery."
+  },
+  "recipeChoosePhoto": "Choose photo",
+  "@recipeChoosePhoto": {
+    "description": "Button picking a recipe photo when there is no camera."
+  },
+  "recipeRemove": "Remove",
+  "@recipeRemove": {
+    "description": "Button/tooltip removing a photo, ingredient, heading or step."
+  },
+  "recipeRequired": "Required",
+  "@recipeRequired": {
+    "description": "Validation error for an empty required field."
+  },
+  "recipeWholeMinutes": "Whole minutes",
+  "@recipeWholeMinutes": {
+    "description": "Validation error for a minutes field."
+  },
+  "recipeName": "Name",
+  "@recipeName": {
+    "description": "Label of the recipe name field."
+  },
+  "recipePortions": "Portions",
+  "@recipePortions": {
+    "description": "Label of the portions field and the portions stepper."
+  },
+  "recipeAtLeastOne": "At least 1",
+  "@recipeAtLeastOne": {
+    "description": "Validation error for the portions field."
+  },
+  "recipePrepMinutes": "Prep (min)",
+  "@recipePrepMinutes": {
+    "description": "Label of the narrow preparation time field (a third of the screen width)."
+  },
+  "recipeCookMinutes": "Cook (min)",
+  "@recipeCookMinutes": {
+    "description": "Label of the narrow cooking time field (a third of the screen width)."
+  },
+  "recipeTags": "Tags",
+  "@recipeTags": {
+    "description": "Section title for the recipe's tags (categories)."
+  },
+  "recipeIngredients": "Ingredients",
+  "@recipeIngredients": {
+    "description": "Section title for the ingredient list; also tooltip opening the ingredients screen."
+  },
+  "recipeAddIngredient": "Add ingredient",
+  "@recipeAddIngredient": {
+    "description": "Button adding an ingredient row."
+  },
+  "recipeAddHeading": "Add heading",
+  "@recipeAddHeading": {
+    "description": "Button adding an ingredient section heading."
+  },
+  "recipeFinishedWeight": "Weight of the finished dish (optional)",
+  "@recipeFinishedWeight": {
+    "description": "Label of the finished weight field."
+  },
+  "recipeFinishedWeightHelp": "Cooking changes the weight. Weigh the dish for accurate per 100 g values.",
+  "@recipeFinishedWeightHelp": {
+    "description": "Helper text of the finished weight field."
+  },
+  "recipeFinishedWeightInvalid": "Grams, e.g. 850",
+  "@recipeFinishedWeightInvalid": {
+    "description": "Validation error of the finished weight field."
+  },
+  "recipeCookingInfo": "Cooking info",
+  "@recipeCookingInfo": {
+    "description": "Label/section title for free cooking notes."
+  },
+  "recipeCookingInfoHint": "Oven temperature, pan size, tips…",
+  "@recipeCookingInfoHint": {
+    "description": "Hint of the cooking info field."
+  },
+  "recipePreparationSteps": "Preparation steps",
+  "@recipePreparationSteps": {
+    "description": "Section title of the step list in the editor."
+  },
+  "recipeAddStep": "Add step",
+  "@recipeAddStep": {
+    "description": "Button adding a preparation step."
+  },
+  "recipeDragToReorder": "Drag to reorder",
+  "@recipeDragToReorder": {
+    "description": "Semantics label of the drag handle."
+  },
+  "recipeHeading": "Heading",
+  "@recipeHeading": {
+    "description": "Label of an ingredient section heading field."
+  },
+  "recipeHeadingHint": "Dough, Topping, Sauce…",
+  "@recipeHeadingHint": {
+    "description": "Hint with example ingredient section headings."
+  },
+  "recipeDeleteTitle": "Delete recipe?",
+  "@recipeDeleteTitle": {
+    "description": "Title of the delete confirmation dialog."
+  },
+  "recipeDeleteMessage": "\"{name}\" and its meal history will be removed.",
+  "@recipeDeleteMessage": {
+    "description": "Body of the delete confirmation dialog.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeCancel": "Cancel",
+  "@recipeCancel": {
+    "description": "Dialog button."
+  },
+  "recipeDelete": "Delete",
+  "@recipeDelete": {
+    "description": "Dialog button / tooltip deleting the recipe."
+  },
+  "recipeEdit": "Edit",
+  "@recipeEdit": {
+    "description": "Tooltip editing the recipe."
+  },
+  "recipeNotFound": "Recipe not found",
+  "@recipeNotFound": {
+    "description": "Shown when the recipe no longer exists."
+  },
+  "recipePrepChip": "Prep {minutes} min",
+  "@recipePrepChip": {
+    "description": "Chip with the preparation time.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeCookChip": "Cook {minutes} min",
+  "@recipeCookChip": {
+    "description": "Chip with the cooking time.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeNoIngredients": "No ingredients added.",
+  "@recipeNoIngredients": {
+    "description": "Shown when a recipe has no ingredients."
+  },
+  "recipeNutrition": "Nutrition",
+  "@recipeNutrition": {
+    "description": "Section title of the nutrition values."
+  },
+  "recipeSource": "Source: {host}",
+  "@recipeSource": {
+    "description": "Link to the website the recipe was imported from.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "recipePreparation": "Preparation",
+  "@recipePreparation": {
+    "description": "Section title of the steps on the recipe page."
+  },
+  "recipeNoSteps": "No steps added.",
+  "@recipeNoSteps": {
+    "description": "Shown when a recipe has no steps."
+  },
+  "recipeListTitle": "Recipes",
+  "@recipeListTitle": {
+    "description": "Title of the recipe list."
+  },
+  "recipeImportFromLink": "Import from link",
+  "@recipeImportFromLink": {
+    "description": "Tooltip opening the recipe import."
+  },
+  "recipeCookbookPdf": "Cookbook PDF",
+  "@recipeCookbookPdf": {
+    "description": "Tooltip opening the cookbook PDF export."
+  },
+  "recipeUnitConverter": "Unit converter",
+  "@recipeUnitConverter": {
+    "description": "Tooltip opening the unit converter."
+  },
+  "recipeAdd": "Add recipe",
+  "@recipeAdd": {
+    "description": "Button creating a new recipe."
+  },
+  "recipeListEmpty": "No recipes yet. Tap \"Add recipe\" to start.",
+  "@recipeListEmpty": {
+    "description": "Shown when there are no recipes; quotes the add button."
+  },
+  "recipeSearch": "Search recipes",
+  "@recipeSearch": {
+    "description": "Hint of the recipe search bar."
+  },
+  "recipePortionCount": "{count, plural, =1{1 portion} other{{count} portions}}",
+  "@recipePortionCount": {
+    "description": "Number of portions in the recipe list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeTotalMinutes": "{minutes} min",
+  "@recipeTotalMinutes": {
+    "description": "Total time in the recipe list.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeImportTitle": "Import recipe",
+  "@recipeImportTitle": {
+    "description": "Title of the import screen."
+  },
+  "recipeImportUrlLabel": "Link to the recipe",
+  "@recipeImportUrlLabel": {
+    "description": "Label of the URL field."
+  },
+  "recipePaste": "Paste",
+  "@recipePaste": {
+    "description": "Tooltip pasting the link from the clipboard."
+  },
+  "recipeImport": "Import",
+  "@recipeImport": {
+    "description": "Button starting the import."
+  },
+  "recipeImportInvalidUrl": "Enter a link to a recipe page, for example https://www.coolinarika.com/recept/…",
+  "@recipeImportInvalidUrl": {
+    "description": "Error for an empty or invalid link."
+  },
+  "recipeImportBotCheckTimeout": "The site kept checking the browser. Try again later, or copy the recipe by hand.",
+  "@recipeImportBotCheckTimeout": {
+    "description": "Error when the site's bot check never finished."
+  },
+  "recipeImportNoRecipe": "No recipe data found on this page. The site may not publish its recipes in a readable format.",
+  "@recipeImportNoRecipe": {
+    "description": "Error when the page has no recipe data."
+  },
+  "recipeImportReading": "Reading the recipe from {host}…",
+  "@recipeImportReading": {
+    "description": "Progress while loading the page.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeImportReadingPage": "Reading the recipe from the page…",
+  "@recipeImportReadingPage": {
+    "description": "Progress while loading the page when the host is unknown."
+  },
+  "recipeImportChallenge": "The site wants to check that you are a person. Complete the check below.",
+  "@recipeImportChallenge": {
+    "description": "Shown while the site shows a bot check."
+  },
+  "recipeImportPhoto": "Downloading the photo…",
+  "@recipeImportPhoto": {
+    "description": "Progress while downloading the recipe photo."
+  },
+  "recipeImportHint": "Works with most recipe sites. You can check and change everything before saving.",
+  "@recipeImportHint": {
+    "description": "Explanation below the import button."
+  },
+  "recipeImportTimeout": "The page did not load in time.",
+  "@recipeImportTimeout": {
+    "description": "Import error."
+  },
+  "recipeImportUnreachable": "The page could not be reached. Check your internet connection.",
+  "@recipeImportUnreachable": {
+    "description": "Import error."
+  },
+  "recipeImportBlocked": "This site blocks automatic downloads. Import it on your phone, where the page opens in a browser view.",
+  "@recipeImportBlocked": {
+    "description": "Import error when the site refuses the download (desktop/tests)."
+  },
+  "recipeImportHttpError": "The page answered with HTTP {status}.",
+  "@recipeImportHttpError": {
+    "description": "Import error with the HTTP status code.",
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "navWheel": "Wheel",
+  "@navWheel": {
+    "description": "Bottom navigation label of the wheel tab."
+  },
+  "navRecipes": "Recipes",
+  "@navRecipes": {
+    "description": "Bottom navigation label of the recipes tab."
+  },
+  "navHistory": "History",
+  "@navHistory": {
+    "description": "Bottom navigation label of the history tab."
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Bottom navigation label of the settings tab."
+  },
+  "wheelEnjoy": "Enjoy your {recipe}!",
+  "@wheelEnjoy": {
+    "description": "Snackbar after confirming the picked recipe.",
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelResetTitle": "Reset the wheel?",
+  "@wheelResetTitle": {
+    "description": "Title of the dialog confirming a wheel reset."
+  },
+  "wheelResetMessage": "All recipes will be back on the wheel. Your meal history is kept.",
+  "@wheelResetMessage": {
+    "description": "Body of the dialog confirming a wheel reset."
+  },
+  "wheelCancel": "Cancel",
+  "@wheelCancel": {
+    "description": "Cancel button of the wheel reset dialog."
+  },
+  "wheelReset": "Reset",
+  "@wheelReset": {
+    "description": "Confirm button of the wheel reset dialog."
+  },
+  "wheelResetWheel": "Reset wheel",
+  "@wheelResetWheel": {
+    "description": "Tooltip and button that puts all eaten dishes back on the wheel."
+  },
+  "wheelLook": "Wheel look",
+  "@wheelLook": {
+    "description": "Tooltip of the button opening the wheel appearance settings."
+  },
+  "wheelShowAll": "Show all dishes",
+  "@wheelShowAll": {
+    "description": "Button/tooltip that removes the tag or pantry focus from the wheel."
+  },
+  "wheelNoFilterMatch": "No dishes match your filters",
+  "@wheelNoFilterMatch": {
+    "description": "Empty-state title when the filters hide every dish."
+  },
+  "wheelHiddenByFilters": "{count, plural, =1{1 dish is hidden by the filters.} other{{count} dishes are hidden by the filters.}}",
+  "@wheelHiddenByFilters": {
+    "description": "Empty-state message when the filters hide every dish.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelClearFilters": "Clear filters",
+  "@wheelClearFilters": {
+    "description": "Button that switches all wheel filters off."
+  },
+  "wheelNothingTagged": "Nothing tagged {tag}",
+  "@wheelNothingTagged": {
+    "description": "Empty-state title when no recipe has the selected tag.",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelNothingTaggedMessage": "Add the tag to recipes in the recipe editor, or pick another tag.",
+  "@wheelNothingTaggedMessage": {
+    "description": "Empty-state message when no recipe has the selected tag."
+  },
+  "wheelNoRecipes": "No recipes yet",
+  "@wheelNoRecipes": {
+    "description": "Empty-state title when there are no recipes at all."
+  },
+  "wheelNoRecipesMessage": "Add your favourite dishes in the Recipes tab and they will show up here.",
+  "@wheelNoRecipesMessage": {
+    "description": "Empty-state message when there are no recipes at all."
+  },
+  "wheelAllEaten": "You ate everything!",
+  "@wheelAllEaten": {
+    "description": "Title when every dish of this round was eaten."
+  },
+  "wheelAllTagEaten": "All {tag} dishes eaten",
+  "@wheelAllTagEaten": {
+    "description": "Title when every dish with the selected tag was eaten.",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelAllEatenMessage": "Every dish on the wheel has been cooked this round.",
+  "@wheelAllEatenMessage": {
+    "description": "Message when every dish of this round was eaten."
+  },
+  "wheelAllTagEatenMessage": "Every dish tagged {tag} has been cooked this round.",
+  "@wheelAllTagEatenMessage": {
+    "description": "Message when every dish with the selected tag was eaten.",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelCanMakeNow": "{count, plural, =1{1 dish you can make now} other{{count} dishes you can make now}}",
+  "@wheelCanMakeNow": {
+    "description": "Badge above the wheel when it only shows dishes from 'What can I cook?'.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelDishesLeft": "{left} of {total} dishes left",
+  "@wheelDishesLeft": {
+    "description": "Badge above the wheel; may be prefixed with the tag name and ' · '.",
+    "placeholders": {
+      "left": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterUpToKcal": "Up to {kcal} kcal",
+  "@wheelFilterUpToKcal": {
+    "description": "Active-filter summary under the badge, first part.",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterUpToMinutes": "up to {minutes} min",
+  "@wheelFilterUpToMinutes": {
+    "description": "Active-filter summary part, joined with ' · ' after the kcal part (hence lower case).",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterHidden": "{count} hidden",
+  "@wheelFilterHidden": {
+    "description": "Active-filter summary part: number of dishes hidden by the filters.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelSpin": "Spin",
+  "@wheelSpin": {
+    "description": "Button that spins the wheel."
+  },
+  "wheelSpinning": "Spinning…",
+  "@wheelSpinning": {
+    "description": "Spin button text while the wheel spins."
+  },
+  "wheelTodayYouCook": "Today you cook",
+  "@wheelTodayYouCook": {
+    "description": "Label above the picked recipe name."
+  },
+  "wheelSpinAgain": "Spin again",
+  "@wheelSpinAgain": {
+    "description": "Button to spin again after a result."
+  },
+  "wheelLetsCook": "Let's cook it",
+  "@wheelLetsCook": {
+    "description": "Button confirming the picked recipe (logs the meal)."
+  },
+  "wheelFilters": "Filters",
+  "@wheelFilters": {
+    "description": "Tooltip of the filter button and title of the filter sheet."
+  },
+  "wheelAllTags": "All",
+  "@wheelAllTags": {
+    "description": "Tag chip that shows dishes of every tag."
+  },
+  "wheelFilterKcalOn": "Up to {kcal} kcal per portion",
+  "@wheelFilterKcalOn": {
+    "description": "Calorie filter switch title when on.",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterKcalOff": "Calories per portion",
+  "@wheelFilterKcalOff": {
+    "description": "Calorie filter switch title when off."
+  },
+  "wheelFilterKcalHelp": "From the linked ingredients",
+  "@wheelFilterKcalHelp": {
+    "description": "Calorie filter switch subtitle."
+  },
+  "wheelMinutesValue": "{minutes} min",
+  "@wheelMinutesValue": {
+    "description": "Slider value label of the time filter.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterMinutesOn": "Ready in up to {minutes} min",
+  "@wheelFilterMinutesOn": {
+    "description": "Time filter switch title when on.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelFilterMinutesOff": "Total time",
+  "@wheelFilterMinutesOff": {
+    "description": "Time filter switch title when off."
+  },
+  "wheelFilterMinutesHelp": "Prep and cooking together",
+  "@wheelFilterMinutesHelp": {
+    "description": "Time filter switch subtitle."
+  },
+  "wheelFilterUnknown": "Include dishes with unknown values",
+  "@wheelFilterUnknown": {
+    "description": "Filter switch title."
+  },
+  "wheelFilterUnknownHelp": "Recipes without linked ingredients or times stay on the wheel",
+  "@wheelFilterUnknownHelp": {
+    "description": "Filter switch subtitle."
+  },
+  "wheelResetModeWhenEmpty": "When every dish was eaten",
+  "@wheelResetModeWhenEmpty": {
+    "description": "Option: when the wheel refills."
+  },
+  "wheelResetModeAfterDays": "After a number of days",
+  "@wheelResetModeAfterDays": {
+    "description": "Option: when the wheel refills."
+  },
+  "wheelResetModeManual": "Only manually",
+  "@wheelResetModeManual": {
+    "description": "Option: when the wheel refills."
+  },
+  "wheelContentText": "Text",
+  "@wheelContentText": {
+    "description": "What the wheel slices show."
+  },
+  "wheelContentPhoto": "Photo",
+  "@wheelContentPhoto": {
+    "description": "What the wheel slices show."
+  },
+  "wheelContentBoth": "Both",
+  "@wheelContentBoth": {
+    "description": "What the wheel slices show."
+  },
+  "wheelThemeClassic": "Classic",
+  "@wheelThemeClassic": {
+    "description": "Wheel theme name."
+  },
+  "wheelThemePizza": "Pizza",
+  "@wheelThemePizza": {
+    "description": "Wheel theme name (looks like a pizza)."
+  },
+  "wheelThemeBurek": "Burek",
+  "@wheelThemeBurek": {
+    "description": "Wheel theme name (looks like a burek)."
+  },
+  "wheelThemeSacher": "Sachertorte",
+  "@wheelThemeSacher": {
+    "description": "Wheel theme name (looks like a Sachertorte)."
+  },
+  "wheelThemeBaklava": "Baklava",
+  "@wheelThemeBaklava": {
+    "description": "Wheel theme name (looks like baklava)."
+  },
+  "themeManja": "Manja",
+  "@themeManja": {
+    "description": "App colour theme name; the app name, never translated."
+  },
+  "themeManjaDescription": "Paprika, basil and saffron",
+  "@themeManjaDescription": {
+    "description": "Description of the Manja colour theme."
+  },
+  "themeNeutral": "Neutral",
+  "@themeNeutral": {
+    "description": "App colour theme name."
+  },
+  "themeNeutralDescription": "Calm slate and grey",
+  "@themeNeutralDescription": {
+    "description": "Description of the Neutral colour theme."
+  },
+  "themeDev": "Dev",
+  "@themeDev": {
+    "description": "App colour theme name (developer style)."
+  },
+  "themeDevDescription": "Charcoal and yellow, always dark",
+  "@themeDevDescription": {
+    "description": "Description of the Dev colour theme."
+  },
+  "themeBrightnessSystem": "System",
+  "@themeBrightnessSystem": {
+    "description": "Brightness option: follow the system."
+  },
+  "themeBrightnessLight": "Light",
+  "@themeBrightnessLight": {
+    "description": "Brightness option."
+  },
+  "themeBrightnessDark": "Dark",
+  "@themeBrightnessDark": {
+    "description": "Brightness option."
+  },
+  "historyTitle": "History",
+  "@historyTitle": {
+    "description": "Title of the meal history screen."
+  },
+  "historyRangeHelp": "Show meals from",
+  "@historyRangeHelp": {
+    "description": "Header text of the date range picker."
+  },
+  "historyRangeSave": "Show",
+  "@historyRangeSave": {
+    "description": "Confirm button of the date range picker."
+  },
+  "historyRemoved": "{recipe} removed from the history",
+  "@historyRemoved": {
+    "description": "Snackbar after swiping a meal away.",
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "historyUndo": "Undo",
+  "@historyUndo": {
+    "description": "Snackbar action restoring a removed meal."
+  },
+  "historyEmpty": "Nothing cooked yet. Spin the wheel!",
+  "@historyEmpty": {
+    "description": "Shown when the history is empty."
+  },
+  "historyMonthHeader": "{month} · {count, plural, =1{1 meal} other{{count} meals}}",
+  "@historyMonthHeader": {
+    "description": "Month section header, e.g. 'October 2026 · 3 meals'.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historySearchHint": "Search dishes",
+  "@historySearchHint": {
+    "description": "Hint of the history search field."
+  },
+  "historyClearSearch": "Clear search",
+  "@historyClearSearch": {
+    "description": "Tooltip of the clear button in the search field."
+  },
+  "historyPickDates": "Pick dates",
+  "@historyPickDates": {
+    "description": "Tooltip of the date range button."
+  },
+  "historyNoMatch": "No meals match",
+  "@historyNoMatch": {
+    "description": "Summary when the search/date filter matches nothing."
+  },
+  "historyMatchSummary": "{count, plural, =1{1 meal on {date}} other{{count} meals, last on {date}}}",
+  "@historyMatchSummary": {
+    "description": "Summary of the filtered meals; date is the most recent one.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pantryTitle": "What can I cook?",
+  "@pantryTitle": {
+    "description": "Title of the pantry screen and tooltip of the wheel button opening it."
+  },
+  "pantrySpinWith": "Spin with these {count}",
+  "@pantrySpinWith": {
+    "description": "Button putting only the dishes you can make on the wheel.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pantrySwitchToWheel": "Switch to \"On the wheel\" to spin with these",
+  "@pantrySwitchToWheel": {
+    "description": "Disabled spin button text; quotes the pantryOnWheel segment."
+  },
+  "pantryAlwaysAtHome": "Always at home",
+  "@pantryAlwaysAtHome": {
+    "description": "Section title: basics you always have."
+  },
+  "pantryAddBasicHint": "Add a basic, e.g. olive oil",
+  "@pantryAddBasicHint": {
+    "description": "Hint of the always-at-home input."
+  },
+  "pantryAlwaysEmpty": "Add what you always have, like salt, oil or flour.",
+  "@pantryAlwaysEmpty": {
+    "description": "Shown while the always-at-home list is empty."
+  },
+  "pantryStaples": "Salt,Pepper,Oil,Flour,Sugar,Eggs,Milk,Butter,Onion,Garlic,Rice",
+  "@pantryStaples": {
+    "description": "Comma-separated basics suggested as chips (no spaces after the commas); also never suggested as cravings."
+  },
+  "pantryInTheMood": "In the mood for",
+  "@pantryInTheMood": {
+    "description": "Section title: ingredients you feel like today."
+  },
+  "pantryAddCravingHint": "Add an ingredient, e.g. chicken",
+  "@pantryAddCravingHint": {
+    "description": "Hint of the in-the-mood input."
+  },
+  "pantryCravingEmpty": "Optional. Pick what you feel like today to only see dishes with it.",
+  "@pantryCravingEmpty": {
+    "description": "Shown while the in-the-mood list is empty."
+  },
+  "pantryOnWheel": "On the wheel",
+  "@pantryOnWheel": {
+    "description": "Segment: only match dishes currently on the wheel."
+  },
+  "pantryAllRecipes": "All recipes",
+  "@pantryAllRecipes": {
+    "description": "Segment: match all recipes."
+  },
+  "pantryCanMake": "You can make ({count})",
+  "@pantryCanMake": {
+    "description": "Section title with the number of complete matches.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pantryEmptyHint": "Add what you have at home to see which dishes you can make.",
+  "@pantryEmptyHint": {
+    "description": "Shown when nothing is entered yet."
+  },
+  "pantryNothingYet": "Nothing yet with these ingredients.",
+  "@pantryNothingYet": {
+    "description": "Shown when no dish can be made."
+  },
+  "pantryMissingFew": "Missing one or two ({count})",
+  "@pantryMissingFew": {
+    "description": "Section title: dishes missing one or two ingredients.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pantryAdd": "Add",
+  "@pantryAdd": {
+    "description": "Tooltip of the add button in the pantry inputs."
+  },
+  "pantryHaveAll": "{count, plural, other{You have all {count} ingredients}}",
+  "@pantryHaveAll": {
+    "description": "Subtitle of a dish you can make.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pantryMissing": "Missing: {items}",
+  "@pantryMissing": {
+    "description": "Subtitle listing the missing ingredients, comma separated.",
+    "placeholders": {
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "nutrientEnergy": "Energy",
+  "@nutrientEnergy": {
+    "description": "Nutrient name on nutrition tables (EU label wording)."
+  },
+  "nutrientProtein": "Protein",
+  "@nutrientProtein": {
+    "description": "Nutrient name."
+  },
+  "nutrientFat": "Fat",
+  "@nutrientFat": {
+    "description": "Nutrient name."
+  },
+  "nutrientSaturatedFat": "Saturated fat",
+  "@nutrientSaturatedFat": {
+    "description": "Nutrient name; shown indented below fat."
+  },
+  "nutrientCarbohydrate": "Carbohydrate",
+  "@nutrientCarbohydrate": {
+    "description": "Nutrient name."
+  },
+  "nutrientSugars": "Sugars",
+  "@nutrientSugars": {
+    "description": "Nutrient name; shown indented below carbohydrate."
+  },
+  "nutrientFiber": "Fiber",
+  "@nutrientFiber": {
+    "description": "Nutrient name (dietary fibre)."
+  },
+  "nutrientSodium": "Sodium",
+  "@nutrientSodium": {
+    "description": "Nutrient name."
+  },
+  "nutrientCholesterol": "Cholesterol",
+  "@nutrientCholesterol": {
+    "description": "Nutrient name."
+  },
+  "nutrientCalcium": "Calcium",
+  "@nutrientCalcium": {
+    "description": "Mineral name."
+  },
+  "nutrientIron": "Iron",
+  "@nutrientIron": {
+    "description": "Mineral name."
+  },
+  "nutrientMagnesium": "Magnesium",
+  "@nutrientMagnesium": {
+    "description": "Mineral name."
+  },
+  "nutrientPotassium": "Potassium",
+  "@nutrientPotassium": {
+    "description": "Mineral name."
+  },
+  "nutrientZinc": "Zinc",
+  "@nutrientZinc": {
+    "description": "Mineral name."
+  },
+  "nutrientVitaminA": "Vitamin A",
+  "@nutrientVitaminA": {
+    "description": "Vitamin name."
+  },
+  "nutrientVitaminC": "Vitamin C",
+  "@nutrientVitaminC": {
+    "description": "Vitamin name."
+  },
+  "nutrientVitaminD": "Vitamin D",
+  "@nutrientVitaminD": {
+    "description": "Vitamin name."
+  },
+  "nutrientVitaminE": "Vitamin E",
+  "@nutrientVitaminE": {
+    "description": "Vitamin name."
+  },
+  "nutrientVitaminB12": "Vitamin B12",
+  "@nutrientVitaminB12": {
+    "description": "Vitamin name."
+  },
+  "nutrientFolate": "Folate",
+  "@nutrientFolate": {
+    "description": "Vitamin name (folate, EU label wording)."
+  },
+  "foodSourceUser": "My ingredients",
+  "@foodSourceUser": {
+    "description": "Name of the source for ingredients the user entered."
+  },
+  "foodSourceRecipe": "My recipes",
+  "@foodSourceRecipe": {
+    "description": "Name of the source for recipes used as ingredients."
+  },
+  "nutritionCancel": "Cancel",
+  "@nutritionCancel": {
+    "description": "Button closing a dialog without changes."
+  },
+  "nutritionSave": "Save",
+  "@nutritionSave": {
+    "description": "Save button."
+  },
+  "nutritionDelete": "Delete",
+  "@nutritionDelete": {
+    "description": "Delete button."
+  },
+  "nutritionEdit": "Edit",
+  "@nutritionEdit": {
+    "description": "Button editing the user's own ingredient."
+  },
+  "nutritionRetry": "Retry",
+  "@nutritionRetry": {
+    "description": "Button repeating a failed online lookup."
+  },
+  "nutritionNoLinks": "Link ingredients to foods in the recipe editor to see nutrition values.",
+  "@nutritionNoLinks": {
+    "description": "Shown in a recipe instead of nutrition values when no ingredient is linked to a food."
+  },
+  "nutritionBasisPortion": "Portion",
+  "@nutritionBasisPortion": {
+    "description": "Segment: show nutrition per portion."
+  },
+  "nutritionBasisCustom": "Custom",
+  "@nutritionBasisCustom": {
+    "description": "Segment: show nutrition for a weight the user types."
+  },
+  "nutritionAmount": "Amount",
+  "@nutritionAmount": {
+    "description": "Field label for the custom weight in grams."
+  },
+  "nutritionDishWeighed": "Dish {weight} (weighed)",
+  "@nutritionDishWeighed": {
+    "description": "Total weight of the finished dish, weighed by the user.",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionDishSum": "Dish {weight} (sum of ingredients)",
+  "@nutritionDishSum": {
+    "description": "Total weight of the dish, added up from the ingredients.",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionPortionsOfAbout": "{count, plural, =1{1 portion of about {weight}} other{{count} portions of about {weight}}}",
+  "@nutritionPortionsOfAbout": {
+    "description": "Number of portions and the weight of one, e.g. \"4 portions of about 250 g\".",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionLowerBound": "* Some linked foods have no data for this value, so it is a lower bound.",
+  "@nutritionLowerBound": {
+    "description": "Footnote for values marked with *."
+  },
+  "nutritionSalt": "Salt",
+  "@nutritionSalt": {
+    "description": "Salt row of the nutrition table (EU label wording)."
+  },
+  "nutritionVitaminsMinerals": "Vitamins and minerals",
+  "@nutritionVitaminsMinerals": {
+    "description": "Expandable section title."
+  },
+  "nutritionDailyReferenceHint": "% of the EU daily reference intake for adults",
+  "@nutritionDailyReferenceHint": {
+    "description": "Explains the percentages in the vitamins and minerals section."
+  },
+  "nutritionNotCounted": "Not counted",
+  "@nutritionNotCounted": {
+    "description": "Card title listing recipe ingredients left out of the nutrition values."
+  },
+  "nutritionMissingNoFood": "{name}: no food linked",
+  "@nutritionMissingNoFood": {
+    "description": "An ingredient line without a linked food.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionMissingNoWeight": "{name}: no gram weight for \"{unit}\"",
+  "@nutritionMissingNoWeight": {
+    "description": "An ingredient line whose unit cannot be turned into grams.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionOffUnreachable": "Open Food Facts could not be reached. Check your internet connection.",
+  "@nutritionOffUnreachable": {
+    "description": "Error message."
+  },
+  "nutritionUsdaUnreachable": "USDA could not be reached. Check your internet connection.",
+  "@nutritionUsdaUnreachable": {
+    "description": "Error message."
+  },
+  "nutritionIngredientsTitle": "Ingredients",
+  "@nutritionIngredientsTitle": {
+    "description": "Title of the ingredients (food database) screen."
+  },
+  "nutritionMyIngredientButton": "My ingredient",
+  "@nutritionMyIngredientButton": {
+    "description": "Button adding an own ingredient."
+  },
+  "nutritionBuiltIn": "Built-in ingredients",
+  "@nutritionBuiltIn": {
+    "description": "Title of the offline ingredient database entry."
+  },
+  "nutritionBuiltInCount": "Built-in ingredients: {count}",
+  "@nutritionBuiltInCount": {
+    "description": "Title of the offline ingredient database with its size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nutritionBuiltInSubtitle": "USDA FoodData Central, works offline",
+  "@nutritionBuiltInSubtitle": {
+    "description": "Subtitle of the offline ingredient database."
+  },
+  "nutritionUsdaOnline": "USDA online lookup",
+  "@nutritionUsdaOnline": {
+    "description": "Settings entry for searching USDA online."
+  },
+  "apiKeyOriginDemo": "Shared demo key, a few lookups per hour. Add your own free key for more.",
+  "@apiKeyOriginDemo": {
+    "description": "Which USDA API key is used."
+  },
+  "apiKeyOriginDeveloper": "Developer key from config/local.json",
+  "@apiKeyOriginDeveloper": {
+    "description": "Which USDA API key is used."
+  },
+  "apiKeyOriginUser": "Your own API key",
+  "@apiKeyOriginUser": {
+    "description": "Which USDA API key is used."
+  },
+  "apiKeyChange": "Change",
+  "@apiKeyChange": {
+    "description": "Button changing the API key."
+  },
+  "apiKeyAdd": "Add key",
+  "@apiKeyAdd": {
+    "description": "Button adding an API key."
+  },
+  "nutritionMyIngredients": "My ingredients",
+  "@nutritionMyIngredients": {
+    "description": "Section title."
+  },
+  "nutritionMyIngredientsEmpty": "Add ingredients you cannot find, e.g. from a package label.",
+  "@nutritionMyIngredientsEmpty": {
+    "description": "Shown when the user has no own ingredients."
+  },
+  "nutritionOnlineInRecipes": "Online ingredients in your recipes",
+  "@nutritionOnlineInRecipes": {
+    "description": "Section title."
+  },
+  "foodAskingLatest": "Asking {source} for the latest values…",
+  "@foodAskingLatest": {
+    "description": "Shown while a food is refreshed online.",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "foodUsedInRecipes": "used in recipes",
+  "@foodUsedInRecipes": {
+    "description": "Subtitle of a food."
+  },
+  "foodDeleteTitle": "Delete \"{name}\"?",
+  "@foodDeleteTitle": {
+    "description": "Dialog title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "foodDeleteUsed": "Some recipes use this ingredient. They will show it as \"no food linked\" until you link another one.",
+  "@foodDeleteUsed": {
+    "description": "Delete dialog text when recipes use the ingredient."
+  },
+  "foodDeleteUnused": "The ingredient will be removed from this device.",
+  "@foodDeleteUnused": {
+    "description": "Delete dialog text."
+  },
+  "foodGone": "{source} no longer has this food",
+  "@foodGone": {
+    "description": "Snackbar after refreshing a food that no longer exists online.",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "foodUpdated": "Updated \"{name}\"",
+  "@foodUpdated": {
+    "description": "Snackbar after refreshing a food.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionPer100g": "Per 100 g",
+  "@nutritionPer100g": {
+    "description": "Heading of a food's nutrition values."
+  },
+  "nutritionPortions": "Portions",
+  "@nutritionPortions": {
+    "description": "Heading of a food's portion weights."
+  },
+  "foodCopyToMine": "Copy to my ingredients",
+  "@foodCopyToMine": {
+    "description": "Button."
+  },
+  "foodUpdating": "Updating…",
+  "@foodUpdating": {
+    "description": "Button while a food is refreshed."
+  },
+  "foodUpdateFrom": "Update from {source}",
+  "@foodUpdateFrom": {
+    "description": "Button refreshing a food from its online source.",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "foodNewTitle": "New ingredient",
+  "@foodNewTitle": {
+    "description": "Screen title."
+  },
+  "foodEditTitle": "Edit ingredient",
+  "@foodEditTitle": {
+    "description": "Screen title."
+  },
+  "foodName": "Name",
+  "@foodName": {
+    "description": "Field label."
+  },
+  "foodRequiredError": "Required",
+  "@foodRequiredError": {
+    "description": "Validation error for an empty required field."
+  },
+  "foodNumberError": "Number",
+  "@foodNumberError": {
+    "description": "Validation error: the field needs a number."
+  },
+  "foodNutritionPer100g": "Nutrition per 100 g",
+  "@foodNutritionPer100g": {
+    "description": "Section title."
+  },
+  "foodNutritionHint": "Copy the values from the package label. Leave unknown values empty.",
+  "@foodNutritionHint": {
+    "description": "Hint below the section title."
+  },
+  "foodOfWhichSaturates": "of which saturates",
+  "@foodOfWhichSaturates": {
+    "description": "Field label, indented below fat (EU label wording)."
+  },
+  "foodOfWhichSugars": "of which sugars",
+  "@foodOfWhichSugars": {
+    "description": "Field label, indented below carbohydrate (EU label wording)."
+  },
+  "foodMoreNutrients": "More nutrients",
+  "@foodMoreNutrients": {
+    "description": "Expandable section title."
+  },
+  "foodMoreNutrientsHint": "Vitamins, minerals and cholesterol",
+  "@foodMoreNutrientsHint": {
+    "description": "Subtitle of the expandable section."
+  },
+  "foodPortionsHint": "How much one unit weighs, so recipes can use cups, spoons or pieces.",
+  "@foodPortionsHint": {
+    "description": "Hint below the portions title."
+  },
+  "foodQty": "Qty",
+  "@foodQty": {
+    "description": "Short field label for the portion amount (narrow field)."
+  },
+  "foodUnit": "Unit",
+  "@foodUnit": {
+    "description": "Field label."
+  },
+  "foodWeight": "Weight",
+  "@foodWeight": {
+    "description": "Field label for the portion weight in grams."
+  },
+  "foodRemovePortion": "Remove",
+  "@foodRemovePortion": {
+    "description": "Tooltip of the button removing a portion row."
+  },
+  "foodAddPortion": "Add portion",
+  "@foodAddPortion": {
+    "description": "Button."
+  },
+  "apiKeyOpenInBrowser": "Open {url} in your browser",
+  "@apiKeyOpenInBrowser": {
+    "description": "Snackbar when the link cannot be opened.",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "apiKeyRateLimited": "You reached the hourly USDA limit for your key. Please try again later.",
+  "@apiKeyRateLimited": {
+    "description": "Error message."
+  },
+  "apiKeyRejected": "USDA did not accept the API key. Check it in Ingredients > USDA online lookup.",
+  "@apiKeyRejected": {
+    "description": "Error message; the path names the ingredients screen and its USDA entry."
+  },
+  "apiKeyDemoLimitTitle": "Out of free lookups",
+  "@apiKeyDemoLimitTitle": {
+    "description": "Dialog title when the shared demo key is used up."
+  },
+  "apiKeyDemoLimitIntro": "Oh, hey there buddy, we see that you used up all the built-in USDA requests.",
+  "@apiKeyDemoLimitIntro": {
+    "description": "Casual, friendly dialog text."
+  },
+  "apiKeyDemoLimitSignupBefore": "If you need more, you can sign up for your own free API key at ",
+  "@apiKeyDemoLimitSignupBefore": {
+    "description": "Text before the link api.data.gov/signup; ends with a space."
+  },
+  "apiKeyDemoLimitSignupAfter": ". Once you register, you will receive your very own API key by email.",
+  "@apiKeyDemoLimitSignupAfter": {
+    "description": "Text right after the link api.data.gov/signup; starts with the character following the link."
+  },
+  "apiKeyDemoLimitEnterKey": "You can then enter this key in the app to get more lookups.",
+  "@apiKeyDemoLimitEnterKey": {
+    "description": "Dialog text."
+  },
+  "apiKeyDemoLimitWarning": "Do not forget: do not share your key publicly.",
+  "@apiKeyDemoLimitWarning": {
+    "description": "Bold warning in the dialog."
+  },
+  "apiKeyNotNow": "Not now",
+  "@apiKeyNotNow": {
+    "description": "Dialog button."
+  },
+  "apiKeyGetKey": "Get a key",
+  "@apiKeyGetKey": {
+    "description": "Dialog button opening the signup page."
+  },
+  "apiKeyEnterMine": "Enter my key",
+  "@apiKeyEnterMine": {
+    "description": "Dialog button."
+  },
+  "apiKeySaved": "Your API key is saved",
+  "@apiKeySaved": {
+    "description": "Snackbar."
+  },
+  "apiKeyRemoved": "Your API key was removed",
+  "@apiKeyRemoved": {
+    "description": "Snackbar."
+  },
+  "apiKeyDialogTitle": "Your USDA API key",
+  "@apiKeyDialogTitle": {
+    "description": "Dialog title."
+  },
+  "apiKeyLabel": "API key",
+  "@apiKeyLabel": {
+    "description": "Field label."
+  },
+  "apiKeyStoredLocally": "The key is stored only on this device. Do not share it publicly.",
+  "@apiKeyStoredLocally": {
+    "description": "Hint below the key field."
+  },
+  "apiKeyGetFreeKey": "Get a free key",
+  "@apiKeyGetFreeKey": {
+    "description": "Button opening the signup page."
+  },
+  "apiKeyRemove": "Remove key",
+  "@apiKeyRemove": {
+    "description": "Dialog button."
+  },
+  "pickerRecipeDetail": "Recipe",
+  "@pickerRecipeDetail": {
+    "description": "Subtitle marking a recipe used as an ingredient."
+  },
+  "pickerNoLongerAvailable": "This ingredient is no longer available",
+  "@pickerNoLongerAvailable": {
+    "description": "Snackbar."
+  },
+  "pickerProductNotFound": "Product not found",
+  "@pickerProductNotFound": {
+    "description": "Dialog title."
+  },
+  "pickerProductNotFoundBody": "Open Food Facts does not know the barcode {code} yet. You can enter the values from the label instead.",
+  "@pickerProductNotFoundBody": {
+    "description": "Dialog text after scanning an unknown barcode.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerCreateOwnButton": "Create my own",
+  "@pickerCreateOwnButton": {
+    "description": "Dialog button creating an own ingredient."
+  },
+  "pickerSearchHint": "Search ingredients, e.g. \"flour wheat\"",
+  "@pickerSearchHint": {
+    "description": "Search field hint."
+  },
+  "pickerCreateOwn": "Create my own ingredient",
+  "@pickerCreateOwn": {
+    "description": "List entry."
+  },
+  "pickerCreateOwnSubtitle": "Enter values from a package label",
+  "@pickerCreateOwnSubtitle": {
+    "description": "List entry subtitle."
+  },
+  "pickerScanBarcode": "Scan a package barcode",
+  "@pickerScanBarcode": {
+    "description": "List entry."
+  },
+  "pickerEnterBarcode": "Enter a package barcode",
+  "@pickerEnterBarcode": {
+    "description": "List entry on devices without a camera scanner."
+  },
+  "pickerBarcodeSubtitle": "Looks the product up in Open Food Facts",
+  "@pickerBarcodeSubtitle": {
+    "description": "List entry subtitle."
+  },
+  "pickerBarcodeCode": "Barcode {code}",
+  "@pickerBarcodeCode": {
+    "description": "Shows the scanned barcode.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerNothingLocal": "Nothing found on this device",
+  "@pickerNothingLocal": {
+    "description": "Shown when the local search has no results."
+  },
+  "pickerSearchOnline": "Search online",
+  "@pickerSearchOnline": {
+    "description": "Section title."
+  },
+  "pickerSearchOnlineFor": "Search online for \"{query}\"",
+  "@pickerSearchOnlineFor": {
+    "description": "Section title with the search text.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerUsdaIngredients": "USDA ingredients",
+  "@pickerUsdaIngredients": {
+    "description": "Button searching USDA."
+  },
+  "pickerStoreProducts": "Store products",
+  "@pickerStoreProducts": {
+    "description": "Button searching Open Food Facts."
+  },
+  "pickerAskingUsda": "Asking USDA, this can take a few seconds…",
+  "@pickerAskingUsda": {
+    "description": "Progress text."
+  },
+  "pickerAskingOff": "Asking Open Food Facts…",
+  "@pickerAskingOff": {
+    "description": "Progress text."
+  },
+  "pickerNoMoreOnline": "No additional online results",
+  "@pickerNoMoreOnline": {
+    "description": "Shown when the online search finds nothing new."
+  },
+  "pickerUses": "{count, plural, =1{In 1 recipe} other{In {count} recipes}}",
+  "@pickerUses": {
+    "description": "How many recipes use a food.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pickerOffAttribution": "Product data from Open Food Facts, made by its contributors under the Open Database License (ODbL).",
+  "@pickerOffAttribution": {
+    "description": "Required attribution; keep \"Open Database License (ODbL)\"."
+  },
+  "scannerTitle": "Scan barcode",
+  "@scannerTitle": {
+    "description": "Screen title."
+  },
+  "scannerTorch": "Torch",
+  "@scannerTorch": {
+    "description": "Tooltip of the flashlight button."
+  },
+  "scannerHint": "Point the camera at the barcode on the package",
+  "@scannerHint": {
+    "description": "Hint over the camera view."
+  },
+  "scannerTypeNumber": "Type the number",
+  "@scannerTypeNumber": {
+    "description": "Button to enter the barcode by hand."
+  },
+  "scannerPermissionDenied": "Manja may not use the camera. Allow it in the phone settings, or type the number.",
+  "@scannerPermissionDenied": {
+    "description": "Error text."
+  },
+  "scannerCameraFailed": "The camera could not be started.",
+  "@scannerCameraFailed": {
+    "description": "Error text."
+  },
+  "scannerInvalidBarcode": "A barcode has 8 to 14 digits",
+  "@scannerInvalidBarcode": {
+    "description": "Validation error."
+  },
+  "scannerDialogTitle": "Package barcode",
+  "@scannerDialogTitle": {
+    "description": "Dialog title."
+  },
+  "scannerLookUp": "Look up",
+  "@scannerLookUp": {
+    "description": "Dialog button looking up the barcode."
+  },
+  "converterTitle": "Unit converter",
+  "@converterTitle": {
+    "description": "Screen title."
+  },
+  "converterSwap": "Swap units",
+  "@converterSwap": {
+    "description": "Tooltip."
+  },
+  "converterIngredient": "Ingredient",
+  "@converterIngredient": {
+    "description": "Section title."
+  },
+  "converterIngredientHint": "Cups, spoons and millilitres weigh differently for every ingredient.",
+  "@converterIngredientHint": {
+    "description": "Hint below the section title."
+  },
+  "converterOther": "Other…",
+  "@converterOther": {
+    "description": "Chip opening the ingredient search."
+  },
+  "converterPickIngredient": "Pick an ingredient to convert between volume and weight.",
+  "@converterPickIngredient": {
+    "description": "Error text."
+  },
+  "converterNoWeight": "There is no weight for \"{unit}\" of {food}.",
+  "@converterNoWeight": {
+    "description": "Error text; food is a food name from the database.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      },
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "converterNoVolumeWeights": "No volume weights known for this ingredient.",
+  "@converterNoVolumeWeights": {
+    "description": "Shown when a food has no volume data."
+  },
+  "converterCommonEquivalents": "Common equivalents",
+  "@converterCommonEquivalents": {
+    "description": "Table title."
+  },
+  "converterTeaspoons": "{count, plural, =1{1 teaspoon} other{{count} teaspoons}}",
+  "@converterTeaspoons": {
+    "description": "Teaspoon count in the equivalents table.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "converterTablespoons": "{count, plural, =1{1 tablespoon} other{{count} tablespoons}}",
+  "@converterTablespoons": {
+    "description": "Tablespoon count in the equivalents table.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "converterFlour": "Flour",
+  "@converterFlour": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterSugar": "Sugar",
+  "@converterSugar": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterPowderedSugar": "Powdered sugar",
+  "@converterPowderedSugar": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterButter": "Butter",
+  "@converterButter": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterWater": "Water",
+  "@converterWater": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterMilk": "Milk",
+  "@converterMilk": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterOliveOil": "Olive oil",
+  "@converterOliveOil": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterRice": "Rice",
+  "@converterRice": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterHoney": "Honey",
+  "@converterHoney": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterSalt": "Salt",
+  "@converterSalt": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterOats": "Oats",
+  "@converterOats": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "converterCocoa": "Cocoa",
+  "@converterCocoa": {
+    "description": "Quick-pick ingredient chip."
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "settingsSectionApp": "App",
+  "@settingsSectionApp": {
+    "description": "Settings section title."
+  },
+  "settingsSectionWheel": "Wheel",
+  "@settingsSectionWheel": {
+    "description": "Settings section title for the meal wheel."
+  },
+  "settingsSectionKitchen": "Kitchen",
+  "@settingsSectionKitchen": {
+    "description": "Settings section title."
+  },
+  "settingsSectionIngredients": "Ingredients",
+  "@settingsSectionIngredients": {
+    "description": "Settings section title."
+  },
+  "settingsSectionAbout": "About",
+  "@settingsSectionAbout": {
+    "description": "Settings section title."
+  },
+  "settingsAppearanceSubtitle": "Theme, light and dark mode",
+  "@settingsAppearanceSubtitle": {
+    "description": "Subtitle of the appearance entry."
+  },
+  "settingsBackupSubtitle": "Export or import your whole profile",
+  "@settingsBackupSubtitle": {
+    "description": "Subtitle of the backup entry."
+  },
+  "settingsWheelLookSubtitle": "Theme, photos, size, names",
+  "@settingsWheelLookSubtitle": {
+    "description": "Subtitle of the wheel look entry."
+  },
+  "settingsRoundsSubtitle": "When eaten dishes come back",
+  "@settingsRoundsSubtitle": {
+    "description": "Subtitle of the wheel rounds entry."
+  },
+  "settingsTagsSubtitle": "Courses and your own groups of dishes",
+  "@settingsTagsSubtitle": {
+    "description": "Subtitle of the tags entry."
+  },
+  "settingsConverterTitle": "Unit converter",
+  "@settingsConverterTitle": {
+    "description": "Settings entry for the unit converter."
+  },
+  "settingsConverterSubtitle": "Cups, spoons, grams and millilitres",
+  "@settingsConverterSubtitle": {
+    "description": "Subtitle of the unit converter entry."
+  },
+  "settingsIngredientsTitle": "Ingredients & USDA key",
+  "@settingsIngredientsTitle": {
+    "description": "Settings entry for own ingredients and the USDA API key."
+  },
+  "settingsIngredientsSubtitle": "Own ingredients, built-in data, online lookup",
+  "@settingsIngredientsSubtitle": {
+    "description": "Subtitle of the ingredients entry."
+  },
+  "settingsAboutTitle": "About Manja",
+  "@settingsAboutTitle": {
+    "description": "Settings entry that opens the about and license page."
+  },
+  "settingsAboutSubtitle": "License, source code and credits",
+  "@settingsAboutSubtitle": {
+    "description": "Subtitle of the about entry."
+  },
+  "appearanceTitle": "Appearance",
+  "@appearanceTitle": {
+    "description": "Title of the appearance screen and its settings entry."
+  },
+  "appearanceAppTheme": "App theme",
+  "@appearanceAppTheme": {
+    "description": "Section title for the app colour theme."
+  },
+  "appearanceMode": "Mode",
+  "@appearanceMode": {
+    "description": "Section title for light/dark mode."
+  },
+  "appearanceDevAlwaysDark": "The Dev theme is always dark.",
+  "@appearanceDevAlwaysDark": {
+    "description": "Hint when the Dev theme is chosen."
+  },
+  "appearanceSystemHint": "System follows the light or dark setting of your device.",
+  "@appearanceSystemHint": {
+    "description": "Explains the System mode option."
+  },
+  "backupTitle": "Backup & move",
+  "@backupTitle": {
+    "description": "Title of the backup screen and its settings entry."
+  },
+  "backupPickTitle": "Open a Manja profile",
+  "@backupPickTitle": {
+    "description": "File picker dialog title."
+  },
+  "backupSaveTitle": "Save your profile",
+  "@backupSaveTitle": {
+    "description": "Save file dialog title."
+  },
+  "backupShareSubject": "Manja profile",
+  "@backupShareSubject": {
+    "description": "Subject when sharing the profile file."
+  },
+  "backupSaved": "Profile saved",
+  "@backupSaved": {
+    "description": "Snackbar after saving the profile file."
+  },
+  "backupError": "Something went wrong: {error}",
+  "@backupError": {
+    "description": "Snackbar for an unexpected error.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNotAProfile": "This is not a Manja profile.",
+  "@backupNotAProfile": {
+    "description": "Error when the opened file is not a profile."
+  },
+  "backupNewerVersion": "This profile was made by a newer version of the app. Please update first.",
+  "@backupNewerVersion": {
+    "description": "Error when the profile comes from a newer app version."
+  },
+  "backupRecipesAdded": "{count, plural, =1{1 recipe added} other{{count} recipes added}}",
+  "@backupRecipesAdded": {
+    "description": "Snackbar after importing.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupAddedSkipped": "{added}, {skipped} already there",
+  "@backupAddedSkipped": {
+    "description": "Snackbar after importing when some recipes were skipped; added is the backupRecipesAdded text.",
+    "placeholders": {
+      "added": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReplaceTitle": "Replace everything?",
+  "@backupReplaceTitle": {
+    "description": "Confirm dialog title before replacing all data."
+  },
+  "backupReplaceText": "All recipes, photos, meal history, own ingredients, pantry and settings on this device will be replaced by the profile. Your USDA key stays.",
+  "@backupReplaceText": {
+    "description": "Confirm dialog text before replacing all data."
+  },
+  "backupReplaceEverything": "Replace everything",
+  "@backupReplaceEverything": {
+    "description": "Confirm button that replaces all data."
+  },
+  "backupCancel": "Cancel",
+  "@backupCancel": {
+    "description": "Dialog button."
+  },
+  "backupExport": "Export",
+  "@backupExport": {
+    "description": "Section title."
+  },
+  "backupExportText": "Puts your recipes, photos, own ingredients, pantry, meal history and settings into one {extension} file. Use it as a backup or to move to another device. Your USDA key is never included.",
+  "@backupExportText": {
+    "description": "Explains the export; extension is the file extension, e.g. \".manja\".",
+    "placeholders": {
+      "extension": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSaveToFile": "Save to file",
+  "@backupSaveToFile": {
+    "description": "Button."
+  },
+  "backupShare": "Share",
+  "@backupShare": {
+    "description": "Button."
+  },
+  "backupImport": "Import",
+  "@backupImport": {
+    "description": "Section title."
+  },
+  "backupImportText": "Open a {extension} file. You can add its recipes to yours or replace everything.",
+  "@backupImportText": {
+    "description": "Explains the import; extension is the file extension, e.g. \".manja\".",
+    "placeholders": {
+      "extension": {
+        "type": "String"
+      }
+    }
+  },
+  "backupOpenProfile": "Open a profile",
+  "@backupOpenProfile": {
+    "description": "Button."
+  },
+  "backupImportTitle": "Import profile",
+  "@backupImportTitle": {
+    "description": "Import dialog title."
+  },
+  "backupSavedOn": "Saved on {date}",
+  "@backupSavedOn": {
+    "description": "When the profile was exported; date is already formatted.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRecipeCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@backupRecipeCount": {
+    "description": "Number of recipes in the profile.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPhotoCount": "{count, plural, =1{1 photo} other{{count} photos}}",
+  "@backupPhotoCount": {
+    "description": "Number of photos in the profile.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupMealCount": "{count, plural, =1{1 meal} other{{count} meals}}",
+  "@backupMealCount": {
+    "description": "Number of meals in the history of the profile.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupOwnIngredientCount": "{count, plural, =1{1 own ingredient} other{{count} own ingredients}}",
+  "@backupOwnIngredientCount": {
+    "description": "Number of own ingredients in the profile.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPantryCount": "{count, plural, =1{1 pantry item} other{{count} pantry items}}",
+  "@backupPantryCount": {
+    "description": "Number of pantry items in the profile.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupSkipHint": "When adding, recipes with a name you already have are skipped.",
+  "@backupSkipHint": {
+    "description": "Hint in the import dialog."
+  },
+  "backupReplace": "Replace",
+  "@backupReplace": {
+    "description": "Import dialog button: replace everything."
+  },
+  "backupAdd": "Add",
+  "@backupAdd": {
+    "description": "Import dialog button: add recipes to the existing ones."
+  },
+  "wheelLookTitle": "Wheel look",
+  "@wheelLookTitle": {
+    "description": "Title of the wheel look screen and its settings entry."
+  },
+  "wheelLookTheme": "Theme",
+  "@wheelLookTheme": {
+    "description": "Section title."
+  },
+  "wheelLookShow": "Show on the wheel",
+  "@wheelLookShow": {
+    "description": "Section title: what is shown on the slices."
+  },
+  "wheelLookSize": "Size",
+  "@wheelLookSize": {
+    "description": "Section title."
+  },
+  "wheelLookMaxSlices": "Recipes shown on the wheel: {count}",
+  "@wheelLookMaxSlices": {
+    "description": "Slider title.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelLookMaxSlicesHint": "With more recipes, one \"+n\" slice stands for the rest. Every recipe still has the same chance.",
+  "@wheelLookMaxSlicesHint": {
+    "description": "Explains the max slices slider."
+  },
+  "wheelLookWinnerPercent": "Winning dish takes {percent}% of the wheel",
+  "@wheelLookWinnerPercent": {
+    "description": "Slider title.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelLookPercent": "{percent}%",
+  "@wheelLookPercent": {
+    "description": "Slider value label.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "wheelLookSpin": "Spin",
+  "@wheelLookSpin": {
+    "description": "Section title."
+  },
+  "wheelLookSpinTime": "Spin time: {seconds} s",
+  "@wheelLookSpinTime": {
+    "description": "Slider title; seconds is already formatted.",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelLookSpinTimeHint": "How long the wheel turns before it stops",
+  "@wheelLookSpinTimeHint": {
+    "description": "Explains the spin time slider."
+  },
+  "wheelLookReveal": "Winner reveal: {seconds} s",
+  "@wheelLookReveal": {
+    "description": "Slider title; seconds is already formatted.",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelLookRevealHint": "How long the chosen dish takes to grow on the wheel",
+  "@wheelLookRevealHint": {
+    "description": "Explains the reveal slider."
+  },
+  "wheelLookSeconds": "{seconds} s",
+  "@wheelLookSeconds": {
+    "description": "Slider value label; seconds is already formatted.",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "wheelLookNames": "Names",
+  "@wheelLookNames": {
+    "description": "Section title."
+  },
+  "wheelLookUpright": "Keep names upright",
+  "@wheelLookUpright": {
+    "description": "Switch title."
+  },
+  "wheelLookUprightHint": "Turn names on the left half so they are never upside down",
+  "@wheelLookUprightHint": {
+    "description": "Switch subtitle."
+  },
+  "roundsTitle": "Wheel rounds",
+  "@roundsTitle": {
+    "description": "Title of the wheel rounds screen and its settings entry."
+  },
+  "roundsPutBack": "Put eaten dishes back on the wheel",
+  "@roundsPutBack": {
+    "description": "Section title."
+  },
+  "roundsResetEvery": "Reset every",
+  "@roundsResetEvery": {
+    "description": "Text before the number of days: \"Reset every [3] days\"."
+  },
+  "roundsFewerDays": "Fewer days",
+  "@roundsFewerDays": {
+    "description": "Tooltip."
+  },
+  "roundsMoreDays": "More days",
+  "@roundsMoreDays": {
+    "description": "Tooltip."
+  },
+  "roundsDays": "{count, plural, =1{day} other{days}}",
+  "@roundsDays": {
+    "description": "Word after the number of days (the number is shown separately).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "roundsHistoryKept": "Your meal history is always kept. A new round only puts the dishes back on the wheel.",
+  "@roundsHistoryKept": {
+    "description": "Hint at the bottom."
+  },
+  "tagsTitle": "Tags",
+  "@tagsTitle": {
+    "description": "Title of the tags screen and its settings entry."
+  },
+  "tagsNew": "New tag",
+  "@tagsNew": {
+    "description": "Button and dialog title."
+  },
+  "tagsRenameTitle": "Rename tag",
+  "@tagsRenameTitle": {
+    "description": "Dialog title."
+  },
+  "tagsRename": "Rename",
+  "@tagsRename": {
+    "description": "Button and tooltip."
+  },
+  "tagsAdd": "Add",
+  "@tagsAdd": {
+    "description": "Dialog button."
+  },
+  "tagsCancel": "Cancel",
+  "@tagsCancel": {
+    "description": "Dialog button."
+  },
+  "tagsDelete": "Delete",
+  "@tagsDelete": {
+    "description": "Button and tooltip."
+  },
+  "tagsDeleteTitle": "Delete \"{name}\"?",
+  "@tagsDeleteTitle": {
+    "description": "Confirm dialog title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tagsDeleteUnused": "No recipe uses this tag.",
+  "@tagsDeleteUnused": {
+    "description": "Confirm dialog text."
+  },
+  "tagsDeleteUsed": "{count, plural, =1{It is removed from 1 recipe. The recipes themselves stay.} other{It is removed from {count} recipes. The recipes themselves stay.}}",
+  "@tagsDeleteUsed": {
+    "description": "Confirm dialog text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tagsIntro": "Tags group your recipes. Pick one above the wheel to spin only those. Drag to change the order.",
+  "@tagsIntro": {
+    "description": "Header text."
+  },
+  "tagsRecipeCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@tagsRecipeCount": {
+    "description": "Number of recipes with the tag.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tagsIngredientHint": "usable as ingredients, not on the wheel unless chosen",
+  "@tagsIngredientHint": {
+    "description": "Subtitle part for ingredient tags (e.g. sauces)."
+  },
+  "tagsNameHint": "Quick weekday",
+  "@tagsNameHint": {
+    "description": "Example tag name in the name field."
+  },
+  "cookbookTitle": "Cookbook PDF",
+  "@cookbookTitle": {
+    "description": "Title of the cookbook screen."
+  },
+  "cookbookDefaultTitle": "Manja cookbook",
+  "@cookbookDefaultTitle": {
+    "description": "Default title of the cookbook."
+  },
+  "cookbookFallbackTitle": "Cookbook",
+  "@cookbookFallbackTitle": {
+    "description": "Title used when the title field is empty."
+  },
+  "cookbookNoneSelected": "No recipes selected",
+  "@cookbookNoneSelected": {
+    "description": "Disabled create button."
+  },
+  "cookbookCreate": "{count, plural, =1{Create PDF with 1 recipe} other{Create PDF with {count} recipes}}",
+  "@cookbookCreate": {
+    "description": "Create button.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookTitleField": "Title",
+  "@cookbookTitleField": {
+    "description": "Label of the title field."
+  },
+  "cookbookLayout": "Layout",
+  "@cookbookLayout": {
+    "description": "Section title."
+  },
+  "cookbookRecipes": "Recipes",
+  "@cookbookRecipes": {
+    "description": "Section title."
+  },
+  "cookbookAll": "All recipes ({count})",
+  "@cookbookAll": {
+    "description": "Selection option.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookFavorites": "Favorites ({count})",
+  "@cookbookFavorites": {
+    "description": "Selection option.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookTagged": "Tagged",
+  "@cookbookTagged": {
+    "description": "Selection option: recipes with the chosen tag."
+  },
+  "cookbookChosen": "Chosen ({count})",
+  "@cookbookChosen": {
+    "description": "Selection option.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookChoose": "Choose",
+  "@cookbookChoose": {
+    "description": "Button that opens the recipe chooser."
+  },
+  "cookbookInclude": "Include",
+  "@cookbookInclude": {
+    "description": "Section title."
+  },
+  "cookbookCover": "Cover page",
+  "@cookbookCover": {
+    "description": "Switch."
+  },
+  "cookbookContents": "Table of contents",
+  "@cookbookContents": {
+    "description": "Switch."
+  },
+  "cookbookPhotos": "Photos",
+  "@cookbookPhotos": {
+    "description": "Switch."
+  },
+  "cookbookNutrition": "Nutrition per portion",
+  "@cookbookNutrition": {
+    "description": "Switch."
+  },
+  "cookbookNutritionHint": "Only for recipes with linked ingredients",
+  "@cookbookNutritionHint": {
+    "description": "Switch subtitle."
+  },
+  "cookbookChosenCount": "{count} chosen",
+  "@cookbookChosenCount": {
+    "description": "Title of the recipe chooser.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookSelectNone": "None",
+  "@cookbookSelectNone": {
+    "description": "Header button: deselect all."
+  },
+  "cookbookSelectAll": "All",
+  "@cookbookSelectAll": {
+    "description": "Header button: select all."
+  },
+  "cookbookDone": "Done",
+  "@cookbookDone": {
+    "description": "Header button."
+  },
+  "cookbookPreview": "Preview",
+  "@cookbookPreview": {
+    "description": "Title of the PDF preview."
+  },
+  "cookbookLayingOut": "Laying out your cookbook…",
+  "@cookbookLayingOut": {
+    "description": "Shown while the PDF is built."
+  },
+  "cookbookLayoutClassic": "Classic",
+  "@cookbookLayoutClassic": {
+    "description": "Layout name."
+  },
+  "cookbookLayoutClassicHint": "A4, one recipe per page with a big photo",
+  "@cookbookLayoutClassicHint": {
+    "description": "Layout description."
+  },
+  "cookbookLayoutCompact": "Compact",
+  "@cookbookLayoutCompact": {
+    "description": "Layout name."
+  },
+  "cookbookLayoutCompactHint": "A4, recipes one after another, saves paper",
+  "@cookbookLayoutCompactHint": {
+    "description": "Layout description."
+  },
+  "cookbookLayoutCards": "Recipe cards",
+  "@cookbookLayoutCards": {
+    "description": "Layout name."
+  },
+  "cookbookLayoutCardsHint": "A6 cards, one recipe each, easy to cut out",
+  "@cookbookLayoutCardsHint": {
+    "description": "Layout description."
+  },
+  "pdfNoRecipes": "No recipes yet",
+  "@pdfNoRecipes": {
+    "description": "PDF page when the cookbook is empty."
+  },
+  "pdfRecipeCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@pdfRecipeCount": {
+    "description": "Cover line, before the month.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfMonths": "January,February,March,April,May,June,July,August,September,October,November,December",
+  "@pdfMonths": {
+    "description": "The twelve month names separated by commas (no spaces), as written before the year on the cover."
+  },
+  "pdfMadeWith": "Made with Manja",
+  "@pdfMadeWith": {
+    "description": "Cover footer."
+  },
+  "pdfContents": "Contents",
+  "@pdfContents": {
+    "description": "Heading of the table of contents."
+  },
+  "pdfPerPortion": "Per portion",
+  "@pdfPerPortion": {
+    "description": "Before the nutrition values."
+  },
+  "pdfPerPortionAtLeast": "Per portion, at least",
+  "@pdfPerPortionAtLeast": {
+    "description": "Before the nutrition values when some ingredients are not linked."
+  },
+  "pdfIngredients": "Ingredients",
+  "@pdfIngredients": {
+    "description": "Heading (printed in capitals)."
+  },
+  "pdfPreparation": "Preparation",
+  "@pdfPreparation": {
+    "description": "Heading (printed in capitals)."
+  },
+  "pdfNotes": "Notes",
+  "@pdfNotes": {
+    "description": "Heading (printed in capitals)."
+  },
+  "pdfSource": "Source: {host}",
+  "@pdfSource": {
+    "description": "Link to the recipe source website.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfPage": "p. {page}",
+  "@pdfPage": {
+    "description": "Page reference after an ingredient that is a recipe in the book.",
+    "placeholders": {
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfPortions": "{count, plural, =1{1 portion} other{{count} portions}}",
+  "@pdfPortions": {
+    "description": "Recipe info line.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPrep": "Prep {time}",
+  "@pdfPrep": {
+    "description": "Recipe info line; time is e.g. \"20 min\".",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfCook": "Cook {time}",
+  "@pdfCook": {
+    "description": "Recipe info line; time is e.g. \"1 h 30 min\".",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfMinutes": "{minutes} min",
+  "@pdfMinutes": {
+    "description": "Duration.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfHours": "{hours} h",
+  "@pdfHours": {
+    "description": "Duration in whole hours.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfHoursMinutes": "{hours} h {minutes} min",
+  "@pdfHoursMinutes": {
+    "description": "Duration.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfProtein": "protein",
+  "@pdfProtein": {
+    "description": "Nutrition line, after the amount: \"31 g protein\"."
+  },
+  "pdfFat": "fat",
+  "@pdfFat": {
+    "description": "Nutrition line, after the amount."
+  },
+  "pdfCarbohydrate": "carbohydrate",
+  "@pdfCarbohydrate": {
+    "description": "Nutrition line, after the amount."
+  },
+  "pdfFiber": "fiber",
+  "@pdfFiber": {
+    "description": "Nutrition line, after the amount."
+  },
+  "aboutLicense": "Free software under the GNU Affero General Public License v3.0.",
+  "@aboutLicense": {
+    "description": "About page; the license name stays in English."
+  },
+  "aboutSource": "Source code: {url}",
+  "@aboutSource": {
+    "description": "About page.",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutTrademark": "The name \"Manja\" and its logo are not covered by the license.",
+  "@aboutTrademark": {
+    "description": "About page."
+  }
 }

@@ -1,17 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show Locale;
 
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:recipe_import/recipe_import.dart';
 
 import '../domain/units.dart';
+import '../l10n/app_localizations.dart';
+
+enum RecipeImportError { timeout, unreachable, blocked, httpStatus, noRecipe }
 
 class RecipeImportException implements Exception {
-  const RecipeImportException(this.message);
+  const RecipeImportException(this.error, {this.statusCode});
 
-  final String message;
+  final RecipeImportError error;
+  final int? statusCode;
+
+  String messageIn(AppLocalizations l) => switch (error) {
+    RecipeImportError.timeout => l.recipeImportTimeout,
+    RecipeImportError.unreachable => l.recipeImportUnreachable,
+    RecipeImportError.blocked => l.recipeImportBlocked,
+    RecipeImportError.httpStatus => l.recipeImportHttpError(statusCode ?? 0),
+    RecipeImportError.noRecipe => l.recipeImportNoRecipe,
+  };
+
+  String get message => messageIn(lookupAppLocalizations(const Locale('en')));
 
   @override
   String toString() => message;
@@ -32,16 +47,16 @@ class RecipeImporter {
           .get(url, headers: {'User-Agent': browserUserAgent, 'Accept': 'text/html'})
           .timeout(const Duration(seconds: 30));
     } on TimeoutException {
-      throw const RecipeImportException('The page did not load in time.');
+      throw const RecipeImportException(RecipeImportError.timeout);
     } on http.ClientException {
-      throw const RecipeImportException('The page could not be reached. Check your internet connection.');
+      throw const RecipeImportException(RecipeImportError.unreachable);
     }
     if (response.statusCode == 403 || response.statusCode == 503) {
-      throw const RecipeImportException(
-        'This site blocks automatic downloads. Import it on your phone, where the page opens in a browser view.',
-      );
+      throw const RecipeImportException(RecipeImportError.blocked);
     }
-    if (response.statusCode != 200) throw RecipeImportException('The page answered with HTTP ${response.statusCode}.');
+    if (response.statusCode != 200) {
+      throw RecipeImportException(RecipeImportError.httpStatus, statusCode: response.statusCode);
+    }
     final type = response.headers['content-type'] ?? '';
     final page = type.contains('charset=') ? response.body : utf8.decode(response.bodyBytes, allowMalformed: true);
     return fromBlocks(jsonLdBlocksFromHtml(page), url).withImage(previewImageFromHtml(page, pageUrl: url));
@@ -50,9 +65,7 @@ class RecipeImporter {
   ImportedRecipe fromBlocks(List<String> blocks, Uri url) {
     final recipe = recipeFromJsonLd(blocks, pageUrl: url);
     if (recipe == null) {
-      throw const RecipeImportException(
-        'No recipe data found on this page. The site may not publish its recipes in a readable format.',
-      );
+      throw const RecipeImportException(RecipeImportError.noRecipe);
     }
     return recipe;
   }

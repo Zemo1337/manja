@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../l10n/l10n.dart';
 import '../cookbook/cookbook_screen.dart';
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
@@ -23,27 +24,28 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
   @override
   Widget build(BuildContext context) {
     final db = AppScope.of(context).db;
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipes'),
+        title: Text(l.recipeListTitle),
         actions: [
           IconButton(
-            tooltip: 'Import from link',
+            tooltip: l.recipeImportFromLink,
             icon: const Icon(Icons.add_link),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportRecipeScreen())),
           ),
           IconButton(
-            tooltip: 'Cookbook PDF',
+            tooltip: l.recipeCookbookPdf,
             icon: const Icon(Icons.picture_as_pdf_outlined),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CookbookScreen())),
           ),
           IconButton(
-            tooltip: 'Unit converter',
+            tooltip: l.recipeUnitConverter,
             icon: const Icon(Icons.scale_outlined),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConverterScreen())),
           ),
           IconButton(
-            tooltip: 'Ingredients',
+            tooltip: l.recipeIngredients,
             icon: const Icon(Icons.kitchen_outlined),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IngredientsScreen())),
           ),
@@ -52,7 +54,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipeEditScreen())),
         icon: const Icon(Icons.add),
-        label: const Text('Add recipe'),
+        label: Text(l.recipeAdd),
       ),
       body: StreamBuilder<List<Recipe>>(
         stream: db.watchRecipes(),
@@ -60,7 +62,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final all = snapshot.data!;
           if (all.isEmpty) {
-            return const Center(child: Text('No recipes yet. Tap "Add recipe" to start.'));
+            return Center(child: Text(l.recipeListEmpty));
           }
           final query = _query.trim().toLowerCase();
           final recipes = query.isEmpty
@@ -74,7 +76,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: SearchBar(
-                  hintText: 'Search recipes',
+                  hintText: l.recipeSearch,
                   leading: const Icon(Icons.search),
                   onChanged: (v) => setState(() => _query = v),
                 ),
@@ -91,7 +93,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                         child: SizedBox.square(dimension: 48, child: RecipePhoto(recipe: recipe, cacheWidth: 144)),
                       ),
                       title: Text(recipe.name),
-                      subtitle: Text(_subtitle(recipe)),
+                      subtitle: Text(_subtitle(l, recipe)),
                       trailing: IconButton(
                         icon: Icon(recipe.isFavorite ? Icons.favorite : Icons.favorite_border),
                         color: recipe.isFavorite ? Theme.of(context).colorScheme.primary : null,
@@ -112,9 +114,9 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
     );
   }
 
-  String _subtitle(Recipe recipe) {
+  String _subtitle(AppLocalizations l, Recipe recipe) {
     final total = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-    final parts = ['${recipe.portions} ${recipe.portions == 1 ? 'portion' : 'portions'}', if (total > 0) '$total min'];
+    final parts = [l.recipePortionCount(recipe.portions), if (total > 0) l.recipeTotalMinutes(total)];
     return parts.join(' · ');
   }
 }

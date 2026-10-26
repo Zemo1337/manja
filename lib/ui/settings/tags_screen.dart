@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
+import '../../l10n/l10n.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -48,12 +49,16 @@ class _TagsScreenState extends State<TagsScreen> {
       showTagNameDialog(context, title: title, initial: initial, action: action);
 
   Future<void> _add() async {
-    final name = await _askName(title: 'New tag', action: 'Add');
+    final name = await _askName(title: context.l10n.tagsNew, action: context.l10n.tagsAdd);
     if (name != null && mounted) await AppScope.of(context).db.addTag(name);
   }
 
   Future<void> _rename(Tag tag) async {
-    final name = await _askName(title: 'Rename tag', initial: tag.name, action: 'Rename');
+    final name = await _askName(
+      title: context.l10n.tagsRenameTitle,
+      initial: tag.name,
+      action: context.l10n.tagsRename,
+    );
     if (name != null && mounted) await AppScope.of(context).db.renameTag(tag.id, name);
   }
 
@@ -62,15 +67,11 @@ class _TagsScreenState extends State<TagsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete "${tag.name}"?'),
-        content: Text(
-          count == 0
-              ? 'No recipe uses this tag.'
-              : 'It is removed from $count ${count == 1 ? 'recipe' : 'recipes'}. The recipes themselves stay.',
-        ),
+        title: Text(context.l10n.tagsDeleteTitle(tag.name)),
+        content: Text(count == 0 ? context.l10n.tagsDeleteUnused : context.l10n.tagsDeleteUsed(count)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.tagsCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.tagsDelete)),
         ],
       ),
     );
@@ -88,12 +89,13 @@ class _TagsScreenState extends State<TagsScreen> {
   @override
   Widget build(BuildContext context) {
     final tags = _tags;
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tags')),
+      appBar: AppBar(title: Text(l.tagsTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
         icon: const Icon(Icons.add),
-        label: const Text('New tag'),
+        label: Text(l.tagsNew),
       ),
       body: tags == null
           ? const Center(child: CircularProgressIndicator())
@@ -101,10 +103,7 @@ class _TagsScreenState extends State<TagsScreen> {
               padding: const EdgeInsets.only(bottom: 88),
               header: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  'Tags group your recipes. Pick one above the wheel to spin only those. Drag to change the order.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                child: Text(l.tagsIntro, style: Theme.of(context).textTheme.bodyMedium),
               ),
               onReorderItem: _reorder,
               children: [
@@ -115,17 +114,21 @@ class _TagsScreenState extends State<TagsScreen> {
                     title: Text(t.name),
                     subtitle: Text(
                       [
-                        '${_counts[t.id] ?? 0} ${(_counts[t.id] ?? 0) == 1 ? 'recipe' : 'recipes'}',
-                        if (t.kind == TagKind.ingredient) 'usable as ingredients, not on the wheel unless chosen',
+                        l.tagsRecipeCount(_counts[t.id] ?? 0),
+                        if (t.kind == TagKind.ingredient) l.tagsIngredientHint,
                       ].join(' · '),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(tooltip: 'Rename', icon: const Icon(Icons.edit_outlined), onPressed: () => _rename(t)),
+                        IconButton(
+                          tooltip: l.tagsRename,
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _rename(t),
+                        ),
                         if (t.kind == null)
                           IconButton(
-                            tooltip: 'Delete',
+                            tooltip: l.tagsDelete,
                             icon: const Icon(Icons.delete_outline),
                             onPressed: () => _delete(t),
                           )
@@ -141,15 +144,11 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 }
 
-Future<String?> showTagNameDialog(
-  BuildContext context, {
-  String title = 'New tag',
-  String initial = '',
-  String action = 'Add',
-}) async {
+Future<String?> showTagNameDialog(BuildContext context, {String? title, String initial = '', String? action}) async {
   final name = await showDialog<String>(
     context: context,
-    builder: (context) => _TagNameDialog(title: title, initial: initial, action: action),
+    builder: (context) =>
+        _TagNameDialog(title: title ?? context.l10n.tagsNew, initial: initial, action: action ?? context.l10n.tagsAdd),
   );
   final trimmed = name?.trim() ?? '';
   return trimmed.isEmpty ? null : trimmed;
@@ -182,11 +181,11 @@ class _TagNameDialogState extends State<_TagNameDialog> {
       controller: _controller,
       autofocus: true,
       textCapitalization: TextCapitalization.sentences,
-      decoration: const InputDecoration(hintText: 'Quick weekday'),
+      decoration: InputDecoration(hintText: context.l10n.tagsNameHint),
       onSubmitted: (v) => Navigator.pop(context, v),
     ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.tagsCancel)),
       FilledButton(onPressed: () => Navigator.pop(context, _controller.text), child: Text(widget.action)),
     ],
   );

@@ -3,24 +3,31 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../app_scope.dart';
 import '../../data/profile_backup.dart';
+import '../../l10n/l10n.dart';
 import 'option_card.dart';
 
 typedef PickProfile = Future<List<int>?> Function();
 typedef SaveProfile = Future<bool> Function(String fileName, Uint8List bytes);
 
+AppLocalizations get _l10n {
+  final locale = Locale(Intl.shortLocale(Intl.getCurrentLocale()));
+  return lookupAppLocalizations(AppLocalizations.delegate.isSupported(locale) ? locale : const Locale('en'));
+}
+
 Future<List<int>?> _pickProfile() async {
-  final files = await FilePicker.pickFiles(dialogTitle: 'Open a Manja profile');
+  final files = await FilePicker.pickFiles(dialogTitle: _l10n.backupPickTitle);
   return files.isEmpty ? null : await files.first.readAsBytes();
 }
 
 Future<bool> _saveProfile(String fileName, Uint8List bytes) async =>
-    await FilePicker.saveFile(fileName: fileName, bytes: bytes, dialogTitle: 'Save your profile') != null;
+    await FilePicker.saveFile(fileName: fileName, bytes: bytes, dialogTitle: _l10n.backupSaveTitle) != null;
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key, this.pick = _pickProfile, this.save = _saveProfile});
@@ -44,11 +51,17 @@ class _BackupScreenState extends State<BackupScreen> {
     return ProfileBackup(scope.db, scope.photos);
   }
 
-  void _show(String message) {
+  static String _message(AppLocalizations l, FormatException e) => switch (e.message) {
+    ProfileBackup.notAProfileMessage => l.backupNotAProfile,
+    ProfileBackup.newerVersionMessage => l.backupNewerVersion,
+    final message => message,
+  };
+
+  void _show(String Function(AppLocalizations l) message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(message(context.l10n))));
   }
 
   Future<void> _run(Future<void> Function() action) async {
@@ -56,9 +69,9 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       await action();
     } on FormatException catch (e) {
-      _show(e.message);
+      _show((l) => _message(l, e));
     } on Exception catch (e) {
-      _show('Something went wrong: $e');
+      _show((l) => l.backupError('$e'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -66,14 +79,15 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _export({required bool share}) => _run(() async {
     final backup = _backup;
+    final subject = context.l10n.backupShareSubject;
     final bytes = await backup.export();
     final name = backup.fileName(DateTime.now());
     if (share) {
       final file = File(p.join((await getTemporaryDirectory()).path, name));
       await file.writeAsBytes(bytes, flush: true);
-      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: 'Manja profile'));
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: subject));
     } else if (await widget.save(name, bytes)) {
-      _show('Profile saved');
+      _show((l) => l.backupSaved);
     }
   });
 
@@ -87,7 +101,7 @@ class _BackupScreenState extends State<BackupScreen> {
       bytes = picked;
       summary = backup.read(bytes);
     } on FormatException catch (e) {
-      _show(e.message);
+      _show((l) => _message(l, e));
       return;
     }
     if (!mounted) return;
@@ -103,8 +117,10 @@ class _BackupScreenState extends State<BackupScreen> {
       final result = await backup.import(bytes, replace: mode == _ImportMode.replace);
       scope.wheel.focus.value = null;
       await scope.appearance.load();
-      final added = '${result.added} ${result.added == 1 ? 'recipe' : 'recipes'} added';
-      _show(result.skipped == 0 ? added : '$added, ${result.skipped} already there');
+      _show((l) {
+        final added = l.backupRecipesAdded(result.added);
+        return result.skipped == 0 ? added : l.backupAddedSkipped(added, result.skipped);
+      });
     });
   }
 
@@ -112,20 +128,17 @@ class _BackupScreenState extends State<BackupScreen> {
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Replace everything?'),
-          content: const Text(
-            'All recipes, photos, meal history, own ingredients, pantry and settings on this device '
-            'will be replaced by the profile. Your USDA key stays.',
-          ),
+          title: Text(context.l10n.backupReplaceTitle),
+          content: Text(context.l10n.backupReplaceText),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.backupCancel)),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Theme.of(context).colorScheme.onError,
               ),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Replace everything'),
+              child: Text(context.l10n.backupReplaceEverything),
             ),
           ],
         ),
@@ -135,23 +148,19 @@ class _BackupScreenState extends State<BackupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Backup & move')),
+      appBar: AppBar(title: Text(l.backupTitle)),
       body: AbsorbPointer(
         absorbing: _busy,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             if (_busy) const LinearProgressIndicator(),
-            const SettingsSectionTitle('Export'),
+            SettingsSectionTitle(l.backupExport),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Puts your recipes, photos, own ingredients, pantry, meal history and settings into one '
-                '${ProfileBackup.extension} file. Use it as a backup or to move to another device. '
-                'Your USDA key is never included.',
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(l.backupExportText(ProfileBackup.extension), style: theme.textTheme.bodyMedium),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -163,24 +172,21 @@ class _BackupScreenState extends State<BackupScreen> {
                   FilledButton.icon(
                     onPressed: () => _export(share: false),
                     icon: const Icon(Icons.save_alt),
-                    label: const Text('Save to file'),
+                    label: Text(l.backupSaveToFile),
                   ),
                   if (_canShare)
                     OutlinedButton.icon(
                       onPressed: () => _export(share: true),
                       icon: const Icon(Icons.share_outlined),
-                      label: const Text('Share'),
+                      label: Text(l.backupShare),
                     ),
                 ],
               ),
             ),
-            const SettingsSectionTitle('Import'),
+            SettingsSectionTitle(l.backupImport),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Open a ${ProfileBackup.extension} file. You can add its recipes to yours or replace everything.',
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(l.backupImportText(ProfileBackup.extension), style: theme.textTheme.bodyMedium),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -190,7 +196,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _import,
                   icon: const Icon(Icons.file_open_outlined),
-                  label: const Text('Open a profile'),
+                  label: Text(l.backupOpenProfile),
                 ),
               ),
             ),
@@ -209,29 +215,29 @@ class _ImportDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final at = summary.exportedAt;
-    String count(int n, String one, String many) => '$n ${n == 1 ? one : many}';
+    final l = context.l10n;
     return AlertDialog(
-      title: const Text('Import profile'),
+      title: Text(l.backupImportTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (at != null)
-            Text('Saved on ${at.day}.${at.month}.${at.year}', style: Theme.of(context).textTheme.bodySmall),
+            Text(l.backupSavedOn('${at.day}.${at.month}.${at.year}'), style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
-          Text(count(summary.recipes, 'recipe', 'recipes')),
-          if (summary.photos > 0) Text(count(summary.photos, 'photo', 'photos')),
-          if (summary.meals > 0) Text(count(summary.meals, 'meal', 'meals')),
-          if (summary.ownIngredients > 0) Text(count(summary.ownIngredients, 'own ingredient', 'own ingredients')),
-          if (summary.pantry > 0) Text(count(summary.pantry, 'pantry item', 'pantry items')),
+          Text(l.backupRecipeCount(summary.recipes)),
+          if (summary.photos > 0) Text(l.backupPhotoCount(summary.photos)),
+          if (summary.meals > 0) Text(l.backupMealCount(summary.meals)),
+          if (summary.ownIngredients > 0) Text(l.backupOwnIngredientCount(summary.ownIngredients)),
+          if (summary.pantry > 0) Text(l.backupPantryCount(summary.pantry)),
           const SizedBox(height: 12),
-          const Text('When adding, recipes with a name you already have are skipped.'),
+          Text(l.backupSkipHint),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        TextButton(onPressed: () => Navigator.pop(context, _ImportMode.replace), child: const Text('Replace')),
-        FilledButton(onPressed: () => Navigator.pop(context, _ImportMode.merge), child: const Text('Add')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.backupCancel)),
+        TextButton(onPressed: () => Navigator.pop(context, _ImportMode.replace), child: Text(l.backupReplace)),
+        FilledButton(onPressed: () => Navigator.pop(context, _ImportMode.merge), child: Text(l.backupAdd)),
       ],
     );
   }

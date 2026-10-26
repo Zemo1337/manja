@@ -85,14 +85,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
   Future<void> _delete() async {
     final db = AppScope.of(context).db;
+    final l = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete recipe?'),
-        content: Text('"${_full!.recipe.name}" and its meal history will be removed.'),
+        title: Text(l.recipeDeleteTitle),
+        content: Text(l.recipeDeleteMessage(_full!.recipe.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.recipeCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.recipeDelete)),
         ],
       ),
     );
@@ -106,10 +107,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final full = _full;
+    final l = context.l10n;
     if (full == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: Center(child: _loaded ? const Text('Recipe not found') : const CircularProgressIndicator()),
+        body: Center(child: _loaded ? Text(l.recipeNotFound) : const CircularProgressIndicator()),
       );
     }
     final theme = Theme.of(context);
@@ -120,8 +122,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       appBar: AppBar(
         title: Text(recipe.name),
         actions: [
-          IconButton(tooltip: 'Edit', icon: const Icon(Icons.edit_outlined), onPressed: _edit),
-          IconButton(tooltip: 'Delete', icon: const Icon(Icons.delete_outline), onPressed: _delete),
+          IconButton(tooltip: l.recipeEdit, icon: const Icon(Icons.edit_outlined), onPressed: _edit),
+          IconButton(tooltip: l.recipeDelete, icon: const Icon(Icons.delete_outline), onPressed: _delete),
         ],
       ),
       body: ListView(
@@ -142,16 +144,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             runSpacing: 8,
             children: [
               if (recipe.prepMinutes != null)
-                _InfoChip(icon: Icons.timer_outlined, label: 'Prep ${recipe.prepMinutes} min'),
+                _InfoChip(icon: Icons.timer_outlined, label: l.recipePrepChip(recipe.prepMinutes!)),
               if (recipe.cookMinutes != null)
-                _InfoChip(icon: Icons.local_fire_department_outlined, label: 'Cook ${recipe.cookMinutes} min'),
+                _InfoChip(icon: Icons.local_fire_department_outlined, label: l.recipeCookChip(recipe.cookMinutes!)),
               for (final t in full.tags) _InfoChip(icon: Icons.label_outline, label: t.name),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Text('Portions', style: theme.textTheme.titleMedium),
+              Text(l.recipePortions, style: theme.textTheme.titleMedium),
               const Spacer(),
               IconButton(
                 onPressed: portions > 1 ? () => setState(() => _portions = portions - 1) : null,
@@ -165,9 +167,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             ],
           ),
           const Divider(),
-          Text('Ingredients', style: theme.textTheme.titleLarge),
+          Text(l.recipeIngredients, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
-          if (full.ingredients.isEmpty) const Text('No ingredients added.'),
+          if (full.ingredients.isEmpty) Text(l.recipeNoIngredients),
           for (final (index, group) in ingredientSections(full.ingredients).indexed) ...[
             if (group.section case final section?)
               Padding(
@@ -185,7 +187,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       width: 110,
                       child: Text(
                         ingredient.amount > 0
-                            ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbolIn(context.l10n, ingredient.amount * scale)}'
+                            ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbolIn(l, ingredient.amount * scale)}'
                             : '',
                         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                       ),
@@ -209,12 +211,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ),
           ],
           const Divider(),
-          Text('Nutrition', style: theme.textTheme.titleLarge),
+          Text(l.recipeNutrition, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
           if (_nutrition != null) NutritionPanel(result: _nutrition!),
           if (recipe.cookingInfo.isNotEmpty) ...[
             const Divider(),
-            Text('Cooking info', style: theme.textTheme.titleLarge),
+            Text(l.recipeCookingInfo, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(recipe.cookingInfo),
           ],
@@ -225,13 +227,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
                 onPressed: () => launchUrl(Uri.parse(source), mode: LaunchMode.externalApplication),
                 icon: const Icon(Icons.link, size: 18),
-                label: Text('Source: ${Uri.tryParse(source)?.host ?? source}', overflow: TextOverflow.ellipsis),
+                label: Text(l.recipeSource(Uri.tryParse(source)?.host ?? source), overflow: TextOverflow.ellipsis),
               ),
             ),
           const Divider(),
-          Text('Preparation', style: theme.textTheme.titleLarge),
+          Text(l.recipePreparation, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
-          if (full.steps.isEmpty) const Text('No steps added.'),
+          if (full.steps.isEmpty) Text(l.recipeNoSteps),
           for (final (index, step) in full.steps.indexed)
             ListTile(
               contentPadding: EdgeInsets.zero,

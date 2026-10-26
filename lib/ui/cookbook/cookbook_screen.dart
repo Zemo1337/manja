@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
@@ -11,6 +12,7 @@ import '../../data/database.dart';
 import '../../data/recipe_foods.dart';
 import '../../domain/cookbook_pdf.dart';
 import '../../domain/text_fold.dart';
+import '../../l10n/l10n.dart';
 import '../settings/option_card.dart';
 import '../app_theme.dart';
 
@@ -39,20 +41,22 @@ Future<List<CookbookRecipe>> loadCookbookRecipes(AppScope scope, Iterable<int> i
   return result;
 }
 
-Future<Uint8List> makeCookbookPdf(List<CookbookRecipe> recipes, CookbookOptions options) async {
+Future<Uint8List> makeCookbookPdf(List<CookbookRecipe> recipes, CookbookOptions options, AppLocalizations l10n) async {
   Future<ByteData> font(String name) => rootBundle.load('assets/fonts/Roboto-$name.ttf');
   final regular = await font('Regular');
   final bold = await font('Bold');
   final light = await font('Light');
   final date = DateTime.now();
-  return Isolate.run(
-    () => buildCookbook(
+  return Isolate.run(() {
+    Intl.defaultLocale = l10n.localeName;
+    return buildCookbook(
       recipes,
       options,
       CookbookFonts(regular: pw.Font.ttf(regular), bold: pw.Font.ttf(bold), light: pw.Font.ttf(light)),
       date: date,
-    ),
-  );
+      l10n: l10n,
+    );
+  });
 }
 
 enum _Selection { all, favorites, tag, chosen }
@@ -65,7 +69,7 @@ class CookbookScreen extends StatefulWidget {
 }
 
 class _CookbookScreenState extends State<CookbookScreen> {
-  final _title = TextEditingController(text: 'Manja cookbook');
+  late final _title = TextEditingController(text: context.l10n.cookbookDefaultTitle);
   CookbookLayout _layout = CookbookLayout.classic;
   bool _cover = true;
   bool _contents = true;
@@ -123,7 +127,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
   };
 
   CookbookOptions get _options => CookbookOptions(
-    title: _title.text.trim().isEmpty ? 'Cookbook' : _title.text.trim(),
+    title: _title.text.trim().isEmpty ? context.l10n.cookbookFallbackTitle : _title.text.trim(),
     layout: _layout,
     cover: _cover,
     contents: _contents,
@@ -150,7 +154,8 @@ class _CookbookScreenState extends State<CookbookScreen> {
     final scope = AppScope.of(context);
     final ids = [for (final r in _selected) r.id];
     final options = _options;
-    final pdf = loadCookbookRecipes(scope, ids, photos: options.photos).then((r) => makeCookbookPdf(r, options));
+    final l10n = context.l10n;
+    final pdf = loadCookbookRecipes(scope, ids, photos: options.photos).then((r) => makeCookbookPdf(r, options, l10n));
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -165,19 +170,16 @@ class _CookbookScreenState extends State<CookbookScreen> {
     final recipes = _recipes;
     final selected = _selected;
     final favorites = recipes?.where((r) => r.isFavorite).length ?? 0;
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Cookbook PDF')),
+      appBar: AppBar(title: Text(l.cookbookTitle)),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: FilledButton.icon(
             onPressed: selected.isEmpty ? null : _preview,
             icon: const Icon(Icons.picture_as_pdf_outlined),
-            label: Text(
-              selected.isEmpty
-                  ? 'No recipes selected'
-                  : 'Create PDF with ${selected.length} ${selected.length == 1 ? 'recipe' : 'recipes'}',
-            ),
+            label: Text(selected.isEmpty ? l.cookbookNoneSelected : l.cookbookCreate(selected.length)),
           ),
         ),
       ),
@@ -190,10 +192,10 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: TextField(
                     controller: _title,
-                    decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: l.cookbookTitleField, border: const OutlineInputBorder()),
                   ),
                 ),
-                const SettingsSectionTitle('Layout'),
+                SettingsSectionTitle(l.cookbookLayout),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -202,7 +204,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                         if (index > 0) const SizedBox(width: 8),
                         Expanded(
                           child: OptionCard(
-                            label: layout.label,
+                            label: layout.labelIn(l),
                             preview: _LayoutPreview(layout: layout),
                             selected: _layout == layout,
                             onTap: () => setState(() => _layout = layout),
@@ -214,24 +216,24 @@ class _CookbookScreenState extends State<CookbookScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text(_layout.description, style: theme.textTheme.bodySmall),
+                  child: Text(_layout.descriptionIn(l), style: theme.textTheme.bodySmall),
                 ),
-                const SettingsSectionTitle('Recipes'),
+                SettingsSectionTitle(l.cookbookRecipes),
                 RadioGroup<_Selection>(
                   groupValue: _selection,
                   onChanged: (v) => setState(() => _selection = v!),
                   child: Column(
                     children: [
-                      RadioListTile(value: _Selection.all, title: Text('All recipes (${recipes.length})')),
+                      RadioListTile(value: _Selection.all, title: Text(l.cookbookAll(recipes.length))),
                       RadioListTile(
                         value: _Selection.favorites,
                         enabled: favorites > 0,
-                        title: Text('Favorites ($favorites)'),
+                        title: Text(l.cookbookFavorites(favorites)),
                       ),
                       if (_tags.isNotEmpty)
                         RadioListTile(
                           value: _Selection.tag,
-                          title: const Text('Tagged'),
+                          title: Text(l.cookbookTagged),
                           secondary: DropdownButton<int>(
                             value: _tagId,
                             items: [for (final t in _tags) DropdownMenuItem(value: t.id, child: Text(t.name))],
@@ -243,31 +245,31 @@ class _CookbookScreenState extends State<CookbookScreen> {
                         ),
                       RadioListTile(
                         value: _Selection.chosen,
-                        title: Text('Chosen (${_chosen.length})'),
-                        secondary: TextButton(onPressed: _choose, child: const Text('Choose')),
+                        title: Text(l.cookbookChosen(_chosen.length)),
+                        secondary: TextButton(onPressed: _choose, child: Text(l.cookbookChoose)),
                       ),
                     ],
                   ),
                 ),
-                const SettingsSectionTitle('Include'),
+                SettingsSectionTitle(l.cookbookInclude),
                 SwitchListTile(
-                  title: const Text('Cover page'),
+                  title: Text(l.cookbookCover),
                   value: _cover,
                   onChanged: (v) => setState(() => _cover = v),
                 ),
                 SwitchListTile(
-                  title: const Text('Table of contents'),
+                  title: Text(l.cookbookContents),
                   value: _contents,
                   onChanged: (v) => setState(() => _contents = v),
                 ),
                 SwitchListTile(
-                  title: const Text('Photos'),
+                  title: Text(l.cookbookPhotos),
                   value: _photos,
                   onChanged: (v) => setState(() => _photos = v),
                 ),
                 SwitchListTile(
-                  title: const Text('Nutrition per portion'),
-                  subtitle: const Text('Only for recipes with linked ingredients'),
+                  title: Text(l.cookbookNutrition),
+                  subtitle: Text(l.cookbookNutritionHint),
                   value: _nutrition,
                   onChanged: (v) => setState(() => _nutrition = v),
                 ),
@@ -360,9 +362,10 @@ class _ChooseRecipesScreenState extends State<_ChooseRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     final all = _chosen.length == widget.recipes.length;
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text('${_chosen.length} chosen'),
+        title: Text(l.cookbookChosenCount(_chosen.length)),
         actions: [
           HeaderTextButton(
             onPressed: () => setState(() {
@@ -372,9 +375,9 @@ class _ChooseRecipesScreenState extends State<_ChooseRecipesScreen> {
                 _chosen.addAll([for (final r in widget.recipes) r.id]);
               }
             }),
-            label: all ? 'None' : 'All',
+            label: all ? l.cookbookSelectNone : l.cookbookSelectAll,
           ),
-          HeaderTextButton(onPressed: () => Navigator.pop(context, _chosen), label: 'Done'),
+          HeaderTextButton(onPressed: () => Navigator.pop(context, _chosen), label: l.cookbookDone),
         ],
       ),
       body: ListView(
@@ -400,7 +403,7 @@ class CookbookPreviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Preview')),
+      appBar: AppBar(title: Text(context.l10n.cookbookPreview)),
       body: PdfPreview(
         build: (_) => pdf,
         pdfFileName: fileName,
@@ -409,9 +412,13 @@ class CookbookPreviewScreen extends StatelessWidget {
         canDebug: false,
         allowPrinting: true,
         allowSharing: true,
-        loadingWidget: const Column(
+        loadingWidget: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [CircularProgressIndicator(), SizedBox(height: 12), Text('Laying out your cookbook…')],
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 12),
+            Text(context.l10n.cookbookLayingOut),
+          ],
         ),
       ),
     );

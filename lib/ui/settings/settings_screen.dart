@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../nutrition/ingredients_screen.dart';
 import '../tools/converter_screen.dart';
 import 'about.dart';
@@ -17,68 +18,69 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l.settingsTitle)),
       body: ListView(
         children: [
-          const SettingsSectionTitle('App'),
+          SettingsSectionTitle(l.settingsSectionApp),
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
-            title: const Text('Appearance'),
-            subtitle: const Text('Theme, light and dark mode'),
+            title: Text(l.appearanceTitle),
+            subtitle: Text(l.settingsAppearanceSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const AppearanceScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.import_export),
-            title: const Text('Backup & move'),
-            subtitle: const Text('Export or import your whole profile'),
+            title: Text(l.backupTitle),
+            subtitle: Text(l.settingsBackupSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const BackupScreen()),
           ),
-          const SettingsSectionTitle('Wheel'),
+          SettingsSectionTitle(l.settingsSectionWheel),
           ListTile(
             leading: const Icon(Icons.palette_outlined),
-            title: const Text('Wheel look'),
-            subtitle: const Text('Theme, photos, size, names'),
+            title: Text(l.wheelLookTitle),
+            subtitle: Text(l.settingsWheelLookSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const WheelLookScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.restart_alt),
-            title: const Text('Wheel rounds'),
-            subtitle: const Text('When eaten dishes come back'),
+            title: Text(l.roundsTitle),
+            subtitle: Text(l.settingsRoundsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const WheelRoundsScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.label_outline),
-            title: const Text('Tags'),
-            subtitle: const Text('Courses and your own groups of dishes'),
+            title: Text(l.tagsTitle),
+            subtitle: Text(l.settingsTagsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const TagsScreen()),
           ),
-          const SettingsSectionTitle('Kitchen'),
+          SettingsSectionTitle(l.settingsSectionKitchen),
           ListTile(
             leading: const Icon(Icons.scale_outlined),
-            title: const Text('Unit converter'),
-            subtitle: const Text('Cups, spoons, grams and millilitres'),
+            title: Text(l.settingsConverterTitle),
+            subtitle: Text(l.settingsConverterSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const ConverterScreen()),
           ),
-          const SettingsSectionTitle('Ingredients'),
+          SettingsSectionTitle(l.settingsSectionIngredients),
           ListTile(
             leading: const Icon(Icons.kitchen_outlined),
-            title: const Text('Ingredients & USDA key'),
-            subtitle: const Text('Own ingredients, built-in data, online lookup'),
+            title: Text(l.settingsIngredientsTitle),
+            subtitle: Text(l.settingsIngredientsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(context, const IngredientsScreen()),
           ),
-          const SettingsSectionTitle('About'),
+          SettingsSectionTitle(l.settingsSectionAbout),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('About Manja'),
-            subtitle: const Text('License, source code and credits'),
+            title: Text(l.settingsAboutTitle),
+            subtitle: Text(l.settingsAboutSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => showManjaAbout(context),
           ),

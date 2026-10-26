@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
 import '../../domain/wheel_layout.dart';
+import '../../domain/units.dart';
 import '../../domain/wheel_service.dart';
+import '../../l10n/l10n.dart';
+import '../wheel/wheel_labels.dart';
 import '../wheel/wheel_painter.dart';
 import '../wheel/wheel_themes.dart';
 import 'option_card.dart';
@@ -46,14 +49,16 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final look = _look;
+    final l = context.l10n;
+    String seconds(int millis) => (millis / 1000).toStringAsFixed(1).replaceFirst('.', decimalSeparator);
     return Scaffold(
-      appBar: AppBar(title: const Text('Wheel look')),
+      appBar: AppBar(title: Text(l.wheelLookTitle)),
       body: look == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.only(bottom: 32),
               children: [
-                const SettingsSectionTitle('Theme'),
+                SettingsSectionTitle(l.wheelLookTheme),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: LayoutBuilder(
@@ -68,7 +73,7 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
                             SizedBox(
                               width: width,
                               child: OptionCard(
-                                label: kind.label,
+                                label: kind.labelIn(l),
                                 selected: look.theme == kind,
                                 onTap: () => _change(look.copyWith(theme: kind)),
                                 preview: CustomPaint(
@@ -87,22 +92,17 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
                     },
                   ),
                 ),
-                const SettingsSectionTitle('Show on the wheel'),
+                SettingsSectionTitle(l.wheelLookShow),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SegmentedButton<WheelContent>(
-                    segments: [for (final c in WheelContent.values) ButtonSegment(value: c, label: Text(c.label))],
+                    segments: [for (final c in WheelContent.values) ButtonSegment(value: c, label: Text(c.labelIn(l)))],
                     selected: {look.content},
                     onSelectionChanged: (s) => _change(look.copyWith(content: s.single)),
                   ),
                 ),
-                const SettingsSectionTitle('Size'),
-                ListTile(
-                  title: Text('Recipes shown on the wheel: ${look.maxSlices}'),
-                  subtitle: const Text(
-                    'With more recipes, one "+n" slice stands for the rest. Every recipe still has the same chance.',
-                  ),
-                ),
+                SettingsSectionTitle(l.wheelLookSize),
+                ListTile(title: Text(l.wheelLookMaxSlices(look.maxSlices)), subtitle: Text(l.wheelLookMaxSlicesHint)),
                 Slider(
                   value: look.maxSlices.toDouble(),
                   min: WheelAppearance.minSlices.toDouble(),
@@ -112,47 +112,47 @@ class _WheelLookScreenState extends State<WheelLookScreen> {
                   onChanged: (v) => setState(() => _look = look.copyWith(maxSlices: v.round())),
                   onChangeEnd: (v) => _change(look.copyWith(maxSlices: v.round())),
                 ),
-                ListTile(title: Text('Winning dish takes ${look.winnerPercent}% of the wheel')),
+                ListTile(title: Text(l.wheelLookWinnerPercent(look.winnerPercent))),
                 Slider(
                   value: look.winnerPercent.toDouble(),
                   min: WheelAppearance.minWinnerPercent.toDouble(),
                   max: 100,
                   divisions: (100 - WheelAppearance.minWinnerPercent) ~/ 10,
-                  label: '${look.winnerPercent}%',
+                  label: l.wheelLookPercent(look.winnerPercent),
                   onChanged: (v) => setState(() => _look = look.copyWith(winnerPercent: v.round())),
                   onChangeEnd: (v) => _change(look.copyWith(winnerPercent: v.round())),
                 ),
-                const SettingsSectionTitle('Spin'),
+                SettingsSectionTitle(l.wheelLookSpin),
                 ListTile(
-                  title: Text('Spin time: ${look.spinSeconds} s'),
-                  subtitle: const Text('How long the wheel turns before it stops'),
+                  title: Text(l.wheelLookSpinTime('${look.spinSeconds}')),
+                  subtitle: Text(l.wheelLookSpinTimeHint),
                 ),
                 Slider(
                   value: look.spinSeconds.toDouble(),
                   min: WheelAppearance.minSpinSeconds.toDouble(),
                   max: WheelAppearance.maxSpinSeconds.toDouble(),
                   divisions: WheelAppearance.maxSpinSeconds - WheelAppearance.minSpinSeconds,
-                  label: '${look.spinSeconds} s',
+                  label: l.wheelLookSeconds('${look.spinSeconds}'),
                   onChanged: (v) => setState(() => _look = look.copyWith(spinSeconds: v.round())),
                   onChangeEnd: (v) => _change(look.copyWith(spinSeconds: v.round())),
                 ),
                 ListTile(
-                  title: Text('Winner reveal: ${(look.revealMillis / 1000).toStringAsFixed(1)} s'),
-                  subtitle: const Text('How long the chosen dish takes to grow on the wheel'),
+                  title: Text(l.wheelLookReveal(seconds(look.revealMillis))),
+                  subtitle: Text(l.wheelLookRevealHint),
                 ),
                 Slider(
                   value: look.revealMillis.toDouble(),
                   min: WheelAppearance.minRevealMillis.toDouble(),
                   max: WheelAppearance.maxRevealMillis.toDouble(),
                   divisions: (WheelAppearance.maxRevealMillis - WheelAppearance.minRevealMillis) ~/ 100,
-                  label: '${(look.revealMillis / 1000).toStringAsFixed(1)} s',
+                  label: l.wheelLookSeconds(seconds(look.revealMillis)),
                   onChanged: (v) => setState(() => _look = look.copyWith(revealMillis: (v / 100).round() * 100)),
                   onChangeEnd: (v) => _change(look.copyWith(revealMillis: (v / 100).round() * 100)),
                 ),
-                const SettingsSectionTitle('Names'),
+                SettingsSectionTitle(l.wheelLookNames),
                 SwitchListTile(
-                  title: const Text('Keep names upright'),
-                  subtitle: const Text('Turn names on the left half so they are never upside down'),
+                  title: Text(l.wheelLookUpright),
+                  subtitle: Text(l.wheelLookUprightHint),
                   value: look.flipText,
                   onChanged: (v) => _change(look.copyWith(flipText: v)),
                 ),

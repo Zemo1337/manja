@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../l10n/l10n.dart';
 import '../app_logo.dart';
 
 const sourceUrl = 'https://github.com/Zemo1337/manja';
@@ -34,8 +35,9 @@ void showManjaAbout(BuildContext context) => showLicensePage(
   context: context,
   applicationName: 'Manja',
   applicationIcon: const Padding(padding: EdgeInsets.all(8), child: AppLogo(size: 72, background: true)),
-  applicationLegalese:
-      'Free software under the GNU Affero General Public License v3.0.\n'
-      'Source code: $sourceUrl\n'
-      'The name "Manja" and its logo are not covered by the license.',
+  applicationLegalese: [
+    context.l10n.aboutLicense,
+    context.l10n.aboutSource(sourceUrl),
+    context.l10n.aboutTrademark,
+  ].join('\n'),
 );

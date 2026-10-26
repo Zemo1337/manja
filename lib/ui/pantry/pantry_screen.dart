@@ -5,14 +5,22 @@ import 'package:flutter/material.dart';
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/pantry_matcher.dart';
+import '../../l10n/l10n.dart';
 import '../app_theme.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../recipes/recipe_photo.dart';
 import '../settings/option_card.dart';
 
-const staples = ['Salt', 'Pepper', 'Oil', 'Flour', 'Sugar', 'Eggs', 'Milk', 'Butter', 'Onion', 'Garlic', 'Rice'];
+List<String> staplesIn(AppLocalizations l) => l.pantryStaples.split(',');
 
-const _basicWords = [...staples, 'Water', 'Sol', 'Biber', 'Papar', 'Ulje', 'Brašno', 'Šećer', 'Voda'];
+final _basicWords = {
+  for (final locale in AppLocalizations.supportedLocales) ...staplesIn(lookupAppLocalizations(locale)),
+  'Water',
+  'Wasser',
+  'Sol',
+  'Papar',
+  'Voda',
+};
 
 final _basicStems = [for (final b in _basicWords) nameStems(b)];
 
@@ -141,8 +149,9 @@ class _PantryScreenState extends State<PantryScreen> {
       return pantryStems.any((s) => s.isNotEmpty && stems.containsAll(s) && s.containsAll(stems));
     }
 
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('What can I cook?')),
+      appBar: AppBar(title: Text(l.pantryTitle)),
       bottomNavigationBar: complete.isEmpty
           ? null
           : SafeArea(
@@ -151,9 +160,7 @@ class _PantryScreenState extends State<PantryScreen> {
                 child: FilledButton.icon(
                   onPressed: canSpin ? () => _spin(complete) : null,
                   icon: const Icon(Icons.casino_outlined),
-                  label: Text(
-                    canSpin ? 'Spin with these ${complete.length}' : 'Switch to "On the wheel" to spin with these',
-                  ),
+                  label: Text(canSpin ? l.pantrySpinWith(complete.length) : l.pantrySwitchToWheel),
                 ),
               ),
             ),
@@ -162,55 +169,57 @@ class _PantryScreenState extends State<PantryScreen> {
           : ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
-                const SettingsSectionTitle('Always at home'),
+                SettingsSectionTitle(l.pantryAlwaysAtHome),
                 _ChipEditor(
                   items: [for (final p in _pantry) (p.name, () => AppScope.of(context).db.deletePantryItem(p.id))],
                   controller: _pantryInput,
-                  hint: 'Add a basic, e.g. olive oil',
+                  hint: l.pantryAddBasicHint,
                   onAdd: _addPantry,
                   suggestions: [
-                    for (final s in staples)
+                    for (final s in staplesIn(l))
                       if (!inPantry(s)) s,
                   ],
-                  empty: 'Add what you always have, like salt, oil or flour.',
+                  empty: l.pantryAlwaysEmpty,
                 ),
-                const SettingsSectionTitle('In the mood for'),
+                SettingsSectionTitle(l.pantryInTheMood),
                 _ChipEditor(
                   items: [for (final c in _cravings) (c, () => setState(() => _cravings.remove(c)))],
                   controller: _cravingInput,
-                  hint: 'Add an ingredient, e.g. chicken',
+                  hint: l.pantryAddCravingHint,
                   onAdd: _addCraving,
                   suggestions: [
                     for (final s in _suggestions)
                       if (!inPantry(s) && !isStaple(s) && !_cravings.any((c) => c.toLowerCase() == s.toLowerCase())) s,
                   ].take(12).toList(),
-                  empty: 'Optional. Pick what you feel like today to only see dishes with it.',
+                  empty: l.pantryCravingEmpty,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: true, label: Text('On the wheel'), icon: Icon(Icons.casino_outlined)),
-                      ButtonSegment(value: false, label: Text('All recipes'), icon: Icon(Icons.menu_book_outlined)),
+                    segments: [
+                      ButtonSegment(value: true, label: Text(l.pantryOnWheel), icon: const Icon(Icons.casino_outlined)),
+                      ButtonSegment(
+                        value: false,
+                        label: Text(l.pantryAllRecipes),
+                        icon: const Icon(Icons.menu_book_outlined),
+                      ),
                     ],
                     selected: {_wheelOnly},
                     onSelectionChanged: (s) => setState(() => _wheelOnly = s.single),
                   ),
                 ),
-                SettingsSectionTitle('You can make (${complete.length})'),
+                SettingsSectionTitle(l.pantryCanMake(complete.length)),
                 if (complete.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      _pantry.isEmpty && _cravings.isEmpty
-                          ? 'Add what you have at home to see which dishes you can make.'
-                          : 'Nothing yet with these ingredients.',
+                      _pantry.isEmpty && _cravings.isEmpty ? l.pantryEmptyHint : l.pantryNothingYet,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
                 for (final m in complete) _MatchTile(match: m),
                 if (near.isNotEmpty) ...[
-                  SettingsSectionTitle('Missing one or two (${near.length})'),
+                  SettingsSectionTitle(l.pantryMissingFew(near.length)),
                   for (final m in near) _MatchTile(match: m),
                 ],
               ],
@@ -269,7 +278,7 @@ class _ChipEditor extends StatelessWidget {
               isDense: true,
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
-                tooltip: 'Add',
+                tooltip: context.l10n.pantryAdd,
                 icon: const Icon(Icons.add),
                 onPressed: () => onAdd(controller.text),
               ),
@@ -315,8 +324,8 @@ class _MatchTile extends StatelessWidget {
       title: Text(recipe.name),
       subtitle: Text(
         match.complete
-            ? 'You have all ${match.used.length} ingredients'
-            : 'Missing: ${match.missing.map((i) => i.name).join(', ')}',
+            ? context.l10n.pantryHaveAll(match.used.length)
+            : context.l10n.pantryMissing(match.missing.map((i) => i.name).join(', ')),
         style: match.complete ? null : TextStyle(color: theme.colorScheme.error),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,

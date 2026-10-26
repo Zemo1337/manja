@@ -38,6 +38,8 @@ class ProfileBackup {
   ProfileBackup(this.db, this.photos);
 
   static const extension = '.manja';
+  static const notAProfileMessage = 'This is not a Manja profile.';
+  static const newerVersionMessage = 'This profile was made by a newer version of the app. Please update first.';
   static const _format = 'manja-profile';
   static const _version = 1;
   static const _dataFile = 'manja.json';
@@ -159,11 +161,11 @@ class ProfileBackup {
       if (file == null) throw const FormatException();
       data = jsonDecode(utf8.decode(file.content)) as Map<String, Object?>;
     } on Object {
-      throw const FormatException('This is not a Manja profile.');
+      throw const FormatException(notAProfileMessage);
     }
-    if (data['format'] != _format) throw const FormatException('This is not a Manja profile.');
+    if (data['format'] != _format) throw const FormatException(notAProfileMessage);
     if ((data['version'] as int? ?? 0) > _version) {
-      throw const FormatException('This profile was made by a newer version of the app. Please update first.');
+      throw const FormatException(newerVersionMessage);
     }
     return (archive, data);
   }

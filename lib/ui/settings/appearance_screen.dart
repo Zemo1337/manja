@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_scope.dart';
 import '../../l10n/l10n.dart';
 import '../app_theme.dart';
+import '../app_theme_labels.dart';
 import 'option_card.dart';
 
 class AppearanceScreen extends StatelessWidget {
@@ -12,8 +13,9 @@ class AppearanceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appearance = AppScope.of(context).appearance;
     final platform = MediaQuery.platformBrightnessOf(context);
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Appearance')),
+      appBar: AppBar(title: Text(l.appearanceTitle)),
       body: ListenableBuilder(
         listenable: appearance,
         builder: (context, _) {
@@ -25,7 +27,7 @@ class AppearanceScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: [
-              const SettingsSectionTitle('App theme'),
+              SettingsSectionTitle(l.appearanceAppTheme),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
@@ -36,7 +38,7 @@ class AppearanceScreen extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: OptionCard(
-                            label: kind.label,
+                            label: kind.labelIn(l),
                             selected: appearance.theme == kind,
                             onTap: () => appearance.setTheme(kind),
                             preview: ThemePreview(scheme: appColorScheme(kind, previewBrightness)),
@@ -48,13 +50,13 @@ class AppearanceScreen extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text(appearance.theme.description, style: Theme.of(context).textTheme.bodySmall),
+                child: Text(appearance.theme.descriptionIn(l), style: Theme.of(context).textTheme.bodySmall),
               ),
-              const SettingsSectionTitle('Mode'),
+              SettingsSectionTitle(l.appearanceMode),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SegmentedButton<AppBrightness>(
-                  segments: [for (final b in AppBrightness.values) ButtonSegment(value: b, label: Text(b.label))],
+                  segments: [for (final b in AppBrightness.values) ButtonSegment(value: b, label: Text(b.labelIn(l)))],
                   selected: {appearance.brightness},
                   onSelectionChanged: appearance.theme.alwaysDark ? null : (s) => appearance.setBrightness(s.single),
                 ),
@@ -62,19 +64,17 @@ class AppearanceScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Text(
-                  appearance.theme.alwaysDark
-                      ? 'The Dev theme is always dark.'
-                      : 'System follows the light or dark setting of your device.',
+                  appearance.theme.alwaysDark ? l.appearanceDevAlwaysDark : l.appearanceSystemHint,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-              SettingsSectionTitle(context.l10n.languageTitle),
+              SettingsSectionTitle(l.languageTitle),
               RadioGroup<String?>(
                 groupValue: appearance.language,
                 onChanged: appearance.setLanguage,
                 child: Column(
                   children: [
-                    RadioListTile<String?>(value: null, title: Text(context.l10n.languagePhone)),
+                    RadioListTile<String?>(value: null, title: Text(l.languagePhone)),
                     for (final locale in AppLocalizations.supportedLocales)
                       RadioListTile<String?>(
                         value: locale.languageCode,

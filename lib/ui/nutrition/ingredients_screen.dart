@@ -5,8 +5,10 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../data/nutrition_repository.dart';
+import '../../l10n/l10n.dart';
 import 'api_key_dialogs.dart';
 import 'food_edit_screen.dart';
+import 'nutrient_labels.dart';
 import 'nutrition_panel.dart';
 
 class IngredientsScreen extends StatefulWidget {
@@ -48,8 +50,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final builtIn = await scope.nutrition.countBySource(FoodSource.usda);
     final version = await scope.nutrition.bundleVersion();
     final keyOrigin = scope.nutrition.hasRemote ? await scope.nutrition.loadApiKey() : null;
-    final used = (await scope.nutrition.foodsByKey(linked)).values.where((f) => f.source != FoodSource.user && f.source != FoodSource.recipe).toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final used =
+        (await scope.nutrition.foodsByKey(linked)).values
+            .where((f) => f.source != FoodSource.user && f.source != FoodSource.recipe)
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
     if (mounted) {
       setState(() {
         _linked = linked;
@@ -68,18 +73,15 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
   Future<void> _delete(Food food) async {
     final used = _linked.contains(food.key);
+    final l = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete "${food.name}"?'),
-        content: Text(
-          used
-              ? 'Some recipes use this ingredient. They will show it as "no food linked" until you link another one.'
-              : 'The ingredient will be removed from this device.',
-        ),
+        title: Text(l.foodDeleteTitle(food.name)),
+        content: Text(used ? l.foodDeleteUsed : l.foodDeleteUnused),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.nutritionCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.nutritionDelete)),
         ],
       ),
     );
@@ -90,12 +92,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final repo = _repo;
     if (repo.updating.value.contains(food.key)) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
     try {
       final fresh = await repo.refresh(food);
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(fresh == null ? '${food.source.label} no longer has this food' : 'Updated "${fresh.name}"'),
-        ),
+        SnackBar(content: Text(fresh == null ? l.foodGone(food.source.labelIn(l)) : l.foodUpdated(fresh.name))),
       );
     } on NutritionSourceException catch (e) {
       if (mounted) {
@@ -139,12 +140,13 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ingredients')),
+      appBar: AppBar(title: Text(l.nutritionIngredientsTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _edit(),
         icon: const Icon(Icons.add),
-        label: const Text('My ingredient'),
+        label: Text(l.nutritionMyIngredientButton),
       ),
       body: StreamBuilder<List<Food>>(
         stream: _repo.watchUserFoods(),
@@ -157,44 +159,40 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   Widget _body(BuildContext context, List<Food> mine, Set<String> updating) {
+    final l = context.l10n;
     return ListView(
       padding: const EdgeInsets.only(bottom: 96),
       children: [
         ListTile(
           leading: const Icon(Icons.inventory_2_outlined),
-          title: Text(_builtIn == null ? 'Built-in ingredients' : 'Built-in ingredients: $_builtIn'),
-          subtitle: Text('USDA FoodData Central, works offline${_builtInVersion == null ? '' : '\n$_builtInVersion'}'),
+          title: Text(_builtIn == null ? l.nutritionBuiltIn : l.nutritionBuiltInCount(_builtIn!)),
+          subtitle: Text('${l.nutritionBuiltInSubtitle}${_builtInVersion == null ? '' : '\n$_builtInVersion'}'),
           isThreeLine: _builtInVersion != null,
         ),
         if (_keyOrigin != null)
           ListTile(
             leading: const Icon(Icons.travel_explore),
-            title: const Text('USDA online lookup'),
+            title: Text(l.nutritionUsdaOnline),
             subtitle: Text(switch (_keyOrigin!) {
-              ApiKeyOrigin.demo => 'Shared demo key, a few lookups per hour. Add your own free key for more.',
-              ApiKeyOrigin.developer => 'Developer key from config/local.json',
-              ApiKeyOrigin.user => 'Your own API key',
+              ApiKeyOrigin.demo => l.apiKeyOriginDemo,
+              ApiKeyOrigin.developer => l.apiKeyOriginDeveloper,
+              ApiKeyOrigin.user => l.apiKeyOriginUser,
             }),
             trailing: TextButton(
               onPressed: _editKey,
-              child: Text(_keyOrigin == ApiKeyOrigin.user ? 'Change' : 'Add key'),
+              child: Text(_keyOrigin == ApiKeyOrigin.user ? l.apiKeyChange : l.apiKeyAdd),
             ),
           ),
         const Divider(height: 24),
-        _section(
-          context,
-          'My ingredients',
-          mine,
-          'Add ingredients you cannot find, e.g. from a package label.',
-          updating,
-        ),
-        if (_usedUsda.isNotEmpty) _section(context, 'Online ingredients in your recipes', _usedUsda, '', updating),
+        _section(context, l.nutritionMyIngredients, mine, l.nutritionMyIngredientsEmpty, updating),
+        if (_usedUsda.isNotEmpty) _section(context, l.nutritionOnlineInRecipes, _usedUsda, '', updating),
       ],
     );
   }
 
   Widget _section(BuildContext context, String title, List<Food> foods, String empty, Set<String> updating) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -212,10 +210,10 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             title: Text(f.name),
             subtitle: Text(
               updating.contains(f.key)
-                  ? 'Asking ${f.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'} for the latest values…'
+                  ? l.foodAskingLatest(f.source == FoodSource.usda ? 'USDA' : 'Open Food Facts')
                   : [
                       if (f.per100g[Nutrient.energy] case final kcal?) '${kcal.round()} kcal / 100 g',
-                      if (_linked.contains(f.key)) 'used in recipes',
+                      if (_linked.contains(f.key)) l.foodUsedInRecipes,
                     ].join(' · '),
             ),
             trailing: updating.contains(f.key)
@@ -252,6 +250,7 @@ class _FoodSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     final mine = food.source == FoodSource.user;
     return SafeArea(
       child: SingleChildScrollView(
@@ -261,30 +260,30 @@ class _FoodSheet extends StatelessWidget {
           children: [
             Text(food.name, style: theme.textTheme.titleLarge),
             Text(
-              food.detail?.isNotEmpty == true ? '${food.source.label} · ${food.detail}' : food.source.label,
+              food.detail?.isNotEmpty == true ? '${food.source.labelIn(l)} · ${food.detail}' : food.source.labelIn(l),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
-            Text('Per 100 g', style: theme.textTheme.titleSmall),
+            Text(l.nutritionPer100g, style: theme.textTheme.titleSmall),
             for (final n in Nutrient.basic)
               if (food.per100g[n] case final v?)
                 Row(
                   children: [
-                    Expanded(child: Text(n.label)),
+                    Expanded(child: Text(n.labelIn(l))),
                     Text('${formatNutrient(n, v)} ${n.unit}'),
                   ],
                 ),
             if (food.per100g.saltG case final salt?)
               Row(
                 children: [
-                  const Expanded(child: Text('Salt')),
+                  Expanded(child: Text(l.nutritionSalt)),
                   Text('${formatNutrient(Nutrient.fat, salt)} g'),
                 ],
               ),
             if (Nutrient.vitaminsAndMinerals.any(food.per100g.has)) VitaminsAndMinerals(values: food.per100g),
             if (food.portions.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('Portions', style: theme.textTheme.titleSmall),
+              Text(l.nutritionPortions, style: theme.textTheme.titleSmall),
               for (final p in food.portions)
                 Row(
                   children: [
@@ -301,7 +300,7 @@ class _FoodSheet extends StatelessWidget {
                 FilledButton.tonalIcon(
                   onPressed: onEdit,
                   icon: Icon(mine ? Icons.edit_outlined : Icons.copy),
-                  label: Text(mine ? 'Edit' : 'Copy to my ingredients'),
+                  label: Text(mine ? l.nutritionEdit : l.foodCopyToMine),
                 ),
                 if (canUpdate)
                   OutlinedButton.icon(
@@ -309,15 +308,15 @@ class _FoodSheet extends StatelessWidget {
                     icon: const Icon(Icons.sync),
                     label: Text(
                       updating
-                          ? 'Updating…'
-                          : 'Update from ${food.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'}',
+                          ? l.foodUpdating
+                          : l.foodUpdateFrom(food.source == FoodSource.usda ? 'USDA' : 'Open Food Facts'),
                     ),
                   ),
                 if (mine)
                   TextButton.icon(
                     onPressed: onDelete,
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('Delete'),
+                    label: Text(l.nutritionDelete),
                   ),
               ],
             ),

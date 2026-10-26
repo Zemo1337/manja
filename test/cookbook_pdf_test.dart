@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manja/data/database.dart';
 import 'package:manja/domain/cookbook_pdf.dart';
+import 'package:manja/l10n/l10n.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -91,11 +93,12 @@ void main() {
   });
 
   test('texts', () {
+    final en = lookupAppLocalizations(const Locale('en'));
     expect(
-      nutritionLine(Nutrients.of(energyKcal: 512.4, protein: 31.2, fat: 8.25), {Nutrient.fat}),
+      nutritionLine(Nutrients.of(energyKcal: 512.4, protein: 31.2, fat: 8.25), {Nutrient.fat}, en),
       '512 kcal · 31 g protein · 8.3 g* fat',
     );
     final r = _recipe(1, 'Sarma').full.recipe;
-    expect(recipeInfo(r), '4 portions · Prep 20 min · Cook 1 h 30 min');
+    expect(recipeInfo(r, en), '4 portions · Prep 20 min · Cook 1 h 30 min');
   });
 }

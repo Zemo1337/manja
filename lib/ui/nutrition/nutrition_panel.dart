@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 
+import '../../domain/units.dart';
+import '../../l10n/l10n.dart';
 import '../app_theme.dart';
+import 'nutrient_labels.dart';
 
 enum NutritionBasis { portion, per100g, custom }
 
 String formatNutrient(Nutrient n, double value) {
   if (n == Nutrient.energy || n == Nutrient.sodium) return value.round().toString();
-  return value < 10 ? value.toStringAsFixed(1) : value.round().toString();
+  return value < 10 ? value.toStringAsFixed(1).replaceFirst('.', decimalSeparator) : value.round().toString();
 }
 
-String formatDetailedNutrient(double value) =>
-    value >= 10 ? value.round().toString() : (value >= 1 ? value.toStringAsFixed(1) : value.toStringAsFixed(2));
+String formatDetailedNutrient(double value) => value >= 10
+    ? value.round().toString()
+    : (value >= 1 ? value.toStringAsFixed(1) : value.toStringAsFixed(2)).replaceFirst('.', decimalSeparator);
 
 String? dailyReferencePercent(Nutrient n, double value) {
   final reference = n.dailyReference;
@@ -49,11 +53,12 @@ class _NutritionPanelState extends State<NutritionPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     final r = widget.result;
     final counted = r.lines.where((l) => l.counted).length;
     if (counted == 0) {
       return Text(
-        'Link ingredients to foods in the recipe editor to see nutrition values.',
+        l.nutritionNoLinks,
         style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
       );
     }
@@ -66,10 +71,10 @@ class _NutritionPanelState extends State<NutritionPanel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SegmentedButton<NutritionBasis>(
-          segments: const [
-            ButtonSegment(value: NutritionBasis.portion, label: Text('Portion')),
-            ButtonSegment(value: NutritionBasis.per100g, label: Text('100 g')),
-            ButtonSegment(value: NutritionBasis.custom, label: Text('Custom')),
+          segments: [
+            ButtonSegment(value: NutritionBasis.portion, label: Text(l.nutritionBasisPortion)),
+            const ButtonSegment(value: NutritionBasis.per100g, label: Text('100 g')),
+            ButtonSegment(value: NutritionBasis.custom, label: Text(l.nutritionBasisCustom)),
           ],
           selected: {_basis},
           showSelectedIcon: false,
@@ -82,7 +87,11 @@ class _NutritionPanelState extends State<NutritionPanel> {
             child: TextField(
               controller: _custom,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Amount', suffixText: 'g', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: l.nutritionAmount,
+                suffixText: 'g',
+                border: const OutlineInputBorder(),
+              ),
               onChanged: (_) => setState(() {}),
             ),
           ),
@@ -94,16 +103,14 @@ class _NutritionPanelState extends State<NutritionPanel> {
         const SizedBox(height: 8),
         Text(
           [
-            'Dish ${_grams(r.totalWeightG)} ${r.finishedWeightG != null ? '(weighed)' : '(sum of ingredients)'}',
-            '${r.portions} ${r.portions == 1 ? 'portion' : 'portions'} of about ${_grams(r.portionWeightG)}',
+            r.finishedWeightG != null
+                ? l.nutritionDishWeighed(_grams(r.totalWeightG))
+                : l.nutritionDishSum(_grams(r.totalWeightG)),
+            l.nutritionPortionsOfAbout(r.portions, _grams(r.portionWeightG)),
           ].join(' · '),
           style: theme.textTheme.bodySmall,
         ),
-        if (r.partial.isNotEmpty)
-          Text(
-            '* Some linked foods have no data for this value, so it is a lower bound.',
-            style: theme.textTheme.bodySmall,
-          ),
+        if (r.partial.isNotEmpty) Text(l.nutritionLowerBound, style: theme.textTheme.bodySmall),
         if (!r.complete) ...[const SizedBox(height: 8), _MissingCard(missing: r.missing)],
       ],
     );
@@ -119,10 +126,19 @@ class _NutrientTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final rows = <(String, String, bool)>[
+    final l = context.l10n;
+    final rows = <(String, String, bool, bool, bool)>[
       for (final n in Nutrient.basic)
-        if (values[n] case final v?) (n.label, '${formatNutrient(n, v)} ${n.unit}', n == Nutrient.energy),
-      if (values.saltG case final salt?) ('Salt', '${formatNutrient(Nutrient.fat, salt)} g', false),
+        if (values[n] case final v?)
+          (
+            n.labelIn(l),
+            '${formatNutrient(n, v)} ${n.unit}',
+            n == Nutrient.energy,
+            n == Nutrient.saturatedFat || n == Nutrient.sugars,
+            partial.contains(n),
+          ),
+      if (values.saltG case final salt?)
+        (l.nutritionSalt, '${formatNutrient(Nutrient.fat, salt)} g', false, false, partial.contains(Nutrient.sodium)),
     ];
     final colors = HighlightColors.of(context);
     final highlight = colors.background;
@@ -130,7 +146,7 @@ class _NutrientTable extends StatelessWidget {
     return Table(
       columnWidths: const {0: FlexColumnWidth(), 1: IntrinsicColumnWidth()},
       children: [
-        for (final (label, value, bold) in rows)
+        for (final (label, value, bold, indented, isPartial) in rows)
           TableRow(
             decoration: bold
                 ? BoxDecoration(color: highlight, borderRadius: BorderRadius.circular(8))
@@ -139,7 +155,7 @@ class _NutrientTable extends StatelessWidget {
                   ),
             children: [
               Padding(
-                padding: EdgeInsets.only(left: _indented(label) ? 24 : 8, top: 6, bottom: 6),
+                padding: EdgeInsets.only(left: indented ? 24 : 8, top: 6, bottom: 6),
                 child: Text(
                   label,
                   style: bold ? theme.textTheme.titleSmall?.copyWith(color: onHighlight) : theme.textTheme.bodyMedium,
@@ -148,7 +164,7 @@ class _NutrientTable extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 6, 8, 6),
                 child: Text(
-                  '$value${_isPartial(label) ? ' *' : ''}',
+                  '$value${isPartial ? ' *' : ''}',
                   textAlign: TextAlign.end,
                   style: bold ? theme.textTheme.titleSmall?.copyWith(color: onHighlight) : theme.textTheme.bodyMedium,
                 ),
@@ -158,11 +174,6 @@ class _NutrientTable extends StatelessWidget {
       ],
     );
   }
-
-  bool _indented(String label) => label == Nutrient.saturatedFat.label || label == Nutrient.sugars.label;
-
-  bool _isPartial(String label) =>
-      partial.any((n) => n.label == label) || (label == 'Salt' && partial.contains(Nutrient.sodium));
 }
 
 class VitaminsAndMinerals extends StatelessWidget {
@@ -175,13 +186,14 @@ class VitaminsAndMinerals extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final l = context.l10n;
     return Theme(
       data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 8),
         childrenPadding: const EdgeInsets.only(bottom: 8),
-        title: Text('Vitamins and minerals', style: theme.textTheme.titleSmall),
-        subtitle: Text('% of the EU daily reference intake for adults', style: muted),
+        title: Text(l.nutritionVitaminsMinerals, style: theme.textTheme.titleSmall),
+        subtitle: Text(l.nutritionDailyReferenceHint, style: muted),
         children: [
           for (final n in Nutrient.vitaminsAndMinerals)
             if (values[n] case final v?)
@@ -192,7 +204,7 @@ class VitaminsAndMinerals extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: Text(n.label, style: theme.textTheme.bodyMedium)),
+                    Expanded(child: Text(n.labelIn(l), style: theme.textTheme.bodyMedium)),
                     Text(
                       '${formatDetailedNutrient(v)} ${n.unit}${partial.contains(n) ? ' *' : ''}',
                       style: theme.textTheme.bodyMedium,
@@ -218,6 +230,7 @@ class _MissingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     return Card(
       margin: EdgeInsets.zero,
       color: theme.colorScheme.secondaryContainer,
@@ -226,11 +239,13 @@ class _MissingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Not counted', style: theme.textTheme.titleSmall),
+            Text(l.nutritionNotCounted, style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             for (final m in missing)
               Text(
-                '${m.line.name}: ${m.issue == LineIssue.noFood ? 'no food linked' : 'no gram weight for "${m.line.unit.symbol}"'}',
+                m.issue == LineIssue.noFood
+                    ? l.nutritionMissingNoFood(m.line.name)
+                    : l.nutritionMissingNoWeight(m.line.name, m.line.unit.symbolIn(l)),
                 style: theme.textTheme.bodySmall,
               ),
           ],

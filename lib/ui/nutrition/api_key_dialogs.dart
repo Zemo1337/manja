@@ -5,21 +5,24 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app_scope.dart';
 import '../../data/nutrition_repository.dart';
+import '../../l10n/l10n.dart';
 
 final apiSignupUri = Uri.parse('https://api.data.gov/signup/');
 
 Future<void> openApiSignup(BuildContext context) async {
   final opened = await launchUrl(apiSignupUri, mode: LaunchMode.externalApplication);
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Open $apiSignupUri in your browser')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.l10n.apiKeyOpenInBrowser('$apiSignupUri'))));
   }
 }
 
 Future<void> handleNutritionError(BuildContext context, NutritionSourceException error) async {
   final repo = AppScope.of(context).nutrition;
+  final l = context.l10n;
   if (error.source != FoodSource.usda) {
     final message = switch (error.kind) {
-      NutritionErrorKind.unreachable => 'Open Food Facts could not be reached. Check your internet connection.',
+      NutritionErrorKind.unreachable => l.nutritionOffUnreachable,
       _ => error.message,
     };
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -30,9 +33,9 @@ Future<void> handleNutritionError(BuildContext context, NutritionSourceException
     return;
   }
   final message = switch (error.kind) {
-    NutritionErrorKind.rateLimited => 'You reached the hourly USDA limit for your key. Please try again later.',
-    NutritionErrorKind.unauthorized => 'USDA did not accept the API key. Check it in Ingredients > USDA online lookup.',
-    NutritionErrorKind.unreachable => 'USDA could not be reached. Check your internet connection.',
+    NutritionErrorKind.rateLimited => l.apiKeyRateLimited,
+    NutritionErrorKind.unauthorized => l.apiKeyRejected,
+    NutritionErrorKind.unreachable => l.nutritionUsdaUnreachable,
     NutritionErrorKind.other => error.message,
   };
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -44,25 +47,26 @@ Future<void> showDemoLimitDialog(BuildContext context) {
     builder: (dialogContext) {
       final theme = Theme.of(dialogContext);
       final link = TextStyle(color: theme.colorScheme.primary, decoration: TextDecoration.underline);
+      final l = dialogContext.l10n;
       return AlertDialog(
         icon: const Icon(Icons.local_cafe_outlined),
-        title: const Text('Out of free lookups'),
+        title: Text(l.apiKeyDemoLimitTitle),
         content: SingleChildScrollView(
           child: Text.rich(
             TextSpan(
               style: theme.textTheme.bodyMedium,
               children: [
-                const TextSpan(text: 'Oh, hey there buddy, we see that you used up all the built-in USDA requests.\n\n'),
-                const TextSpan(text: 'If you need more, you can sign up for your own free API key at '),
+                TextSpan(text: '${l.apiKeyDemoLimitIntro}\n\n'),
+                TextSpan(text: l.apiKeyDemoLimitSignupBefore),
                 TextSpan(
                   text: 'api.data.gov/signup',
                   style: link,
                   recognizer: TapGestureRecognizer()..onTap = () => openApiSignup(dialogContext),
                 ),
-                const TextSpan(text: '. Once you register, you will receive your very own API key by email.\n\n'),
-                const TextSpan(text: 'You can then enter this key in the app to get more lookups.\n\n'),
+                TextSpan(text: '${l.apiKeyDemoLimitSignupAfter}\n\n'),
+                TextSpan(text: '${l.apiKeyDemoLimitEnterKey}\n\n'),
                 TextSpan(
-                  text: 'Do not forget: do not share your key publicly.',
+                  text: l.apiKeyDemoLimitWarning,
                   style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
@@ -70,14 +74,14 @@ Future<void> showDemoLimitDialog(BuildContext context) {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Not now')),
-          TextButton(onPressed: () => openApiSignup(dialogContext), child: const Text('Get a key')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l.apiKeyNotNow)),
+          TextButton(onPressed: () => openApiSignup(dialogContext), child: Text(l.apiKeyGetKey)),
           FilledButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
               await showApiKeyDialog(context);
             },
-            child: const Text('Enter my key'),
+            child: Text(l.apiKeyEnterMine),
           ),
         ],
       );
@@ -97,7 +101,7 @@ Future<ApiKeyOrigin?> showApiKeyDialog(BuildContext context) async {
   final origin = await repo.setUserApiKey(result);
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(origin == ApiKeyOrigin.user ? 'Your API key is saved' : 'Your API key was removed')),
+      SnackBar(content: Text(origin == ApiKeyOrigin.user ? context.l10n.apiKeySaved : context.l10n.apiKeyRemoved)),
     );
   }
   return origin;
@@ -123,8 +127,9 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AlertDialog(
-      title: const Text('Your USDA API key'),
+      title: Text(l.apiKeyDialogTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,25 +140,22 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
             obscureText: true,
             autocorrect: false,
             enableSuggestions: false,
-            decoration: const InputDecoration(labelText: 'API key', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l.apiKeyLabel, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 8),
-          Text(
-            'The key is stored only on this device. Do not share it publicly.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(l.apiKeyStoredLocally, style: Theme.of(context).textTheme.bodySmall),
           TextButton.icon(
             onPressed: () => openApiSignup(context),
             icon: const Icon(Icons.open_in_new, size: 18),
-            label: const Text('Get a free key'),
+            label: Text(l.apiKeyGetFreeKey),
           ),
         ],
       ),
       actions: [
         if (widget.current != null)
-          TextButton(onPressed: () => Navigator.pop(context, ''), child: const Text('Remove key')),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(context, _controller.text), child: const Text('Save')),
+          TextButton(onPressed: () => Navigator.pop(context, ''), child: Text(l.apiKeyRemove)),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.nutritionCancel)),
+        FilledButton(onPressed: () => Navigator.pop(context, _controller.text), child: Text(l.nutritionSave)),
       ],
     );
   }

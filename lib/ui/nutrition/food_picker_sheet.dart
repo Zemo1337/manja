@@ -9,6 +9,7 @@ import '../../data/database.dart';
 import '../../data/nutrition_repository.dart';
 import '../../data/recipe_foods.dart';
 import '../../domain/text_fold.dart';
+import '../../l10n/l10n.dart';
 import 'api_key_dialogs.dart';
 import 'barcode_scanner_screen.dart';
 import 'food_edit_screen.dart';
@@ -84,12 +85,13 @@ class _FoodPickerState extends State<_FoodPicker> {
     final candidates = _ingredientRecipes ??= widget.recipes ? await _loadIngredientRecipes() : const [];
     if (!mounted || generation != _generation) return;
     final query = foldText(_text);
+    final recipeDetail = context.l10n.pickerRecipeDetail;
     setState(() {
       _local = local;
       _recipes = [
         for (final r in candidates)
           if (foldText(r.name).contains(query))
-            FoodSummary(source: FoodSource.recipe, sourceId: '${r.id}', name: r.name, detail: 'Recipe'),
+            FoodSummary(source: FoodSource.recipe, sourceId: '${r.id}', name: r.name, detail: recipeDetail),
       ]..sort((a, b) => (uses[b.key] ?? 0).compareTo(uses[a.key] ?? 0));
       if (_remoteQuery != _text) {
         _remote = null;
@@ -147,8 +149,7 @@ class _FoodPickerState extends State<_FoodPicker> {
       final food = await _repo.food(summary.key);
       if (!mounted) return;
       if (food == null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('This ingredient is no longer available')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.pickerNoLongerAvailable)));
         return;
       }
       Navigator.pop(context, food);
@@ -173,16 +174,15 @@ class _FoodPickerState extends State<_FoodPicker> {
       if (!mounted) return;
       if (food == null) {
         setState(() => _opening = null);
+        final l = context.l10n;
         final create = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Product not found'),
-            content: Text(
-              'Open Food Facts does not know the barcode $code yet. You can enter the values from the label instead.',
-            ),
+            title: Text(l.pickerProductNotFound),
+            content: Text(l.pickerProductNotFoundBody(code)),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Create my own')),
+              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.nutritionCancel)),
+              FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.pickerCreateOwnButton)),
             ],
           ),
         );
@@ -193,9 +193,8 @@ class _FoodPickerState extends State<_FoodPicker> {
     } on NutritionSourceException catch (e) {
       if (mounted) {
         setState(
-          () => _scanError = e.kind == NutritionErrorKind.unreachable
-              ? 'Open Food Facts could not be reached. Check your internet connection.'
-              : e.message,
+          () =>
+              _scanError = e.kind == NutritionErrorKind.unreachable ? context.l10n.nutritionOffUnreachable : e.message,
         );
       }
     } finally {
@@ -214,6 +213,7 @@ class _FoodPickerState extends State<_FoodPicker> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     final remote = _remote;
     return Column(
       children: [
@@ -222,10 +222,10 @@ class _FoodPickerState extends State<_FoodPicker> {
           child: TextField(
             controller: _query,
             autofocus: widget.initialQuery.isEmpty,
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Search ingredients, e.g. "flour wheat"',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: l.pickerSearchHint,
+              border: const OutlineInputBorder(),
             ),
             textInputAction: TextInputAction.search,
             onChanged: _onChanged,
@@ -237,15 +237,15 @@ class _FoodPickerState extends State<_FoodPicker> {
             children: [
               ListTile(
                 leading: const Icon(Icons.add_circle_outline),
-                title: const Text('Create my own ingredient'),
-                subtitle: const Text('Enter values from a package label'),
+                title: Text(l.pickerCreateOwn),
+                subtitle: Text(l.pickerCreateOwnSubtitle),
                 onTap: _opening == null ? _createOwn : null,
               ),
               if (_repo.hasSource(FoodSource.openFoodFacts))
                 ListTile(
                   leading: Icon(canScanBarcodes ? Icons.qr_code_scanner : Icons.pin_outlined),
-                  title: Text(canScanBarcodes ? 'Scan a package barcode' : 'Enter a package barcode'),
-                  subtitle: const Text('Looks the product up in Open Food Facts'),
+                  title: Text(canScanBarcodes ? l.pickerScanBarcode : l.pickerEnterBarcode),
+                  subtitle: Text(l.pickerBarcodeSubtitle),
                   trailing: _opening == 'barcode'
                       ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : null,
@@ -255,19 +255,19 @@ class _FoodPickerState extends State<_FoodPicker> {
                 ListTile(
                   leading: Icon(Icons.cloud_off, color: theme.colorScheme.error),
                   title: Text(_scanError!),
-                  subtitle: Text('Barcode $_scannedCode'),
-                  trailing: TextButton(onPressed: () => _scan(_scannedCode), child: const Text('Retry')),
+                  subtitle: Text(l.pickerBarcodeCode('$_scannedCode')),
+                  trailing: TextButton(onPressed: () => _scan(_scannedCode), child: Text(l.nutritionRetry)),
                 ),
               for (final f in _recipes) _tile(f),
               if (_local.isEmpty && _recipes.isEmpty && _text.isNotEmpty)
-                ListTile(dense: true, title: Text('Nothing found on this device', style: theme.textTheme.bodySmall)),
+                ListTile(dense: true, title: Text(l.pickerNothingLocal, style: theme.textTheme.bodySmall)),
               for (final f in _local) _tile(f),
               if (_repo.hasRemote) ...[
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: Text(
-                    _text.length < 2 ? 'Search online' : 'Search online for "$_text"',
+                    _text.length < 2 ? l.pickerSearchOnline : l.pickerSearchOnlineFor(_text),
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -278,8 +278,8 @@ class _FoodPickerState extends State<_FoodPicker> {
                     runSpacing: 8,
                     children: [
                       for (final (source, label, icon) in [
-                        (FoodSource.usda, 'USDA ingredients', Icons.eco_outlined),
-                        (FoodSource.openFoodFacts, 'Store products', Icons.shopping_basket_outlined),
+                        (FoodSource.usda, l.pickerUsdaIngredients, Icons.eco_outlined),
+                        (FoodSource.openFoodFacts, l.pickerStoreProducts, Icons.shopping_basket_outlined),
                       ])
                         if (_repo.hasSource(source))
                           (remote != null || _remoteLoading) && _remoteSource == source
@@ -305,9 +305,7 @@ class _FoodPickerState extends State<_FoodPicker> {
                         const LinearProgressIndicator(),
                         const SizedBox(height: 8),
                         Text(
-                          _remoteSource == FoodSource.usda
-                              ? 'Asking USDA, this can take a few seconds…'
-                              : 'Asking Open Food Facts…',
+                          _remoteSource == FoodSource.usda ? l.pickerAskingUsda : l.pickerAskingOff,
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -317,10 +315,10 @@ class _FoodPickerState extends State<_FoodPicker> {
                   ListTile(
                     leading: Icon(Icons.cloud_off, color: theme.colorScheme.error),
                     title: Text(_remoteError!),
-                    trailing: TextButton(onPressed: () => _searchRemote(), child: const Text('Retry')),
+                    trailing: TextButton(onPressed: () => _searchRemote(), child: Text(l.nutritionRetry)),
                   ),
                 if (remote != null && remote.isEmpty)
-                  ListTile(dense: true, title: Text('No additional online results', style: theme.textTheme.bodySmall)),
+                  ListTile(dense: true, title: Text(l.pickerNoMoreOnline, style: theme.textTheme.bodySmall)),
                 if (remote != null)
                   for (final f in remote) _tile(f),
                 if (remote != null && _remoteSource == FoodSource.openFoodFacts) const _OffAttribution(),
@@ -336,7 +334,7 @@ class _FoodPickerState extends State<_FoodPicker> {
   Widget _tile(FoodSummary f) {
     final uses = _uses?[f.key] ?? 0;
     final subtitle = [
-      if (uses > 0) uses == 1 ? 'In 1 recipe' : 'In $uses recipes',
+      if (uses > 0) context.l10n.pickerUses(uses),
       if (f.detail case final detail? when detail.isNotEmpty) detail,
     ].join(' · ');
     return ListTile(
@@ -366,10 +364,7 @@ class _OffAttribution extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: const Icon(Icons.info_outline, size: 18),
-      title: Text(
-        'Product data from Open Food Facts, made by its contributors under the Open Database License (ODbL).',
-        style: theme.textTheme.bodySmall,
-      ),
+      title: Text(context.l10n.pickerOffAttribution, style: theme.textTheme.bodySmall),
       onTap: () => launchUrl(Uri.parse('https://world.openfoodfacts.org'), mode: LaunchMode.externalApplication),
     );
   }

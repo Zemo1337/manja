@@ -1,6 +1,7 @@
 import 'package:nutrition_core/nutrition_core.dart';
 
 import '../domain/units.dart';
+import '../l10n/l10n.dart';
 import 'database.dart';
 import 'nutrition_repository.dart';
 
@@ -52,6 +53,7 @@ Future<Food?> recipeFood(AppDatabase db, int recipeId, {Set<int> visiting = cons
 Food recipeAsFood(Recipe recipe, RecipeNutrition nutrition) {
   final grams = nutrition.portionWeightG;
   final known = grams > 0;
+  final l10n = appLocalizationsNow();
   return Food(
     source: FoodSource.recipe,
     sourceId: '${recipe.id}',
@@ -59,8 +61,10 @@ Food recipeAsFood(Recipe recipe, RecipeNutrition nutrition) {
     per100g: known ? nutrition.per100g : Nutrients.empty,
     portions: [if (known) FoodPortion(label: 'portion', grams: grams, unit: CookingUnit.portion)],
     detail: !known
-        ? 'Weight of a portion unknown'
-        : '1 portion ${nutrition.finishedWeightG == null ? '≈' : '='} ${formatAmount(grams)} g',
+        ? l10n.recipeFoodWeightUnknown
+        : nutrition.finishedWeightG == null
+        ? l10n.recipeFoodPortionEstimate(formatAmount(grams))
+        : l10n.recipeFoodPortion(formatAmount(grams)),
   );
 }
 

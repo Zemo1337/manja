@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../app_scope.dart';
 import '../../data/database.dart';
 import '../../domain/text_fold.dart';
-
-const _months = [
-  'January', 'February', 'March', 'April', 'May', 'June', //
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+import '../../l10n/l10n.dart';
 
 String _two(int n) => n.toString().padLeft(2, '0');
 
@@ -53,8 +50,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       firstDate: DateTime(first.year, first.month, first.day),
       lastDate: DateTime(now.year, now.month, now.day),
       initialDateRange: _range,
-      helpText: 'Show meals from',
-      saveText: 'Show',
+      helpText: context.l10n.historyRangeHelp,
+      saveText: context.l10n.historyRangeSave,
     );
     if (range != null) setState(() => _range = range);
   }
@@ -66,8 +63,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('${entry.recipe.name} removed from the history'),
-          action: SnackBarAction(label: 'Undo', onPressed: () => db.logMeal(entry.recipe.id, entry.log.eatenAt)),
+          content: Text(context.l10n.historyRemoved(entry.recipe.name)),
+          action: SnackBarAction(
+            label: context.l10n.historyUndo,
+            onPressed: () => db.logMeal(entry.recipe.id, entry.log.eatenAt),
+          ),
         ),
       );
   }
@@ -76,21 +76,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final db = AppScope.of(context).db;
     final theme = Theme.of(context);
+    final l = context.l10n;
+    final monthFormat = DateFormat.yMMMM();
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(title: Text(l.historyTitle)),
       body: StreamBuilder<List<MealLogEntry>>(
         stream: db.watchMealLog(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final all = snapshot.data!;
-          if (all.isEmpty) return const Center(child: Text('Nothing cooked yet. Spin the wheel!'));
+          if (all.isEmpty) return Center(child: Text(l.historyEmpty));
           final entries = _filter(all);
           final range = _range;
           final rows = <Widget>[];
           String? month;
           for (final e in entries) {
             final d = e.log.eatenAt;
-            final label = '${_months[d.month - 1]} ${d.year}';
+            final label = toBeginningOfSentenceCase(monthFormat.format(d));
             if (label != month) {
               month = label;
               final count = entries.where((x) => x.log.eatenAt.year == d.year && x.log.eatenAt.month == d.month).length;
@@ -98,7 +100,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Text(
-                    '$label · $count ${count == 1 ? 'meal' : 'meals'}',
+                    l.historyMonthHeader(label, count),
                     style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
                   ),
                 ),
@@ -134,13 +136,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         controller: _search,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.search),
-                          hintText: 'Search dishes',
+                          hintText: l.historySearchHint,
                           isDense: true,
                           border: const OutlineInputBorder(),
                           suffixIcon: _search.text.isEmpty
                               ? null
                               : IconButton(
-                                  tooltip: 'Clear search',
+                                  tooltip: l.historyClearSearch,
                                   icon: const Icon(Icons.close),
                                   onPressed: () => setState(_search.clear),
                                 ),
@@ -150,7 +152,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     const SizedBox(width: 8),
                     IconButton.outlined(
-                      tooltip: 'Pick dates',
+                      tooltip: l.historyPickDates,
                       onPressed: () => _pickRange(all),
                       icon: const Icon(Icons.date_range),
                     ),
@@ -179,9 +181,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       entries.isEmpty
-                          ? 'No meals match'
-                          : '${entries.length} ${entries.length == 1 ? 'meal' : 'meals'}'
-                                '${entries.length > 1 ? ', last on ${_day(entries.first.log.eatenAt)}' : ' on ${_day(entries.first.log.eatenAt)}'}',
+                          ? l.historyNoMatch
+                          : l.historyMatchSummary(entries.length, _day(entries.first.log.eatenAt)),
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

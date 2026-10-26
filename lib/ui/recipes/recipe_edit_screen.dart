@@ -11,6 +11,7 @@ import '../../data/recipe_importer.dart';
 import '../../domain/ingredient_suggestions.dart';
 import '../../domain/tag_matching.dart';
 import '../../domain/units.dart';
+import '../../l10n/l10n.dart';
 import '../nutrition/food_picker_sheet.dart';
 import '../settings/tags_screen.dart';
 import 'recipe_photo.dart';
@@ -172,7 +173,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
           width: 64,
           child: TextFormField(
             controller: row.amount,
-            decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: context.l10n.recipeQty, border: const OutlineInputBorder()),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (v) => (v ?? '').trim().isNotEmpty && _parseAmount(v!) == null ? '?' : null,
           ),
@@ -184,12 +185,12 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
             key: ValueKey((row.unit, recipeIdOfFoodKey(row.foodKey) != null)),
             initialValue: row.unit,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: context.l10n.recipeUnit, border: const OutlineInputBorder()),
             items: [
               for (final u in _unitsFor(row))
                 DropdownMenuItem(
                   value: u,
-                  child: Text(u.symbol, overflow: TextOverflow.ellipsis),
+                  child: Text(u.symbolIn(context.l10n), overflow: TextOverflow.ellipsis),
                 ),
             ],
             onChanged: (u) => setState(() => row.unit = u ?? row.unit),
@@ -200,7 +201,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
           child: TextFormField(
             controller: controller,
             focusNode: focusNode,
-            decoration: const InputDecoration(labelText: 'Ingredient', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: context.l10n.recipeIngredient, border: const OutlineInputBorder()),
             textCapitalization: TextCapitalization.sentences,
           ),
         ),
@@ -225,7 +226,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 dense: true,
                 leading: Icon(s.foodKey == null ? Icons.history : Icons.link, size: 20),
                 title: Text(s.name),
-                trailing: Text(s.recipes == 1 ? '1 recipe' : '${s.recipes} recipes'),
+                trailing: Text(context.l10n.recipeSuggestionRecipes(s.recipes)),
                 onTap: () => onSelected(s),
               ),
           ],
@@ -295,7 +296,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               _tagIds = ids;
             }),
           ),
-        ActionChip(avatar: const Icon(Icons.add, size: 18), label: const Text('New tag'), onPressed: _newTag),
+        ActionChip(avatar: const Icon(Icons.add, size: 18), label: Text(context.l10n.recipeNewTag), onPressed: _newTag),
       ],
     );
   }
@@ -318,13 +319,14 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
 
   Widget _foodLink(BuildContext context, _IngredientRow row) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     if (row.foodKey == null) {
       return Align(
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
           onPressed: () => _linkFood(row),
           icon: const Icon(Icons.link, size: 18),
-          label: const Text('Link nutrition'),
+          label: Text(l.recipeLinkNutrition),
           style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
         ),
       );
@@ -344,8 +346,8 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 Text(
                   food?.name ??
                       (recipeIdOfFoodKey(row.foodKey) != null
-                          ? 'Linked recipe (deleted)'
-                          : 'Linked ingredient (not on this device)'),
+                          ? l.recipeLinkedRecipeDeleted
+                          : l.recipeLinkedIngredientMissing),
                   style: theme.textTheme.bodySmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -353,21 +355,21 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 if (food != null && !convertible)
                   Text(
                     food.source == FoodSource.recipe
-                        ? 'The weight of a portion is unknown. Link the ingredients of "${food.name}" or enter its finished weight.'
-                        : 'No gram weight for "${row.unit.symbol}". Use g or ml, or add a portion to the ingredient.',
+                        ? l.recipePortionWeightUnknown(food.name)
+                        : l.recipeNoGramWeight(row.unit.symbolIn(l)),
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
                   ),
               ],
             ),
           ),
           IconButton(
-            tooltip: 'Change',
+            tooltip: l.recipeChangeLink,
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.swap_horiz, size: 20),
             onPressed: () => _linkFood(row),
           ),
           IconButton(
-            tooltip: 'Unlink',
+            tooltip: l.recipeUnlink,
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.link_off, size: 20),
             onPressed: () => _unlinkFood(row),
@@ -400,7 +402,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load the photo: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.recipePhotoLoadError('$e'))));
     }
   }
 
@@ -484,6 +486,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       );
     }
     final camera = _picker.supportsImageSource(ImageSource.camera);
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -502,18 +505,18 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               TextButton.icon(
                 onPressed: () => _pickPhoto(ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Camera'),
+                label: Text(l.recipeCamera),
               ),
             TextButton.icon(
               onPressed: () => _pickPhoto(ImageSource.gallery),
               icon: const Icon(Icons.photo_library_outlined),
-              label: Text(camera ? 'Gallery' : 'Choose photo'),
+              label: Text(camera ? l.recipeGallery : l.recipeChoosePhoto),
             ),
             if (_hasPhoto)
               TextButton.icon(
                 onPressed: _removePhoto,
                 icon: const Icon(Icons.delete_outline),
-                label: const Text('Remove'),
+                label: Text(l.recipeRemove),
               ),
           ],
         ),
@@ -521,21 +524,22 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     );
   }
 
-  String? _required(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _required(String? v) => (v == null || v.trim().isEmpty) ? context.l10n.recipeRequired : null;
 
   String? _optionalMinutes(String? v) {
     if (v == null || v.trim().isEmpty) return null;
     final n = int.tryParse(v.trim());
-    return n == null || n < 0 ? 'Whole minutes' : null;
+    return n == null || n < 0 ? context.l10n.recipeWholeMinutes : null;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isNew ? 'New recipe' : 'Edit recipe'),
-        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: 'Save')],
+        title: Text(_isNew ? l.recipeEditTitleNew : l.recipeEditTitleEdit),
+        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: l.recipeSave)],
       ),
       body: Form(
         key: _formKey,
@@ -546,7 +550,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _name,
-                decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: l.recipeName, border: const OutlineInputBorder()),
                 textCapitalization: TextCapitalization.sentences,
                 validator: _required,
               ),
@@ -556,16 +560,16 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _portions,
-                      decoration: const InputDecoration(labelText: 'Portions', border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: l.recipePortions, border: const OutlineInputBorder()),
                       keyboardType: TextInputType.number,
-                      validator: (v) => (int.tryParse(v?.trim() ?? '') ?? 0) < 1 ? 'At least 1' : null,
+                      validator: (v) => (int.tryParse(v?.trim() ?? '') ?? 0) < 1 ? l.recipeAtLeastOne : null,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextFormField(
                       controller: _prep,
-                      decoration: const InputDecoration(labelText: 'Prep (min)', border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: l.recipePrepMinutes, border: const OutlineInputBorder()),
                       keyboardType: TextInputType.number,
                       validator: _optionalMinutes,
                     ),
@@ -574,7 +578,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _cook,
-                      decoration: const InputDecoration(labelText: 'Cook (min)', border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: l.recipeCookMinutes, border: const OutlineInputBorder()),
                       keyboardType: TextInputType.number,
                       validator: _optionalMinutes,
                     ),
@@ -582,11 +586,11 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              Text('Tags', style: theme.textTheme.titleMedium),
+              Text(l.recipeTags, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               _tagSection(context),
               const SizedBox(height: 24),
-              Text('Ingredients', style: theme.textTheme.titleLarge),
+              Text(l.recipeIngredients, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
             ]),
             _reorderable(_ingredients, _ingredientTile),
@@ -597,46 +601,46 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                   TextButton.icon(
                     onPressed: () => setState(() => _ingredients.add(_IngredientRow())),
                     icon: const Icon(Icons.add),
-                    label: const Text('Add ingredient'),
+                    label: Text(l.recipeAddIngredient),
                   ),
                   TextButton.icon(
                     onPressed: _addHeading,
                     icon: const Icon(Icons.title),
-                    label: const Text('Add heading'),
+                    label: Text(l.recipeAddHeading),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _finishedWeight,
-                decoration: const InputDecoration(
-                  labelText: 'Weight of the finished dish (optional)',
-                  helperText: 'Cooking changes the weight. Weigh the dish for accurate per 100 g values.',
+                decoration: InputDecoration(
+                  labelText: l.recipeFinishedWeight,
+                  helperText: l.recipeFinishedWeightHelp,
                   helperMaxLines: 2,
                   suffixText: 'g',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return null;
                   final g = _parseAmount(v);
-                  return g == null || g <= 0 ? 'Grams, e.g. 850' : null;
+                  return g == null || g <= 0 ? l.recipeFinishedWeightInvalid : null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _info,
-                decoration: const InputDecoration(
-                  labelText: 'Cooking info',
-                  hintText: 'Oven temperature, pan size, tips…',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l.recipeCookingInfo,
+                  hintText: l.recipeCookingInfoHint,
+                  border: const OutlineInputBorder(),
                 ),
                 minLines: 2,
                 maxLines: 5,
                 textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: 24),
-              Text('Preparation steps', style: theme.textTheme.titleLarge),
+              Text(l.recipePreparationSteps, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
             ]),
             _reorderable(_steps, _stepTile),
@@ -646,7 +650,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 child: TextButton.icon(
                   onPressed: () => setState(() => _steps.add(TextEditingController())),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add step'),
+                  label: Text(l.recipeAddStep),
                 ),
               ),
               const SizedBox(height: 32),
@@ -679,9 +683,9 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
 
   Widget _dragHandle(int index) => ReorderableDragStartListener(
     index: index,
-    child: const Padding(
-      padding: EdgeInsets.fromLTRB(0, 16, 6, 16),
-      child: Icon(Icons.drag_indicator, semanticLabel: 'Drag to reorder'),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(0, 16, 6, 16),
+      child: Icon(Icons.drag_indicator, semanticLabel: context.l10n.recipeDragToReorder),
     ),
   );
 
@@ -697,7 +701,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                   _dragHandle(index),
                   Expanded(child: _ingredientFields(row)),
                   IconButton(
-                    tooltip: 'Remove',
+                    tooltip: context.l10n.recipeRemove,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.close),
                     onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
@@ -718,18 +722,18 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
         Expanded(
           child: TextFormField(
             controller: row.name,
-            decoration: const InputDecoration(
-              labelText: 'Heading',
-              hintText: 'Dough, Topping, Sauce…',
-              prefixIcon: Icon(Icons.title),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.l10n.recipeHeading,
+              hintText: context.l10n.recipeHeadingHint,
+              prefixIcon: const Icon(Icons.title),
+              border: const OutlineInputBorder(),
             ),
             style: Theme.of(context).textTheme.titleMedium,
             textCapitalization: TextCapitalization.sentences,
           ),
         ),
         IconButton(
-          tooltip: 'Remove',
+          tooltip: context.l10n.recipeRemove,
           visualDensity: VisualDensity.compact,
           icon: const Icon(Icons.close),
           onPressed: () => setState(() => _ingredients.removeAt(index).dispose()),
@@ -758,7 +762,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
           ),
         ),
         IconButton(
-          tooltip: 'Remove',
+          tooltip: context.l10n.recipeRemove,
           visualDensity: VisualDensity.compact,
           icon: const Icon(Icons.close),
           onPressed: () => setState(() => _steps.removeAt(index).dispose()),

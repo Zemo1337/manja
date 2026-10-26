@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:nutrition_off/nutrition_off.dart';
 
+import '../../l10n/l10n.dart';
+
 bool get canScanBarcodes =>
     !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
 
@@ -55,16 +57,17 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan barcode'),
+        title: Text(l.scannerTitle),
         actions: [
           ValueListenableBuilder(
             valueListenable: _controller,
             builder: (context, state, _) => state.error != null
                 ? const SizedBox.shrink()
                 : IconButton(
-                    tooltip: 'Torch',
+                    tooltip: l.scannerTorch,
                     icon: const Icon(Icons.flashlight_on_outlined),
                     onPressed: () => _controller.toggleTorch(),
                   ),
@@ -106,16 +109,16 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
-                                'Point the camera at the barcode on the package',
+                              Text(
+                                l.scannerHint,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
+                                style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
                               ),
                               const SizedBox(height: 12),
                               FilledButton.tonalIcon(
                                 onPressed: _type,
                                 icon: const Icon(Icons.keyboard_outlined),
-                                label: const Text('Type the number'),
+                                label: Text(l.scannerTypeNumber),
                               ),
                             ],
                           ),
@@ -139,6 +142,7 @@ class _ScannerError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final denied = error.errorCode == MobileScannerErrorCode.permissionDenied;
+    final l = context.l10n;
     return ColoredBox(
       color: Colors.black,
       child: Center(
@@ -150,14 +154,12 @@ class _ScannerError extends StatelessWidget {
               const Icon(Icons.no_photography_outlined, color: Colors.white, size: 48),
               const SizedBox(height: 12),
               Text(
-                denied
-                    ? 'Manja may not use the camera. Allow it in the phone settings, or type the number.'
-                    : 'The camera could not be started.',
+                denied ? l.scannerPermissionDenied : l.scannerCameraFailed,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
-              FilledButton.tonal(onPressed: onType, child: const Text('Type the number')),
+              FilledButton.tonal(onPressed: onType, child: Text(l.scannerTypeNumber)),
             ],
           ),
         ),
@@ -186,7 +188,7 @@ class _BarcodeDialogState extends State<_BarcodeDialog> {
   void _submit() {
     final code = normalizeBarcode(_controller.text);
     if (code == null) {
-      setState(() => _error = 'A barcode has 8 to 14 digits');
+      setState(() => _error = context.l10n.scannerInvalidBarcode);
       return;
     }
     Navigator.pop(context, code);
@@ -194,7 +196,7 @@ class _BarcodeDialogState extends State<_BarcodeDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Package barcode'),
+    title: Text(context.l10n.scannerDialogTitle),
     content: TextField(
       controller: _controller,
       autofocus: true,
@@ -206,8 +208,8 @@ class _BarcodeDialogState extends State<_BarcodeDialog> {
       onSubmitted: (_) => _submit(),
     ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-      FilledButton(onPressed: _submit, child: const Text('Look up')),
+      TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.nutritionCancel)),
+      FilledButton(onPressed: _submit, child: Text(context.l10n.scannerLookUp)),
     ],
   );
 }

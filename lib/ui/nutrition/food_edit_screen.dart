@@ -3,7 +3,9 @@ import 'package:nutrition_core/nutrition_core.dart';
 
 import '../../app_scope.dart';
 import '../../domain/units.dart';
+import '../../l10n/l10n.dart';
 import '../app_theme.dart';
+import 'nutrient_labels.dart';
 
 const _portionUnits = [
   CookingUnit.piece,
@@ -20,14 +22,21 @@ const _portionUnits = [
 ];
 
 const _fields = [
-  (Nutrient.energy, 'Energy', 'kcal'),
-  (Nutrient.fat, 'Fat', 'g'),
-  (Nutrient.saturatedFat, '  of which saturates', 'g'),
-  (Nutrient.carbohydrate, 'Carbohydrate', 'g'),
-  (Nutrient.sugars, '  of which sugars', 'g'),
-  (Nutrient.fiber, 'Fiber', 'g'),
-  (Nutrient.protein, 'Protein', 'g'),
+  (Nutrient.energy, 'kcal'),
+  (Nutrient.fat, 'g'),
+  (Nutrient.saturatedFat, 'g'),
+  (Nutrient.carbohydrate, 'g'),
+  (Nutrient.sugars, 'g'),
+  (Nutrient.fiber, 'g'),
+  (Nutrient.protein, 'g'),
 ];
+
+String _fieldLabel(AppLocalizations l, Nutrient n) => switch (n) {
+  Nutrient.saturatedFat => l.foodOfWhichSaturates,
+  Nutrient.sugars => l.foodOfWhichSugars,
+  Nutrient.sodium => l.nutritionSalt,
+  _ => n.labelIn(l),
+};
 
 class FoodEditScreen extends StatefulWidget {
   const FoodEditScreen({super.key, this.existing, this.initialName = ''});
@@ -58,7 +67,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.existing?.name ?? widget.initialName);
   late final _values = {
-    for (final (n, _, _) in _fields) n: TextEditingController(text: _format(widget.existing?.per100g[n])),
+    for (final (n, _) in _fields) n: TextEditingController(text: _format(widget.existing?.per100g[n])),
   };
   late final _salt = TextEditingController(text: _format(widget.existing?.per100g.saltG));
   late final _detailed = {
@@ -91,12 +100,12 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
   String? _optionalNumber(String? v) {
     if (v == null || v.trim().isEmpty) return null;
     final n = _parse(v);
-    return n == null || n < 0 ? 'Number' : null;
+    return n == null || n < 0 ? context.l10n.foodNumberError : null;
   }
 
   String? _requiredPositive(String? v) {
     final n = _parse(v ?? '');
-    return n == null || n <= 0 ? 'Required' : null;
+    return n == null || n <= 0 ? context.l10n.foodRequiredError : null;
   }
 
   Future<void> _save() async {
@@ -128,10 +137,11 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existing == null ? 'New ingredient' : 'Edit ingredient'),
-        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: 'Save')],
+        title: Text(widget.existing == null ? l.foodNewTitle : l.foodEditTitle),
+        actions: [HeaderTextButton(onPressed: _saving ? null : _save, label: l.nutritionSave)],
       ),
       body: Form(
         key: _formKey,
@@ -140,26 +150,23 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
           children: [
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: l.foodName, border: const OutlineInputBorder()),
               textCapitalization: TextCapitalization.sentences,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+              validator: (v) => v == null || v.trim().isEmpty ? l.foodRequiredError : null,
             ),
             const SizedBox(height: 24),
-            Text('Nutrition per 100 g', style: theme.textTheme.titleLarge),
-            Text(
-              'Copy the values from the package label. Leave unknown values empty.',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.foodNutritionPer100g, style: theme.textTheme.titleLarge),
+            Text(l.foodNutritionHint, style: theme.textTheme.bodySmall),
             const SizedBox(height: 12),
-            for (final (n, label, unit) in [..._fields, (Nutrient.sodium, 'Salt', 'g')])
+            for (final (n, unit) in [..._fields, (Nutrient.sodium, 'g')])
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: TextFormField(
                   key: ValueKey('nutrient-${n.name}'),
                   controller: n == Nutrient.sodium ? _salt : _values[n],
                   decoration: InputDecoration(
-                    labelText: label.trim(),
-                    prefixText: label.startsWith(' ') ? '   ' : null,
+                    labelText: _fieldLabel(l, n),
+                    prefixText: n == Nutrient.saturatedFat || n == Nutrient.sugars ? '   ' : null,
                     suffixText: unit,
                     border: const OutlineInputBorder(),
                     isDense: true,
@@ -173,8 +180,8 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 initiallyExpanded: _detailed.values.any((c) => c.text.isNotEmpty),
-                title: const Text('More nutrients'),
-                subtitle: Text('Vitamins, minerals and cholesterol', style: theme.textTheme.bodySmall),
+                title: Text(l.foodMoreNutrients),
+                subtitle: Text(l.foodMoreNutrientsHint, style: theme.textTheme.bodySmall),
                 children: [
                   for (final n in Nutrient.vitaminsAndMinerals)
                     Padding(
@@ -183,7 +190,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                         key: ValueKey('nutrient-${n.name}'),
                         controller: _detailed[n],
                         decoration: InputDecoration(
-                          labelText: n.label,
+                          labelText: n.labelIn(l),
                           suffixText: n.unit,
                           border: const OutlineInputBorder(),
                           isDense: true,
@@ -196,11 +203,8 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Portions', style: theme.textTheme.titleLarge),
-            Text(
-              'How much one unit weighs, so recipes can use cups, spoons or pieces.',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l.nutritionPortions, style: theme.textTheme.titleLarge),
+            Text(l.foodPortionsHint, style: theme.textTheme.bodySmall),
             const SizedBox(height: 12),
             for (final (index, p) in _portions.indexed)
               Padding(
@@ -213,7 +217,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                       width: 64,
                       child: TextFormField(
                         controller: p.amount,
-                        decoration: const InputDecoration(labelText: 'Qty', border: OutlineInputBorder()),
+                        decoration: InputDecoration(labelText: l.foodQty, border: const OutlineInputBorder()),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: _requiredPositive,
                       ),
@@ -223,8 +227,8 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                       child: DropdownButtonFormField<CookingUnit>(
                         initialValue: p.unit,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
-                        items: [for (final u in _portionUnits) DropdownMenuItem(value: u, child: Text(u.label))],
+                        decoration: InputDecoration(labelText: l.foodUnit, border: const OutlineInputBorder()),
+                        items: [for (final u in _portionUnits) DropdownMenuItem(value: u, child: Text(u.labelIn(l)))],
                         onChanged: (u) => setState(() => p.unit = u ?? p.unit),
                       ),
                     ),
@@ -233,17 +237,17 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
                       width: 88,
                       child: TextFormField(
                         controller: p.grams,
-                        decoration: const InputDecoration(
-                          labelText: 'Weight',
+                        decoration: InputDecoration(
+                          labelText: l.foodWeight,
                           suffixText: 'g',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: _requiredPositive,
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Remove',
+                      tooltip: l.foodRemovePortion,
                       icon: const Icon(Icons.close),
                       onPressed: () => setState(() => _portions.removeAt(index).dispose()),
                     ),
@@ -255,7 +259,7 @@ class _FoodEditScreenState extends State<FoodEditScreen> {
               child: TextButton.icon(
                 onPressed: () => setState(() => _portions.add(_PortionRow())),
                 icon: const Icon(Icons.add),
-                label: const Text('Add portion'),
+                label: Text(l.foodAddPortion),
               ),
             ),
             const SizedBox(height: 32),

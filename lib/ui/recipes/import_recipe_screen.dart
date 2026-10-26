@@ -8,6 +8,7 @@ import 'package:recipe_import/recipe_import.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/recipe_importer.dart';
+import '../../l10n/l10n.dart';
 import 'recipe_edit_screen.dart';
 
 const _readPageScript = '''
@@ -75,7 +76,7 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
   Future<void> _start() async {
     final url = _parseUrl();
     if (url == null) {
-      setState(() => _error = 'Enter a link to a recipe page, for example https://www.coolinarika.com/recept/…');
+      setState(() => _error = context.l10n.recipeImportInvalidUrl);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -88,7 +89,7 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
       try {
         await _finish(await _importer.fromUrl(url));
       } on RecipeImportException catch (e) {
-        _fail(e.message);
+        if (mounted) _fail(e.messageIn(context.l10n));
       }
       return;
     }
@@ -124,12 +125,8 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
     final challenge = _challengeTitles.hasMatch('${page['title']}');
     if (challenge && _phase != _Phase.challenge && mounted) setState(() => _phase = _Phase.challenge);
     final waited = DateTime.now().difference(_startedAt!);
-    if (waited > Duration(seconds: challenge ? 120 : 30)) {
-      _fail(
-        challenge
-            ? 'The site kept checking the browser. Try again later, or copy the recipe by hand.'
-            : 'No recipe data found on this page. The site may not publish its recipes in a readable format.',
-      );
+    if (mounted && waited > Duration(seconds: challenge ? 120 : 30)) {
+      _fail(challenge ? context.l10n.recipeImportBotCheckTimeout : context.l10n.recipeImportNoRecipe);
     }
   }
 
@@ -151,8 +148,9 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final busy = _phase != _Phase.idle;
+    final l = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Import recipe')),
+      appBar: AppBar(title: Text(l.recipeImportTitle)),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -164,13 +162,13 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
               keyboardType: TextInputType.url,
               autocorrect: false,
               decoration: InputDecoration(
-                labelText: 'Link to the recipe',
+                labelText: l.recipeImportUrlLabel,
                 hintText: 'https://…',
                 border: const OutlineInputBorder(),
                 errorText: _error,
                 errorMaxLines: 3,
                 suffixIcon: IconButton(
-                  tooltip: 'Paste',
+                  tooltip: l.recipePaste,
                   icon: const Icon(Icons.content_paste),
                   onPressed: busy
                       ? null
@@ -188,7 +186,7 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
             child: FilledButton.icon(
               onPressed: busy ? null : _start,
               icon: const Icon(Icons.download),
-              label: const Text('Import'),
+              label: Text(l.recipeImport),
             ),
           ),
           if (busy)
@@ -202,9 +200,10 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(switch (_phase) {
-                      _Phase.loading => 'Reading the recipe from ${_target?.host ?? 'the page'}…',
-                      _Phase.challenge => 'The site wants to check that you are a person. Complete the check below.',
-                      _Phase.photo => 'Downloading the photo…',
+                      _Phase.loading =>
+                        _target == null ? l.recipeImportReadingPage : l.recipeImportReading(_target!.host),
+                      _Phase.challenge => l.recipeImportChallenge,
+                      _Phase.photo => l.recipeImportPhoto,
                       _Phase.idle => '',
                     }),
                   ),
@@ -227,10 +226,7 @@ class _ImportRecipeScreenState extends State<ImportRecipeScreen> {
           else if (!busy)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Works with most recipe sites. You can check and change everything before saving.',
-                style: theme.textTheme.bodySmall,
-              ),
+              child: Text(l.recipeImportHint, style: theme.textTheme.bodySmall),
             ),
         ],
       ),

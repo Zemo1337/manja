@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 import 'package:nutrition_core/nutrition_core.dart' show CookingUnit;
 
 import 'app_localizations.dart';
@@ -9,6 +10,13 @@ extension L10nContext on BuildContext {
   /// The app's texts; English where no translations are set up, as in widget tests with a bare MaterialApp.
   AppLocalizations get l10n =>
       Localizations.of<AppLocalizations>(this, AppLocalizations) ?? lookupAppLocalizations(const Locale('en'));
+}
+
+/// The texts of the app's current language, for code that has no BuildContext.
+AppLocalizations appLocalizationsNow() {
+  final code = Intl.defaultLocale?.split(RegExp('[-_]')).first;
+  final supported = AppLocalizations.supportedLocales.any((l) => l.languageCode == code);
+  return lookupAppLocalizations(Locale(supported ? code! : 'en'));
 }
 
 extension CookingUnitL10n on CookingUnit {

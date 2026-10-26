@@ -23,6 +23,20 @@ enum CookbookLayout {
   final String description;
 }
 
+extension CookbookLayoutL10n on CookbookLayout {
+  String labelIn(AppLocalizations l) => switch (this) {
+    CookbookLayout.classic => l.cookbookLayoutClassic,
+    CookbookLayout.compact => l.cookbookLayoutCompact,
+    CookbookLayout.cards => l.cookbookLayoutCards,
+  };
+
+  String descriptionIn(AppLocalizations l) => switch (this) {
+    CookbookLayout.classic => l.cookbookLayoutClassicHint,
+    CookbookLayout.compact => l.cookbookLayoutCompactHint,
+    CookbookLayout.cards => l.cookbookLayoutCardsHint,
+  };
+}
+
 class CookbookOptions {
   const CookbookOptions({
     this.title = 'Manja cookbook',
@@ -123,25 +137,37 @@ class _Style {
   };
 }
 
-String nutritionLine(Nutrients n, Set<Nutrient> partial) {
+String nutritionLine(Nutrients n, Set<Nutrient> partial, AppLocalizations l) {
   String value(Nutrient k, double v) {
-    final text = k == Nutrient.energy || k == Nutrient.sodium || v >= 10 ? v.round().toString() : v.toStringAsFixed(1);
+    final text = k == Nutrient.energy || k == Nutrient.sodium || v >= 10
+        ? v.round().toString()
+        : v.toStringAsFixed(1).replaceFirst('.', decimalSeparator);
     return '$text ${k.unit}${partial.contains(k) ? '*' : ''}';
   }
 
+  final names = {
+    Nutrient.protein: l.pdfProtein,
+    Nutrient.fat: l.pdfFat,
+    Nutrient.carbohydrate: l.pdfCarbohydrate,
+    Nutrient.fiber: l.pdfFiber,
+  };
   return [
     for (final k in const [Nutrient.energy, Nutrient.protein, Nutrient.fat, Nutrient.carbohydrate, Nutrient.fiber])
-      if (n[k] case final v?) k == Nutrient.energy ? value(k, v) : '${value(k, v)} ${k.label.toLowerCase()}',
+      if (n[k] case final v?) k == Nutrient.energy ? value(k, v) : '${value(k, v)} ${names[k]}',
   ].join(' · ');
 }
 
-String recipeInfo(Recipe r) => [
-  '${r.portions} ${r.portions == 1 ? 'portion' : 'portions'}',
-  if (r.prepMinutes case final m? when m > 0) 'Prep ${_minutes(m)}',
-  if (r.cookMinutes case final m? when m > 0) 'Cook ${_minutes(m)}',
+String recipeInfo(Recipe r, AppLocalizations l) => [
+  l.pdfPortions(r.portions),
+  if (r.prepMinutes case final m? when m > 0) l.pdfPrep(_minutes(m, l)),
+  if (r.cookMinutes case final m? when m > 0) l.pdfCook(_minutes(m, l)),
 ].join(' · ');
 
-String _minutes(int m) => m < 60 ? '$m min' : '${m ~/ 60} h${m % 60 == 0 ? '' : ' ${m % 60} min'}';
+String _minutes(int m, AppLocalizations l) => m < 60
+    ? l.pdfMinutes(m)
+    : m % 60 == 0
+    ? l.pdfHours(m ~/ 60)
+    : l.pdfHoursMinutes(m ~/ 60, m % 60);
 
 String _amount(RecipeIngredient i, AppLocalizations l10n) =>
     i.amount > 0 ? '${formatAmount(i.amount)} ${CookingUnit.fromName(i.unit).symbolIn(l10n, i.amount)}' : '';
@@ -248,7 +274,7 @@ class _Builder {
       doc.addPage(
         pw.Page(
           pageTheme: _pageTheme(),
-          build: (_) => pw.Center(child: pw.Text('No recipes yet')),
+          build: (_) => pw.Center(child: pw.Text(l10n.pdfNoRecipes)),
         ),
       );
     }
@@ -283,10 +309,7 @@ class _Builder {
   pw.Page _cover() {
     final photos = [for (final r in recipes) ?images[r.full.recipe.id]];
     final withPhotos = photos.take(photos.length >= 4 ? 4 : (photos.length >= 2 ? 2 : photos.length)).toList();
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June', //
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
+    final months = l10n.pdfMonths.split(',');
     final scale = _cards ? 0.45 : 1.0;
     return pw.Page(
       pageTheme: pw.PageTheme(
@@ -307,7 +330,7 @@ class _Builder {
             ),
             pw.SizedBox(height: 10 * scale),
             pw.Text(
-              '${recipes.length} ${recipes.length == 1 ? 'recipe' : 'recipes'} · ${months[date.month - 1]} ${date.year}',
+              '${l10n.pdfRecipeCount(recipes.length)} · ${months[date.month - 1]} ${date.year}',
               style: pw.TextStyle(font: fonts.light, fontSize: 16 * scale, color: _muted),
             ),
             pw.SizedBox(height: 28 * scale),
@@ -346,7 +369,7 @@ class _Builder {
                   ),
                 pw.Spacer(),
                 pw.Text(
-                  'Made with Manja',
+                  l10n.pdfMadeWith,
                   style: pw.TextStyle(fontSize: 10 * scale, color: _muted),
                 ),
               ],
@@ -364,7 +387,7 @@ class _Builder {
       children: [
         if (first) ...[
           pw.Text(
-            'Contents',
+            l10n.pdfContents,
             style: pw.TextStyle(font: fonts.bold, fontSize: style.title, color: _paprika),
           ),
           pw.SizedBox(height: style.body * 1.5),
@@ -416,7 +439,7 @@ class _Builder {
           ),
         ),
         pw.SizedBox(height: style.body * 0.3),
-        pw.Text(recipeInfo(r), style: pw.TextStyle(color: _muted)),
+        pw.Text(recipeInfo(r, l10n), style: pw.TextStyle(color: _muted)),
       ],
     );
     final photo = image == null
@@ -449,14 +472,14 @@ class _Builder {
           padding: pw.EdgeInsets.symmetric(horizontal: style.body * 0.8, vertical: style.body * 0.4),
           decoration: pw.BoxDecoration(color: _saffronLight, borderRadius: pw.BorderRadius.circular(6)),
           child: pw.Text(
-            '${entry.complete ? 'Per portion' : 'Per portion, at least'}: '
-            '${nutritionLine(entry.perPortion!, entry.partial)}',
+            '${entry.complete ? l10n.pdfPerPortion : l10n.pdfPerPortionAtLeast}: '
+            '${nutritionLine(entry.perPortion!, entry.partial, l10n)}',
             style: pw.TextStyle(fontSize: style.body * 0.9),
           ),
         ),
       ],
       if (entry.full.ingredients.isNotEmpty) ...[
-        _heading('Ingredients'),
+        _heading(l10n.pdfIngredients),
         for (final (index, group) in ingredientSections(entry.full.ingredients).indexed) ...[
           if (group.section case final section?)
             pw.Padding(
@@ -470,7 +493,7 @@ class _Builder {
         ],
       ],
       if (entry.full.steps.isNotEmpty) ...[
-        _heading('Preparation'),
+        _heading(l10n.pdfPreparation),
         for (final (index, step) in entry.full.steps.indexed)
           pw.Padding(
             padding: pw.EdgeInsets.only(bottom: style.body * 0.5),
@@ -489,13 +512,13 @@ class _Builder {
             ),
           ),
       ],
-      if (r.cookingInfo.trim().isNotEmpty) ...[_heading('Notes'), pw.Text(r.cookingInfo.trim())],
+      if (r.cookingInfo.trim().isNotEmpty) ...[_heading(l10n.pdfNotes), pw.Text(r.cookingInfo.trim())],
       if (r.sourceUrl case final url? when url.isNotEmpty) ...[
         pw.SizedBox(height: style.body),
         pw.UrlLink(
           destination: url,
           child: pw.Text(
-            'Source: ${Uri.tryParse(url)?.host ?? url}',
+            l10n.pdfSource(Uri.tryParse(url)?.host ?? url),
             style: pw.TextStyle(fontSize: style.body * 0.8, color: _muted),
           ),
         ),
@@ -534,7 +557,7 @@ class _Builder {
               pw.TextSpan(text: i.name),
               if (used != null)
                 pw.TextSpan(
-                  text: '  p. ${_pages[used] ?? '00'}',
+                  text: '  ${l10n.pdfPage(_pages[used] ?? '00')}',
                   style: pw.TextStyle(color: _basil, fontSize: style.body * 0.85),
                 ),
             ],
