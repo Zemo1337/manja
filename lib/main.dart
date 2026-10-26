@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:nutrition_core/nutrition_core.dart';
 import 'package:nutrition_off/nutrition_off.dart';
 import 'package:nutrition_usda/nutrition_usda.dart';
@@ -13,6 +14,7 @@ import 'data/food_bundle.dart';
 import 'data/nutrition_repository.dart';
 import 'data/photo_store.dart';
 import 'domain/wheel_service.dart';
+import 'l10n/app_localizations.dart';
 import 'ui/app_theme.dart';
 import 'ui/settings/about.dart';
 import 'ui/home_shell.dart';
@@ -62,6 +64,13 @@ class ManjaApp extends StatelessWidget {
         theme: appTheme(appearance.theme, Brightness.light),
         darkTheme: appTheme(appearance.theme, Brightness.dark),
         themeMode: appearance.themeMode,
+        locale: appearance.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) {
+          Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
+          return child!;
+        },
         home: const HomeShell(),
       ),
     );

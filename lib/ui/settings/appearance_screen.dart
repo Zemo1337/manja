@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app_scope.dart';
+import '../../l10n/l10n.dart';
 import '../app_theme.dart';
 import 'option_card.dart';
 
@@ -65,6 +66,21 @@ class AppearanceScreen extends StatelessWidget {
                       ? 'The Dev theme is always dark.'
                       : 'System follows the light or dark setting of your device.',
                   style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              SettingsSectionTitle(context.l10n.languageTitle),
+              RadioGroup<String?>(
+                groupValue: appearance.language,
+                onChanged: appearance.setLanguage,
+                child: Column(
+                  children: [
+                    RadioListTile<String?>(value: null, title: Text(context.l10n.languagePhone)),
+                    for (final locale in AppLocalizations.supportedLocales)
+                      RadioListTile<String?>(
+                        value: locale.languageCode,
+                        title: Text(lookupAppLocalizations(locale).languageName),
+                      ),
+                  ],
                 ),
               ),
             ],

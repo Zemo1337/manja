@@ -9,6 +9,7 @@ import '../../data/database.dart';
 import '../../data/recipe_foods.dart';
 import '../../domain/ingredient_sections.dart';
 import '../../domain/units.dart';
+import '../../l10n/l10n.dart';
 import '../app_theme.dart';
 import '../nutrition/nutrition_panel.dart';
 import 'recipe_edit_screen.dart';
@@ -184,7 +185,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       width: 110,
                       child: Text(
                         ingredient.amount > 0
-                            ? '${formatAmount(ingredient.amount * scale)} ${unitText(CookingUnit.fromName(ingredient.unit), ingredient.amount * scale)}'
+                            ? '${formatAmount(ingredient.amount * scale)} ${CookingUnit.fromName(ingredient.unit).symbolIn(context.l10n, ingredient.amount * scale)}'
                             : '',
                         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                       ),

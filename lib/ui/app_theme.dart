@@ -30,6 +30,7 @@ class AppearanceController extends ChangeNotifier {
 
   static const _keyTheme = 'app.theme';
   static const _keyBrightness = 'app.brightness';
+  static const _keyLanguage = 'app.language';
 
   final AppDatabase db;
   AppThemeKind _theme = AppThemeKind.manja;
@@ -37,6 +38,11 @@ class AppearanceController extends ChangeNotifier {
 
   AppThemeKind get theme => _theme;
   AppBrightness get brightness => _brightness;
+
+  /// The language code chosen in Settings, or null to follow the phone.
+  String? _language;
+  String? get language => _language;
+  Locale? get locale => _language == null ? null : Locale(_language!);
 
   ThemeMode get themeMode {
     if (_theme.alwaysDark) return ThemeMode.dark;
@@ -50,6 +56,7 @@ class AppearanceController extends ChangeNotifier {
   Future<void> load() async {
     _theme = AppThemeKind.values.asNameMap()[await db.getSetting(_keyTheme)] ?? AppThemeKind.manja;
     _brightness = AppBrightness.values.asNameMap()[await db.getSetting(_keyBrightness)] ?? AppBrightness.system;
+    _language = await db.getSetting(_keyLanguage);
     notifyListeners();
   }
 
@@ -57,6 +64,16 @@ class AppearanceController extends ChangeNotifier {
     _theme = theme;
     notifyListeners();
     await db.setSetting(_keyTheme, theme.name);
+  }
+
+  Future<void> setLanguage(String? code) async {
+    _language = code;
+    notifyListeners();
+    if (code == null) {
+      await db.deleteSetting(_keyLanguage);
+    } else {
+      await db.setSetting(_keyLanguage, code);
+    }
   }
 
   Future<void> setBrightness(AppBrightness brightness) async {

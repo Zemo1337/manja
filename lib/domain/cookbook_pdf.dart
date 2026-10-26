@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:nutrition_core/nutrition_core.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../data/database.dart';
 import '../data/recipe_foods.dart';
+import '../l10n/l10n.dart';
 import 'ingredient_sections.dart';
 import 'text_fold.dart';
 import 'units.dart';
@@ -141,21 +143,23 @@ String recipeInfo(Recipe r) => [
 
 String _minutes(int m) => m < 60 ? '$m min' : '${m ~/ 60} h${m % 60 == 0 ? '' : ' ${m % 60} min'}';
 
-String _amount(RecipeIngredient i) =>
-    i.amount > 0 ? '${formatAmount(i.amount)} ${unitText(CookingUnit.fromName(i.unit), i.amount)}' : '';
+String _amount(RecipeIngredient i, AppLocalizations l10n) =>
+    i.amount > 0 ? '${formatAmount(i.amount)} ${CookingUnit.fromName(i.unit).symbolIn(l10n, i.amount)}' : '';
 
 Future<Uint8List> buildCookbook(
   List<CookbookRecipe> recipes,
   CookbookOptions options,
   CookbookFonts fonts, {
   DateTime? date,
-}) => buildCookbookDocument(recipes, options, fonts, date: date).save();
+  AppLocalizations? l10n,
+}) => buildCookbookDocument(recipes, options, fonts, date: date, l10n: l10n).save();
 
 pw.Document buildCookbookDocument(
   List<CookbookRecipe> recipes,
   CookbookOptions options,
   CookbookFonts fonts, {
   DateTime? date,
+  AppLocalizations? l10n,
 }) {
   final sorted = [...recipes]..sort((a, b) => compareNames(a.full.recipe.name, b.full.recipe.name));
   final images = <int, pw.ImageProvider>{};
@@ -169,7 +173,14 @@ pw.Document buildCookbookDocument(
       }
     }
   }
-  final builder = _Builder(sorted, options, fonts, images, date ?? DateTime.now());
+  final builder = _Builder(
+    sorted,
+    options,
+    fonts,
+    images,
+    date ?? DateTime.now(),
+    l10n ?? lookupAppLocalizations(const Locale('en')),
+  );
   final firstPass = builder.document(const {});
   if (!options.contents) return firstPass;
   return builder.document(recipePages(firstPass));
@@ -181,7 +192,10 @@ Map<String, String> recipePages(pw.Document doc) => {
 };
 
 class _Builder {
-  _Builder(this.recipes, this.options, this.fonts, this.images, this.date) : style = _Style.of(options.layout);
+  _Builder(this.recipes, this.options, this.fonts, this.images, this.date, this.l10n)
+    : style = _Style.of(options.layout);
+
+  final AppLocalizations l10n;
 
   final List<CookbookRecipe> recipes;
   final CookbookOptions options;
@@ -512,9 +526,9 @@ class _Builder {
         child: pw.RichText(
           text: pw.TextSpan(
             children: [
-              if (_amount(i).isNotEmpty)
+              if (_amount(i, l10n).isNotEmpty)
                 pw.TextSpan(
-                  text: '${_amount(i)}  ',
+                  text: '${_amount(i, l10n)}  ',
                   style: pw.TextStyle(font: fonts.bold),
                 ),
               pw.TextSpan(text: i.name),

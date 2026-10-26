@@ -1,12 +1,18 @@
-import 'package:nutrition_core/nutrition_core.dart' show CookingUnit;
+import 'package:intl/intl.dart';
 
 export 'package:nutrition_core/nutrition_core.dart' show CookingUnit, UnitKind;
 
-String formatAmount(double amount) {
-  if (amount == amount.roundToDouble()) return amount.toInt().toString();
-  return amount.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+/// The decimal separator of the app's language: "." in English, "," in German and Bosnian.
+String get decimalSeparator {
+  try {
+    return NumberFormat.decimalPattern().symbols.DECIMAL_SEP;
+  } on Object {
+    return '.';
+  }
 }
 
-/// The unit as written after [amount], e.g. "2 portions".
-String unitText(CookingUnit unit, double amount) =>
-    unit == CookingUnit.portion && amount != 1 ? 'portions' : unit.symbol;
+String formatAmount(double amount) {
+  if (amount == amount.roundToDouble()) return amount.toInt().toString();
+  final text = amount.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+  return text.replaceFirst('.', decimalSeparator);
+}

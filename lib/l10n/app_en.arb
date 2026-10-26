@@ -1,0 +1,229 @@
+{
+  "@@locale": "en",
+  "languageName": "English",
+  "@languageName": {
+    "description": "The name of this language, written in this language; shown in the language picker."
+  },
+  "unitG": "{count, plural, other{g}}",
+  "unitGName": "gram",
+  "@unitG": {
+    "description": "Short unit after an amount, e.g. \"2 g\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitKg": "{count, plural, other{kg}}",
+  "unitKgName": "kilogram",
+  "@unitKg": {
+    "description": "Short unit after an amount, e.g. \"2 kg\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitMg": "{count, plural, other{mg}}",
+  "unitMgName": "milligram",
+  "@unitMg": {
+    "description": "Short unit after an amount, e.g. \"2 mg\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitOz": "{count, plural, other{oz}}",
+  "unitOzName": "ounce",
+  "@unitOz": {
+    "description": "Short unit after an amount, e.g. \"2 oz\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitLb": "{count, plural, other{lb}}",
+  "unitLbName": "pound",
+  "@unitLb": {
+    "description": "Short unit after an amount, e.g. \"2 lb\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitMl": "{count, plural, other{ml}}",
+  "unitMlName": "millilitre",
+  "@unitMl": {
+    "description": "Short unit after an amount, e.g. \"2 ml\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitL": "{count, plural, other{l}}",
+  "unitLName": "litre",
+  "@unitL": {
+    "description": "Short unit after an amount, e.g. \"2 l\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitDl": "{count, plural, other{dl}}",
+  "unitDlName": "decilitre",
+  "@unitDl": {
+    "description": "Short unit after an amount, e.g. \"2 dl\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitCl": "{count, plural, other{cl}}",
+  "unitClName": "centilitre",
+  "@unitCl": {
+    "description": "Short unit after an amount, e.g. \"2 cl\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitTsp": "{count, plural, other{tsp}}",
+  "unitTspName": "teaspoon",
+  "@unitTsp": {
+    "description": "Short unit after an amount, e.g. \"2 tsp\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitTbsp": "{count, plural, other{tbsp}}",
+  "unitTbspName": "tablespoon",
+  "@unitTbsp": {
+    "description": "Short unit after an amount, e.g. \"2 tbsp\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitCup": "{count, plural, other{cup}}",
+  "unitCupName": "cup (US)",
+  "@unitCup": {
+    "description": "Short unit after an amount, e.g. \"2 cup\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitMetricCup": "{count, plural, other{cup (metric)}}",
+  "unitMetricCupName": "cup (metric)",
+  "@unitMetricCup": {
+    "description": "Short unit after an amount, e.g. \"2 cup (metric)\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitFlOz": "{count, plural, other{fl oz}}",
+  "unitFlOzName": "fluid ounce",
+  "@unitFlOz": {
+    "description": "Short unit after an amount, e.g. \"2 fl oz\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitPint": "{count, plural, other{pt}}",
+  "unitPintName": "pint (US)",
+  "@unitPint": {
+    "description": "Short unit after an amount, e.g. \"2 pt\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitQuart": "{count, plural, other{qt}}",
+  "unitQuartName": "quart (US)",
+  "@unitQuart": {
+    "description": "Short unit after an amount, e.g. \"2 qt\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitPiece": "{count, plural, other{pc}}",
+  "unitPieceName": "piece",
+  "@unitPiece": {
+    "description": "Short unit after an amount, e.g. \"2 pc\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitPinch": "{count, plural, other{pinch}}",
+  "unitPinchName": "pinch",
+  "@unitPinch": {
+    "description": "Short unit after an amount, e.g. \"2 pinch\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitClove": "{count, plural, other{clove}}",
+  "unitCloveName": "clove",
+  "@unitClove": {
+    "description": "Short unit after an amount, e.g. \"2 clove\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitSlice": "{count, plural, other{slice}}",
+  "unitSliceName": "slice",
+  "@unitSlice": {
+    "description": "Short unit after an amount, e.g. \"2 slice\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitCan": "{count, plural, other{can}}",
+  "unitCanName": "can",
+  "@unitCan": {
+    "description": "Short unit after an amount, e.g. \"2 can\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitPortion": "{count, plural, =1{portion} other{portions}}",
+  "unitPortionName": "portion",
+  "@unitPortion": {
+    "description": "Short unit after an amount, e.g. \"2 portions\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "languageTitle": "Language",
+  "languagePhone": "Same as the phone"
+}
