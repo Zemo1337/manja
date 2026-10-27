@@ -77,13 +77,13 @@ Settings → Ingredients & USDA key.
 
 ### Built-in ingredient data
 
-`assets/food/usda.json.gz` holds the USDA Foundation and SR Legacy foods (about 8,000 foods, 514 KB) with energy,
+`assets/food/usda.json` holds the USDA Foundation and SR Legacy foods (about 8,000 foods, 3.7 MB; the APK compresses it) with energy,
 macronutrients, vitamins and minerals. The app imports it on first start and again whenever the file's version
 changes. To rebuild it from the bulk downloads at
 [fdc.nal.usda.gov/download-datasets](https://fdc.nal.usda.gov/download-datasets):
 
 ```bash
-cd packages/nutrition_usda && dart run tool/build_bundle.dart "FDC Foundation <date> + SR Legacy 2018-04, with vitamins and minerals" ../../assets/food/usda.json.gz <foundation.json> <sr_legacy.json>
+cd packages/nutrition_usda && dart run tool/build_bundle.dart "FDC Foundation <date> + SR Legacy 2018-04, with vitamins and minerals" ../../assets/food/usda.json <foundation.json> <sr_legacy.json>
 ```
 
 The database layer uses [drift](https://drift.simonbinder.eu/). After changing tables in `lib/data/database.dart`,

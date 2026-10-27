@@ -17,7 +17,7 @@ void main() {
   setUpAll(() async {
     db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     repo = NutritionRepository(db);
-    final bundle = decodeGzipBundle(File(usdaBundleAsset).readAsBytesSync());
+    final bundle = decodeFoodBundle(File(usdaBundleAsset).readAsBytesSync());
     await repo.importBundle(bundle.version, bundle.foods);
     await repo.loadSearchNames(rootBundle);
   });

@@ -147,7 +147,7 @@ void main() {
   });
 
   test('the shipped USDA bundle imports and is searchable', () async {
-    final bundle = decodeGzipBundle(File(usdaBundleAsset).readAsBytesSync());
+    final bundle = decodeFoodBundle(File(usdaBundleAsset).readAsBytesSync());
     expect(bundle.foods.length, greaterThan(8000));
     expect(bundle.version, contains('SR Legacy'));
 
