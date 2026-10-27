@@ -14,6 +14,8 @@ import 'data/database.dart';
 import 'data/food_bundle.dart';
 import 'data/nutrition_repository.dart';
 import 'data/photo_store.dart';
+import 'data/profile_backup.dart';
+import 'data/starter_recipes.dart';
 import 'domain/wheel_service.dart';
 import 'l10n/l10n.dart';
 import 'ui/app_theme.dart';
@@ -41,6 +43,12 @@ Future<void> main() async {
   await nutrition.loadSearchNames(rootBundle);
   final appearance = AppearanceController(db);
   await appearance.load();
+  await importStarterRecipes(ProfileBackup(db, photos), appearance.language ?? phone.languageCode).catchError((
+    Object e,
+  ) {
+    debugPrint('Starter recipes could not be imported: $e');
+    return false;
+  });
   runApp(
     AppScope(
       db: db,

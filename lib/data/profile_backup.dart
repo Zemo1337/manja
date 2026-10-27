@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'database.dart';
 import 'photo_store.dart';
 import 'recipe_foods.dart';
+import 'starter_recipes.dart';
 
 class ProfileSummary {
   const ProfileSummary({
@@ -43,7 +44,7 @@ class ProfileBackup {
   static const _format = 'manja-profile';
   static const _version = 1;
   static const _dataFile = 'manja.json';
-  static const _localOnlySettings = {'nutrition.usdaApiKey', 'nutrition.bundleVersion'};
+  static const _localOnlySettings = {'nutrition.usdaApiKey', 'nutrition.bundleVersion', starterRecipesSetting};
   static const _deviceSettings = {'wheel.tag'};
   static final _photoName = RegExp(r'^photos/[A-Za-z0-9_.-]+$');
 
