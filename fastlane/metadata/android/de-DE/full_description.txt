@@ -1,0 +1,22 @@
+Manja ist ein kostenloses Essensrad und Rezeptbuch. Trag die Gerichte ein, die du magst, dreh am Rad, und was du gegessen hast, verlässt das Rad, bis die Runde vorbei ist.
+
+Kein Konto, keine Werbung, kein Tracking: alles bleibt auf deinem Handy.
+
+<b>Funktionen</b>
+• <b>Essensrad</b>: dreh am Rad und lass dir ein Gericht aussuchen. Gegessene Gerichte verlassen das Rad, bis es sich wieder füllt: wenn alles gegessen wurde, nach einer Anzahl von Tagen oder von Hand. Designs: Klassisch, Pizza, Burek, Sachertorte und Baklava.
+• <b>Kategorien und Filter</b>: dreh nur Hauptgerichte, Nachspeisen oder eigene Gruppen, begrenze Kalorien pro Portion oder die gesamte Kochzeit.
+• <b>Rezepte</b>: Zutaten in metrischen oder US-Einheiten, Überschriften, Schritte, Portionen, Fotos und Favoriten. Rezepte können als Zutat in anderen Rezepten verwendet werden, etwa ein Teig oder eine Soße.
+• <b>Import über einen Link</b>: füge eine Rezeptseite ein und Manja liest sie (bei Seiten mit schema.org-Rezeptdaten).
+• <b>Nährwerte</b>: pro Portion oder pro 100 g, mit Vitaminen und Mineralstoffen. Die eingebauten USDA-Daten funktionieren offline; USDA und Open Food Facts können online durchsucht werden.
+• <b>Barcode-Scanner</b>: scanne eine Verpackung und erhalte die Nährwerte von Open Food Facts.
+• <b>Was kann ich kochen?</b>: sag Manja, was du zu Hause hast, und es zeigt dir die Gerichte, die du machen kannst.
+• <b>Verlauf</b>: was du wann gegessen hast.
+• <b>Kochbuch-PDF</b>: drucke oder teile deine Rezepte in drei Layouts.
+• <b>Sichern und Umziehen</b>: exportiere alles in eine .manja-Datei und importiere sie auf einem anderen Gerät.
+• <b>Sprachen</b>: Deutsch, Englisch und Bosnisch.
+• Heller und dunkler Modus, Einheitenrechner und ein paar Familienrezepte für den Anfang.
+
+<b>Datenschutz</b>
+Manja nutzt das Internet nur, wenn du es willst: zum Nachschlagen von Zutaten bei USDA oder Open Food Facts und zum Importieren eines Rezepts über einen Link. Die Kamera wird nur zum Scannen von Barcodes und für Rezeptfotos verwendet.
+
+Nährwertdaten: USDA FoodData Central (gemeinfrei) und Open Food Facts (Open Database License).

@@ -1,0 +1,22 @@
+Manja je besplatno kolo jela i knjiga recepata. Dodaj jela koja voliš, zavrti kolo, a ono što si pojeo napušta kolo dok se krug ne završi.
+
+Bez računa, bez reklama, bez praćenja: sve ostaje na tvom telefonu.
+
+<b>Mogućnosti</b>
+• <b>Kolo jela</b>: zavrti kolo i neka ono izabere jelo. Pojedena jela napuštaju kolo dok se ponovo ne napuni: kad je sve pojedeno, nakon određenog broja dana ili ručno. Teme: Klasična, Pizza, Burek, Sacher torta i Baklava.
+• <b>Kategorije i filteri</b>: vrti samo glavna jela, deserte ili vlastite grupe, ograniči kalorije po porciji ili ukupno vrijeme kuhanja.
+• <b>Recepti</b>: sastojci u metričkim ili američkim jedinicama, naslovi, koraci, porcije, fotografije i omiljeni recepti. Recepti se mogu koristiti kao sastojak u drugim receptima, npr. tijesto ili sos.
+• <b>Uvoz s linka</b>: zalijepi stranicu s receptom i Manja će je pročitati (za stranice sa schema.org podacima o receptu).
+• <b>Nutritivne vrijednosti</b>: po porciji ili na 100 g, uključujući vitamine i minerale. Ugrađeni USDA podaci rade bez interneta; USDA i Open Food Facts mogu se pretraživati online.
+• <b>Skener barkoda</b>: skeniraj pakovanje i dobij nutritivne vrijednosti s Open Food Facts.
+• <b>Šta mogu skuhati?</b>: reci Manji šta imaš kod kuće i pokazat će ti jela koja možeš napraviti.
+• <b>Historija</b>: šta si jeo i kada.
+• <b>Kuharica (PDF)</b>: odštampaj ili podijeli svoje recepte u tri izgleda.
+• <b>Sigurnosna kopija i prenos</b>: izvezi sve u jednu .manja datoteku i uvezi je na drugom uređaju.
+• <b>Jezici</b>: bosanski, engleski i njemački.
+• Svijetli i tamni način, pretvarač jedinica i nekoliko porodičnih recepata za početak.
+
+<b>Privatnost</b>
+Manja koristi internet samo kad ti to zatražiš: za traženje sastojaka na USDA ili Open Food Facts i za uvoz recepta s linka. Kamera se koristi samo za skeniranje barkodova i fotografisanje recepata.
+
+Nutritivni podaci: USDA FoodData Central (javno dobro) i Open Food Facts (Open Database License).

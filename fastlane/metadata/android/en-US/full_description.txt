@@ -1,0 +1,22 @@
+Manja is a free meal wheel and recipe book. Add the dishes you like, spin the wheel, and whatever you ate leaves the wheel until the round is over.
+
+No account, no ads, no tracking: everything stays on your phone.
+
+<b>Features</b>
+• <b>Meal wheel</b>: spin to pick a dish. Eaten dishes leave the wheel until it refills: when everything was eaten, after a number of days, or by hand. Themes: Classic, Pizza, Burek, Sachertorte and Baklava.
+• <b>Categories and filters</b>: spin only mains, desserts or your own groups, limit calories per portion or the total cooking time.
+• <b>Recipes</b>: ingredients in metric or imperial units, headings, steps, portions, photos and favourites. Recipes can be used as ingredients in other recipes, like a dough or a sauce.
+• <b>Import from a link</b>: paste a recipe page and Manja reads it (for sites that publish schema.org recipe data).
+• <b>Nutrition</b>: per portion or per 100 g, including vitamins and minerals. Built-in USDA data works offline; USDA and Open Food Facts can be searched online.
+• <b>Barcode scanner</b>: scan a package and get its nutrition values from Open Food Facts.
+• <b>What can I cook?</b>: tell Manja what you have at home and it shows the dishes you can make.
+• <b>History</b>: what you ate and when.
+• <b>Cookbook PDF</b>: print or share your recipes in three layouts.
+• <b>Backup and move</b>: export everything to one .manja file and import it on another device.
+• <b>Languages</b>: English, German and Bosnian.
+• Light and dark mode, unit converter, and a few family recipes to start with.
+
+<b>Privacy</b>
+Manja uses the internet only when you ask it to: looking up ingredients at USDA or Open Food Facts, and importing a recipe from a link. The camera is used only to scan barcodes and take recipe photos.
+
+Nutrition data: USDA FoodData Central (public domain) and Open Food Facts (Open Database License).

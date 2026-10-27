@@ -5,7 +5,12 @@
 Manja is a free meal wheel and recipe book. Add the dishes you like, spin the wheel, and whatever you ate leaves the
 wheel until the round is over. No account, no ads, no tracking: everything stays on your phone.
 
-<!-- Screenshots: add docs/screenshots/*.png here -->
+<p>
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="200" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="200" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="200" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="200" alt="">
+</p>
 
 ## Features
 
@@ -113,8 +118,7 @@ To add a language:
    them in the built-in USDA data, so searching "farine" finds the wheat flour. See `search_de.json` for the format.
 3. Run `flutter gen-l10n` and `flutter test`. The new language appears in Settings → Appearance by itself.
 
-The VS Code extension [i18n Ally](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally) shows all
-languages side by side and points out missing texts.
+The store texts (F-Droid) are in `fastlane/metadata/android/<locale>/`; copy the `en-US` folder to translate them.
 
 ## Contributing
 
