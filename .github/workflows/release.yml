@@ -1,0 +1,80 @@
+# Builds the signed release APKs that F-Droid compares its own build against.
+# The build runs in the same paths and with the same commands as the F-Droid
+# recipe (metadata/com.manja.app.yml in fdroiddata), so the APKs match byte for byte.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: 3.47.6
+  NDK_VERSION: 28.2.13676358
+  APP_DIR: /home/vagrant/build/com.manja.app
+  FLUTTER_DIR: /home/vagrant/build/srclib/flutter
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Prepare the F-Droid paths
+        run: |
+          sudo mkdir -p /home/vagrant/build
+          sudo chown "$USER" /home/vagrant/build
+          git clone --branch "$GITHUB_REF_NAME" "https://github.com/$GITHUB_REPOSITORY.git" "$APP_DIR"
+          git clone --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$FLUTTER_DIR"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
+
+      - name: Prebuild
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          rm -rf ios linux macos windows
+          export PUB_CACHE=$(pwd)/.pub-cache
+          $FLUTTER_DIR/bin/flutter config --no-analytics
+          $FLUTTER_DIR/bin/flutter pub get --enforce-lockfile
+
+      - name: Keystore
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          export PUB_CACHE=$(pwd)/.pub-cache
+          mkdir "$RUNNER_TEMP/apk"
+          $FLUTTER_DIR/bin/flutter build apk --release --split-per-abi --target-platform="android-arm"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "$RUNNER_TEMP/apk/"
+          $FLUTTER_DIR/bin/flutter build apk --release --split-per-abi --target-platform="android-arm64"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$RUNNER_TEMP/apk/"
+          rm android/key.properties
+
+      - name: Publish
+        working-directory: ${{ runner.temp }}/apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes ""
+          gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
+            app-armeabi-v7a-release.apk app-arm64-v8a-release.apk
