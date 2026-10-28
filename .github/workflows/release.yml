@@ -82,3 +82,5 @@ jobs:
             || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes ""
           gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
             app-armeabi-v7a-release.apk app-arm64-v8a-release.apk
+          # A moved tag turns its release into a draft, which F-Droid cannot download from.
+          gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME" --draft=false
