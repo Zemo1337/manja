@@ -31,6 +31,12 @@ android {
         versionName = flutter.versionName
     }
 
+    // The encrypted dependency list is only readable by Google Play and is rejected by F-Droid.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     // android/key.properties is written by the release workflow and never committed.
     val keyProperties = rootProject.file("key.properties")
     signingConfigs {
