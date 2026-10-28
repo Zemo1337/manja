@@ -16,6 +16,9 @@ env:
   NDK_VERSION: 28.2.13676358
   APP_DIR: /home/vagrant/build/com.manja.app
   FLUTTER_DIR: /home/vagrant/build/srclib/flutter
+  # Native libraries keep the NDK path in their build ID, so the SDK sits where F-Droid has it.
+  ANDROID_HOME: /opt/android-sdk
+  ANDROID_SDK_ROOT: /opt/android-sdk
 
 jobs:
   release:
@@ -28,11 +31,12 @@ jobs:
 
       - name: Prepare the F-Droid paths
         run: |
-          sudo mkdir -p /home/vagrant/build
-          sudo chown "$USER" /home/vagrant/build
+          sudo mkdir -p /home/vagrant/build /opt/android-sdk
+          sudo chown "$USER" /home/vagrant/build /opt/android-sdk
           git clone --branch "$GITHUB_REF_NAME" "https://github.com/$GITHUB_REPOSITORY.git" "$APP_DIR"
           git clone --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$FLUTTER_DIR"
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null
+          /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root="$ANDROID_HOME" "ndk;$NDK_VERSION" "cmake;3.22.1" "platform-tools" > /dev/null
 
       - name: Prebuild
         working-directory: ${{ env.APP_DIR }}
